@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+<title>Структура Ифрит</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">Структура программы Ифрит</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="/ifrit/ifrit_chess_engine.html">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+ В Ифрите можно выделить следующие составные части:<br>
+ 1 <a href="1_UCI.htm">UCI протокол.</a><br>
+ 2  <a href="2_Generator.htm">Генератор избыточных ходов.</a> Принимает позицию и выдает список всевозможных ходов из данной позиции.
+ Не учитывает шахи.<br>
+ 3 <a href="3_Moves.htm">Реализатор ходов.</a> Принимает ход и реализует его на доске. Он делает как прямые ходы, так и 
+ возврат хода. <br>
+ 4 <a href="4_Check.htm">Детектор шахов</a> проверяет позицию, выданную реализатором ходов. Если позиция не корректна, то об этом сообщается и реализатор возвращает ход. На данный момент детектор состоит из нескольких функций и смотрит отдельно атаку на короля ,и битые поля при рокировке.<br>
+ 5 <a href="5_Loop.htm">Генератор вариантов.</a> В данный момент это полный перебор с альфа-бета отсечением.
+  В нем же реализуем вывод главной линии переменной длины.<br>
+ 6 <a href="6_Estimation.htm">Оценщик позиции.</a> Получаем позицию и выдаем ее оценку.<br> 
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>
+
+</html>

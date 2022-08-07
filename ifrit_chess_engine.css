@@ -1,0 +1,33 @@
+
+/* Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. */
+/* Last modified 15.06.2019 - 15.06.2019 */
+
+
+/*
+ .button {
+     -moz-border-radius: 8px;
+     -webkit-border-radius: 8px;
+     border-radius: 8px;
+     border: 2px groove green;
+     display: block;
+     height: 30px;
+     line-height: 30px;
+     width: 100px;
+     text-decoration: none;
+     text-align: center;
+     color: red;
+     font-weight: bold;
+   }
+*/
+/*table border="1" cols ="1" cellpadding="1" cellspacing="0" bordercolor="#111111" width="100%" id="Tabl_1*/
+
+/* class="st1"*/
+ .st1 {
+    /* background: black;*/
+    /*background: "#CCCCFF";*/
+    /*background-color: #3366CC;*/ /* Цвет фона веб-страницы */
+    margin-top: 1px;
+    margin-bottom: 1px;
+    margin-right: 1px;
+    margin-left: 1px;
+ }

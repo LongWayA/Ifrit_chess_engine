@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+<title>Transposition_table</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">Transposition table</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="0_0_Structure_Ifrit_b.htm">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+ <br>   
+ <font size="4">Вводные рассуждения.</font><br>
+ <br>
+ Основная идея заключается в том, что бы при возникновении уже просчитанных 
+ позиций использовать ранее полученные результаты.<br>
+ <br>
+ Для реализации мы должны, во-первых, запомнить позицию и информацию по ней, а 
+ во-вторых, при получении такой же увидеть, что <br>
+ мы ее уже ранее рассматривали и воспользоваться уже полученными данными.<br>
+ <br>
+ Если решать задачу в лоб, то мы должны запоминать позицию и потом сравнивать 
+ весь ранее запомненный массив позиций с текущей <br>
+ проверяя, что все фигуры находятся на тех же местах. Страшно даже представить, 
+ сколько времени это займет. Быстрее просчитать <br>
+ позицию по-новому.<br>
+ <br>
+ Для повышения эффективности используется хеш-ключ. Каждой позиции мы 
+ сопоставляем некоторое число. Причем, разным позициям <br>
+ должны быть приписаны разные числа, а одинаковым позициям должны 
+ соответствовать одинаковые числа. Например, возникла у нас <br>
+ определенная позиция, мы посчитали по ней хеш-ключ, запомнили его и всю 
+ сопутствующую информацию, такую как лучший ход, <br>
+ оценка и т.д. Во время дальнейшего перебора во всех возникающих позициях мы 
+ считаем хеш-ключ и смотрим - если он нам уже <br>
+ встречался, то значит, нам встречалась эта позиция, и мы используем ранее 
+ полученный результат.<br>
+ Конечно, возможна ситуация когда у разных позиций будут одинаковые ключи, 
+ потому что отображение множества позиций на <br>
+ множество ключей все-таки не однозначно, тогда возникает коллизия. Мы будем 
+ думать, что позиции одинаковы, а они разные и <br>
+ применение результатов одной к другой окажется ошибкой.<br>
+ <br>
+ <font size="4">Хеш-ключ.</font><br>
+ <br>
+ Как же привязать число к позиции? Вообще говоря, разные позиции отличаются друг 
+ от друга фигурами и расположением этих фигур. <br>
+ Поэтому естественным шагом будет использовать трехмерный массив 64-битных 
+ чисел.<br>
+ Хеш-ключ [цвет фигуры][имя фигуры][позиция фигуры]<br>
+ Таким образом, мы имеем всевозможные фигуры на всевозможных позициях. Каждую 
+ ячейку этого массива мы заполним случайным 64 <br>
+ –битным числом. Почему именно 64 битное, а не 32 битное число? Потому что при 
+ использовании 32 битных слишком много <br>
+ коллизий.<br>
+ <br>
+ Для генерации случайного 64-битного числа можно воспользоваться следующей 
+ функцией.<br>
+ Так это реализовано в Ифрите (Ifrit_b_2_5):<br>
+ unsigned __int64 rand_64(){<br>
+ //в основе генерации случайных чисел лежит стандартная функция библиотеки<br>
+ //&lt;cstdlib&gt; возвращающая псевдослучайное число в диапазоне 0 до 32767<br>
+ //int rand ( void ); <br>
+ //Returns a pseudo-random integral number in the range 0 to RAND_MAX.<br>
+ //RAND_MAX is a constant defined in &lt;cstdlib&gt;. Its default value may vary 
+ between <br>
+ //implementations but it is granted to be at least 32767.<br>
+ <br>
+ &nbsp;
+ return rand() ^ ( ((unsigned __int64)rand() &lt;&lt; 15) ^ ((unsigned __int64)rand() 
+ &lt;&lt; 31) ^ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ ((unsigned __int64)rand() &lt;&lt; 47) ^ ((unsigned __int64)rand() &lt;&lt; 59));<br>
+ }//unsigned __int64 rand_64(){<br>
+ <br>
+ А можно использовать уже готовую таблицу, как это сделано во Фрукте. <br>
+ <br>
+ Приведу функцию инициализирующую трехмерный массив хеш-ключей(Ifrit_b_2_5):<br>
+ void Ini_random_piese_key(){<br>
+ &nbsp;
+ for(int c=0 ; c&lt;2 ; c++){<br>
+ &nbsp;&nbsp;&nbsp;
+ for(int n=1 ; n&lt;7 ; n++){<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ for(int q=0 ; q&lt;64 ; q++){<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ random_piese_key[c][n][q]=rand_64();<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ }//for(int q=0 ; q&lt;120 ; q++){<br>
+ &nbsp;&nbsp;&nbsp;
+ }//for(int n=1 ; n&lt;7 ; n++){<br>
+ &nbsp;
+ }//for(int c=1 ; c&lt;3 ; c++){<br>
+ }//Ini_random_piese_key(){<br>
+ <br>
+ Теперь, когда у нас есть трехмерная таблица хеш-ключей, мы можем вычислить 
+ хеш-ключ конкретной позиции.<br>
+ (Ifrit_b_2_5):<br>
+ void Start_position_random_key(T_Bitboard * bitboard){<br>
+ &nbsp;
+ int n_1 = 0;<br>
+ &nbsp;
+ int colour=0;<br>
+ &nbsp;
+ int name=0;<br>
+ &nbsp;
+ unsigned __int64 key = U64(0xF3218F1C9510786C);<br>
+ &nbsp;
+ n_1 = 0;<br>
+ &nbsp;
+ while (n_1&lt;64){<br>
+ &nbsp;&nbsp;&nbsp;
+ name = bitboard-&gt;white_name_from_coord[n_1];<br>
+ &nbsp;&nbsp;&nbsp;
+ if (name != 0) key = key ^ random_piese_key[1][name][n_1];<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;
+ name = bitboard-&gt;black_name_from_coord[n_1];<br>
+ &nbsp;&nbsp;&nbsp;
+ if (name != 0) key = key ^ random_piese_key[0][name][n_1];<br>
+ &nbsp;&nbsp;&nbsp;
+ n_1 = n_1 + 1;<br>
+ &nbsp;
+ }//while (n_1&lt;64){<br>
+ &nbsp;
+ bitboard-&gt;hash_key=key;<br>
+ }//Start_position_random_key(T_board_list_816 * board_list_816){<br>
+ Мы просто бежим по позиции XORим полученные из массива числа. Раньше вместо XOR 
+ я использовал обычное сложение. Разницы почти <br>
+ нет.<br>
+ Конечно, каждый раз полностью считать хеш-ключ позиции не нужно. Достаточно 
+ только отобразить изменения. Т.е. если, к <br>
+ примеру, фигура пошла из одного места в другое, то мы должны просто изменить 
+ хеш-ключ позиции, изменив хеш-число фигуры. И <br>
+ вот тут проявляется удобная особенность XOR. Дело в том, что два XOR возвращают 
+ исходное число. Поэтому первый раз, применяя <br>
+ XOR, мы добавляем число, а применив его второй раз, мы его убираем.<br>
+ Это выглядит примерно так:<br>
+ key=key_mem ^ random_piese_key[colour_figure][name_figure][initial_position];//убрали 
+ фигуру из старого места<br>
+ key=key ^ random_piese_key[colour_figure][name_figure][final_position];//добавили 
+ в новом месте<br>
+ <br>
+ <font size="4">Хеш-таблица.</font><br>
+ <br>
+ Теперь, когда мы знаем, как для текущей позиции можно вычислить хеш-ключ, можно 
+ организовать хеш-таблицу. Надо сказать, что в <br>
+ Ифрите хеш-таблица используется только для сортировки ходов, поэтому в ней я 
+ запоминаю только лучший для данной позиции ход. <br>
+ Для этого использую следующую структуру(Ifrit_b_2_5):<br>
+ struct T_hash_moves {<br>
+ &nbsp;
+ // хеш ключ позиции<br>
+ &nbsp;
+ unsigned __int64 key;<br>
+ &nbsp;
+ // описание хода смотреть в струкутре T_list_surplus_moves<br>
+ &nbsp;
+ int move;<br>
+ &nbsp;
+ // глубина записи данного ключа<br>
+ &nbsp;
+ int depth;<br>
+ };//struct T_PV {<br>
+ <br>
+ Есть еще один момент, на котором стоит остановиться. Перебирать каждый раз все 
+ хеш-ключи для того что бы выяснить есть ли у <br>
+ нас такой или нет нежелательно. Поэтому индекс хеш-таблицы привязывается к 
+ хеш-ключу.<br>
+ Просто использовать хеш-ключ в качестве индекса массива хеш-таблицы мы не 
+ можем, так как он слишком большой. Поэтому <br>
+ прибегаем к следующему приему.<br>
+ Для начала надо вспомнить, как работает &amp;<br>
+ и &amp; 0 0 1 первый операнд<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ 0 1 1 второй операнд<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ -----<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ 0 0 1 результат<br>
+ Мы видим, что нули переходят в нули, и это будем использовать, но для этого 
+ максимальный индекс таблицы должен быть числом <br>
+ вида<br>
+ 00..011111, тогда каким бы не был хеш-ключ мы никогда не выйдем за пределы 
+ максимального индекса и можно записать<br>
+ hash_moves[(unsigned int)key &amp; max_index_hash ]<br>
+ <br>
+ Такое число это число вида (2 в степени n) -1<br>
+ <br>
+ <font size="4">Выделение памяти под хеш-таблицу.</font><br>
+ <br>
+ Так это сделано в Ifrit_b_2_5:<br>
+ void Hash_size_ini_default(int hash_size){<br>
+ &nbsp;
+ unsigned int hash_n = 0;<br>
+ &nbsp;
+ // перегоняем размер в Мб в байты, а потом в количество элементов<br>
+ &nbsp;
+ max_index_hash = (unsigned int)((hash_size * (1024 * 1024))/sizeof(T_hash_moves));<br>
+ &nbsp;
+ // нам нужно получить размер (2 в степени n) -1 чтобы получилось <br>
+ &nbsp;
+ // число вида 000..0111 и можно было вгонять хеш-индекс в пределы массива 
+ операцией &amp;<br>
+ &nbsp;
+ for (hash_n =2 ; hash_n &lt;= max_index_hash ; hash_n = 2 * hash_n );<br>
+ &nbsp;
+ hash_n = hash_n / 2;<br>
+ &nbsp;
+ if ((hash_n &amp; (hash_n - 1)) != 0) cout &lt;&lt; &quot;ЗАСАДА! размер не вида степени двух 
+ &quot; &lt;&lt; hash_n &lt;&lt; &quot;\n&quot;;<br>
+ &nbsp;
+ max_index_hash = hash_n - 1;<br>
+ &nbsp;
+ // резервируем память под таблицу и заполняем ее нулями<br>
+ &nbsp;
+ hash_moves = (T_hash_moves*) calloc ((max_index_hash + 3),sizeof(T_hash_moves));<br>
+ &nbsp;
+ if (hash_moves == NULL) {<br>
+ &nbsp;&nbsp;&nbsp;
+ cout &lt;&lt; &quot;памяти нет &quot; &lt;&lt; &quot;\n&quot;;<br>
+ &nbsp;&nbsp;&nbsp;
+ exit(1); <br>
+ &nbsp;
+ }//if (hash_moves == NULL) {<br>
+ }//void Hash_size_ini_default(){<br>
+ <br>
+ <font size="4">Заключительные замечания.</font><br>
+ <br>
+ Посмотрим, что дает нам хеш-таблица<br>
+ <br>
+ Альфа-бета с сортировкой взятий <br>
+ 8/8 <span lang="en-us">&nbsp;&nbsp;&nbsp; </span>00:07 <span lang="en-us">&nbsp;&nbsp;
+ </span>3.151.926 607.473 <span lang="en-us">&nbsp;&nbsp;&nbsp;&nbsp; </span>
+ +0,12 <span lang="en-us">&nbsp;</span>e2e4 e7e5 Ng1f3 Ng8f6 d2d4 e5xd4 Qd1xd4 
+ Bf8e7<br>
+ 9/9 <span lang="en-us">&nbsp;&nbsp;&nbsp; </span>00:45 <span lang="en-us">&nbsp;&nbsp;
+ </span>25.499.252 780.290 <span lang="en-us">&nbsp;&nbsp; </span>+0,29
+ <span lang="en-us">&nbsp;</span>e2e4 e7e5 Ng1f3 Bf8d6 d2d4 e5xd4 Qd1xd4 Ng8f6 
+ Bf1c4<br>
+ 10/10 04:41 <span lang="en-us">&nbsp;&nbsp; </span>102.801.673 559.898
+ <span lang="en-us">&nbsp;</span>+0,09 <span lang="en-us">&nbsp;</span>e2e4 e7e5 
+ Ng1f3 Ng8f6 d2d4 e5xd4 e4e5 Qd8e7 Qd1xd4 Nb8c6<br>
+ <br>
+ Включена хеш-таблица<br>
+ 8/8 <span lang="en-us">&nbsp;&nbsp;&nbsp; </span>00:03 <span lang="en-us">&nbsp;&nbsp;
+ </span>795.159 535.434 <span lang="en-us">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ </span>+0,12 <span lang="en-us">&nbsp;</span>e2e4 e7e5 Ng1f3 Ng8f6 d2d4 e5xd4 
+ Qd1xd4 Bf8e7<br>
+ 9/9 <span lang="en-us">&nbsp;&nbsp;&nbsp; </span>00:17 <span lang="en-us">&nbsp;&nbsp;
+ </span>8.755.251 737.652 <span lang="en-us">&nbsp;&nbsp;&nbsp;&nbsp; </span>
+ +0,29 <span lang="en-us">&nbsp;</span>e2e4 e7e5 Ng1f3 Bf8d6 d2d4 e5xd4 Qd1xd4 
+ Ng8f6 Bf1c4<br>
+ 10/10 01:46 <span lang="en-us">&nbsp;&nbsp; </span>39.045.546 545.722
+ <span lang="en-us">&nbsp;&nbsp; </span>+0,04 <span lang="en-us">&nbsp;</span>Nb1c3 
+ d7d5 d2d4 Bc8f5 Ng1f3 Nb8c6 Bc1f4 Ng8f6 e2e3 Qd8d7<br>
+ <br>
+ Надо еще добавить, что хеш-ход я вставляю в список первым. Для этого ищу его в 
+ списке ходов <br>
+ и если нашел, то ставлю первым, а если нет, то оставляю как есть, кстати, это и 
+ является <br>
+ защитой от коллизий. Правда защита не полная.<br>
+ <br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>
+
+</html>

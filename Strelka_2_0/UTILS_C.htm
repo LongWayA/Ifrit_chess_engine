@@ -1,0 +1,610 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<title>UTILS_C</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center">UTILS_C</h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="/index.html">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+
+        
+
+        <p align="justify">
+        //////////////////////////////////////////////////////////////////////////////<br>
+        // Расчет разменов хода move<br>
+        int see_move(int move)<br>
+        { int slide_index[4];<br>
+        int from, to, piece_value, capt_value, me, opp, dir, delta;<br>
+        unsigned __int64 atk_bm, clear_bm, mask;<br>
+        unsigned __int64 slide_pieces[4];<br>
+        <br>
+        from = MOVE_FROM(move);<br>
+        to = MOVE_TO(move);<br>
+        piece_value = ValuePiece[Board-&gt;square[from]];<br>
+        capt_value = ValuePiece[Board-&gt;square[to]];<br>
+        if (capt_value &gt;= piece_value) return 1;<br>
+        if (MOVE_IS_ENPASSANT(move)) return 1;<br>
+        me = Board-&gt;turn;<br>
+        opp = me ^ 1;<br>
+        mask = MaskPawnAttacks[me][to] &amp; (Board-&gt;mp[WhitePawn + opp]); // чужие 
+        пешки<br>
+        if (mask) return 0; // чужие пешки атакуют - плохо<br>
+        // Формируем битовую маску фигур, атакующих позицию to<br>
+        // Атаки коней на to<br>
+        atk_bm = ((Board-&gt;mp[WhiteKnight]) | (Board-&gt;mp[BlackKnight])) &amp; 
+        MaskKnightMoves[to];<br>
+        delta = piece_value - capt_value;<br>
+        if (delta &gt; 3 &amp;&amp; ((Board-&gt;mp[WhiteKnight + opp]) &amp; atk_bm)) return 0; // 
+        чужие кони атакуют - плохо<br>
+        // Аатаки дальнобойных фигур по диагоналям<br>
+        slide_index[0] = (int)((Board-&gt;md3) &gt;&gt; LineShift[0][to]) &amp; 0x3F;<br>
+        slide_index[1] = (int)((Board-&gt;md4) &gt;&gt; LineShift[1][to]) &amp; 0x3F;<br>
+        mask = (Board-&gt;mp[WhiteQueen]) | (Board-&gt;mp[BlackQueen]) |<br>
+        (Board-&gt;mp[WhiteBishop]) | (Board-&gt;mp[BlackBishop]);<br>
+        slide_pieces[0] = mask;<br>
+        slide_pieces[1] = mask;<br>
+        atk_bm |= (LineMask[0][to][slide_index[0]] | LineMask[1][to][slide_index[1]]) 
+        &amp; mask;<br>
+        if (delta &gt; 3 &amp;&amp; ((Board-&gt;mp[WhiteBishop + opp]) &amp; atk_bm)) return 0; // 
+        чужие слоны атакуют<br>
+        mask = MaskPawnAttacks[opp][to] &amp; (Board-&gt;mp[WhitePawn + me]);<br>
+        if (mask) return 1; // свои пешки атакуют - хорошо<br>
+        // Атаки дальнобойных фигур по линиям<br>
+        slide_index[2] = (int)((Board-&gt;md1) &gt;&gt; LineShift[2][to]) &amp; 0x3F;<br>
+        slide_index[3] = (int)((Board-&gt;md2) &gt;&gt; LineShift[3][to]) &amp; 0x3F;<br>
+        mask = (Board-&gt;mp[WhiteRook]) | (Board-&gt;mp[BlackRook]) |<br>
+        (Board-&gt;mp[WhiteQueen]) | (Board-&gt;mp[BlackQueen]);<br>
+        slide_pieces[2] = mask;<br>
+        slide_pieces[3] = mask;<br>
+        atk_bm |= (LineMask[2][to][slide_index[2]] | LineMask[3][to][slide_index[3]]) 
+        &amp; mask;<br>
+        // В конце добавляем атаки королей<br>
+        atk_bm |= ((Board-&gt;mp[WhiteKing]) | (Board-&gt;mp[BlackKing])) &amp; 
+        MaskKingMoves[to];<br>
+        // Маска для очистки полей фигур, сделавших свое дело<br>
+        clear_bm = MaskClearSquare[from] &amp; MaskClearSquare[to];<br>
+        atk_bm &amp;= clear_bm;<br>
+        dir = LineIndex[from][to];<br>
+        if (dir &lt; 4) atk_bm |= LineMask[dir][from][slide_index[dir]] &amp; 
+        slide_pieces[dir] &amp; clear_bm;<br>
+        capt_value -= piece_value;<br>
+        do {<br>
+        clear_bm &amp;= ~atk_bm;<br>
+        // Сначала смотрим атаки соперника<br>
+        mask = (Board-&gt;mp[WhiteKnight + opp]) &amp; atk_bm;<br>
+        if (mask) { // есть атакующий конь соперника<br>
+        atk_bm ^= (~(mask - 1)) &amp; mask;<br>
+        piece_value = 3;<br>
+        }<br>
+        else {<br>
+        mask = (Board-&gt;mp[WhiteBishop + opp]) &amp; atk_bm;<br>
+        if (mask) { // есть атакующий слон соперника<br>
+        piece_value = 3;<br>
+        from = first_one(mask);<br>
+        dir = LineIndex[from][to];<br>
+        mask = LineMask[dir][from][slide_index[dir]] &amp; clear_bm &amp; slide_pieces[0];<br>
+        atk_bm = mask | (MaskClearSquare[from] &amp; atk_bm);<br>
+        }<br>
+        else {<br>
+        mask = (Board-&gt;mp[WhiteRook + opp]) &amp; atk_bm;<br>
+        if (mask) { // есть атакующая ладья соперника<br>
+        piece_value = 5;<br>
+        from = first_one(mask);<br>
+        dir = LineIndex[from][to];<br>
+        mask = LineMask[dir][from][slide_index[dir]] &amp; clear_bm &amp; slide_pieces[2];<br>
+        atk_bm = mask | (MaskClearSquare[from] &amp; atk_bm);<br>
+        }<br>
+        else {<br>
+        mask = (Board-&gt;mp[WhiteQueen + opp]) &amp; atk_bm;<br>
+        if (mask) { // есть атакующий ферзь соперника<br>
+        piece_value = 10;<br>
+        from = first_one(mask);<br>
+        dir = LineIndex[from][to];<br>
+        mask = LineMask[dir][from][slide_index[dir]] &amp; clear_bm &amp; slide_pieces[dir];<br>
+        atk_bm = mask | (MaskClearSquare[from] &amp; atk_bm);<br>
+        }<br>
+        else {<br>
+        mask = (Board-&gt;mp[WhiteKing + opp]) &amp; atk_bm; // в конце смотрим атаки 
+        короля<br>
+        if (!mask) return 1; // атак соперника больше нет - хорошо<br>
+        piece_value = 2001;<br>
+        }<br>
+        }<br>
+        }<br>
+        }<br>
+        capt_value += piece_value;<br>
+        if (capt_value &lt; 0) return 0;<br>
+        // Теперь - ответные атаки своих фигур<br>
+        mask = (Board-&gt;mp[WhiteKnight + me]) &amp; atk_bm;<br>
+        if (mask) {<br>
+        atk_bm ^= (~(mask - 1)) &amp; mask;<br>
+        piece_value = 3;<br>
+        }<br>
+        else {<br>
+        mask = (Board-&gt;mp[WhiteBishop + me]) &amp; atk_bm;<br>
+        if (mask) {<br>
+        piece_value = 3;<br>
+        from = first_one(mask);<br>
+        dir = LineIndex[from][to];<br>
+        mask = LineMask[dir][from][slide_index[dir]] &amp; clear_bm &amp; slide_pieces[0];<br>
+        atk_bm = mask | (MaskClearSquare[from] &amp; atk_bm);<br>
+        }<br>
+        else {<br>
+        mask = (Board-&gt;mp[WhiteRook + me]) &amp; atk_bm;<br>
+        if (mask) {<br>
+        piece_value = 5;<br>
+        from = first_one(mask);<br>
+        dir = LineIndex[from][to];<br>
+        mask = LineMask[dir][from][slide_index[dir]] &amp; clear_bm &amp; slide_pieces[2];<br>
+        atk_bm = mask | (MaskClearSquare[from] &amp; atk_bm);<br>
+        }<br>
+        else {<br>
+        mask = (Board-&gt;mp[WhiteQueen + me]) &amp; atk_bm;<br>
+        if (mask) {<br>
+        piece_value = 10;<br>
+        from = first_one(mask);<br>
+        dir = LineIndex[from][to];<br>
+        mask = LineMask[dir][from][slide_index[dir]] &amp; clear_bm &amp; 
+        slide_pieces[dir];<br>
+        atk_bm = mask | (MaskClearSquare[from] &amp; atk_bm);<br>
+        }<br>
+        else {<br>
+        mask = (Board-&gt;mp[WhiteKing + me]) &amp; atk_bm;<br>
+        if (!mask) return 0;<br>
+        if (capt_value &gt; 1000) return 1;<br>
+        piece_value = 2999;<br>
+        }<br>
+        }<br>
+        }<br>
+        }<br>
+        capt_value -= piece_value;<br>
+        } while (capt_value &lt; 0);<br>
+        return 1;<br>
+        }<br>
+        ///////////////////////////////////////////////////////////////////////////////<br>
+        // Проверка легальности хода move<br>
+        int move_is_legal(int move, struct pos_info_t * pos_info)<br>
+        { int from, to, piece;<br>
+        unsigned __int64 mask_to;<br>
+        <br>
+        from = MOVE_FROM(move);<br>
+        to = MOVE_TO(move);<br>
+        mask_to = (unsigned __int64)1 &lt;&lt; to;<br>
+        if ((Board-&gt;md1) &amp; mask_to) return 0;<br>
+        piece = Board-&gt;square[from];<br>
+        if (piece == 0) return 0; // нет фигуры на from<br>
+        if (Board-&gt;turn == White) { // Ход белых<br>
+        if ((piece &amp; 1) != 0) return 0; // а фигура на from - черная<br>
+        if (piece == WhiteKnight) { if (MaskKnightMoves[from] &amp; mask_to) return 
+        1; else return 0; }<br>
+        if (piece == WhiteBishop) {<br>
+        if ((LINE1(from) | LINE2(from)) &amp; mask_to) return 1; else return 0;<br>
+        }<br>
+        if (MOVE_IS_CASTLING(move)) { // рокировка<br>
+        if (mask_to &amp; 0x40) {<br>
+        if (((Board-&gt;flags) &amp; 1) == 0) return 0;<br>
+        if (Board-&gt;square[5] != 0) return 0;<br>
+        if ((pos_info-&gt;mob[1]) &amp; 0x20) return 0;<br>
+        }<br>
+        else {<br>
+        if (((Board-&gt;flags) &amp; 2) == 0) return 0;<br>
+        if (Board-&gt;square[3] != 0) return 0;<br>
+        if ((pos_info-&gt;mob[1]) &amp; 0x08) return 0;<br>
+        }<br>
+        return 1;<br>
+        }<br>
+        if (piece == WhiteRook) {<br>
+        if ((LINE3(from) | LINE4(from)) &amp; mask_to) return 1; else return 0;<br>
+        }<br>
+        if (piece == WhiteQueen) {<br>
+        if ((LINE1(from) | LINE2(from) | LINE3(from) | LINE4(from)) &amp; mask_to) 
+        return 1; else return 0;<br>
+        }<br>
+        if (piece == WhitePawn) {<br>
+        if (WhitePawnMoves1[from] &amp; mask_to &amp; 0x00FFFFFFFFFFFFFF) return 1;<br>
+        if (!(WhitePawnMoves2[from] &amp; mask_to)) return 0;<br>
+        if (WhitePawnMoves1[from] &amp; (Board-&gt;md1)) return 0;<br>
+        return 1;<br>
+        }<br>
+        if (MaskKingMoves[from] &amp; mask_to) return 1;<br>
+        }<br>
+        else { // Ход черных - аналогично<br>
+        if ((piece &amp; 1) == 0) return 0;<br>
+        if (piece == BlackKnight) { if (MaskKnightMoves[from] &amp; mask_to) return 
+        1; else return 0; }<br>
+        if (piece == BlackBishop) {<br>
+        if ((LINE1(from) | LINE2(from)) &amp; mask_to) return 1; else return 0;<br>
+        }<br>
+        if (MOVE_IS_CASTLING(move)) {<br>
+        if (mask_to &amp; 0x4000000000000000) {<br>
+        if (((Board-&gt;flags) &amp; 4) == 0) return 0;<br>
+        if (Board-&gt;square[61] != 0) return 0;<br>
+        if ((pos_info-&gt;mob[1]) &amp; 0x2000000000000000) return 0;<br>
+        }<br>
+        else {<br>
+        if (((Board-&gt;flags) &amp; 8) == 0) return 0;<br>
+        if (Board-&gt;square[59] != 0) return 0;<br>
+        if ((pos_info-&gt;mob[1]) &amp; 0x0800000000000000) return 0;<br>
+        }<br>
+        return 1;<br>
+        }<br>
+        if (piece == BlackRook) {<br>
+        if ((LINE3(from) | LINE4(from)) &amp; mask_to) return 1; else return 0;<br>
+        }<br>
+        if (piece == BlackQueen) {<br>
+        if ((LINE1(from) | LINE2(from) | LINE3(from) | LINE4(from)) &amp; mask_to) 
+        return 1; else return 0;<br>
+        }<br>
+        if (piece == BlackPawn) {<br>
+        if (BlackPawnMoves1[from] &amp; mask_to &amp; 0xFFFFFFFFFFFFFF00) return 1;<br>
+        if (!(BlackPawnMoves2[from] &amp; mask_to)) return 0;<br>
+        if (BlackPawnMoves1[from] &amp; (Board-&gt;md1)) return 0;<br>
+        return 1;<br>
+        }<br>
+        if (MaskKingMoves[from] &amp; mask_to) return 1;<br>
+        }<br>
+        return 0;<br>
+        }<br>
+        ////////////////////////////////////////////////////////////////////////////<br>
+        // Выполнение хода move из текущей позиции - переопределяем структуру 
+        Board<br>
+        void move_do(int move, struct undo_t undo[])<br>
+        { int from, to, piece, capture, flags, me;<br>
+        unsigned __int64 mask, mask_to;<br>
+        <br>
+        pos_info_entry++;<br>
+        undo-&gt;flags = Board-&gt;flags;<br>
+        undo-&gt;ep_square = Board-&gt;ep_square;<br>
+        undo-&gt;ply_nb = Board-&gt;ply_nb;<br>
+        undo-&gt;sp = Board-&gt;sp;<br>
+        undo-&gt;opening = Board-&gt;opening;<br>
+        undo-&gt;endgame = Board-&gt;endgame;<br>
+        undo-&gt;key = Board-&gt;key;<br>
+        undo-&gt;pawn_key = Board-&gt;pawn_key;<br>
+        undo-&gt;mat_summ = Board-&gt;mat_summ;<br>
+        undo-&gt;mat_diff = Board-&gt;mat_diff;<br>
+        Board-&gt;stack[Board-&gt;sp++] = Board-&gt;key;<br>
+        Board-&gt;ply_nb++;<br>
+        from = MOVE_FROM(move);<br>
+        to = MOVE_TO(move);<br>
+        piece = Board-&gt;square[from];<br>
+        flags = CastleFlags[from] &amp; CastleFlags[to] &amp; (Board-&gt;flags);<br>
+        Board-&gt;key ^= RandomCastle[(Board-&gt;flags) ^ flags];<br>
+        Board-&gt;flags = flags;<br>
+        if (Board-&gt;ep_square) {<br>
+        Board-&gt;key ^= RandomEP[(Board-&gt;ep_square) &amp; 7];<br>
+        Board-&gt;ep_square = 0;<br>
+        }<br>
+        Board-&gt;square[from] = 0;<br>
+        me = Board-&gt;turn;<br>
+        mask = MaskClearSquare[from];<br>
+        Board-&gt;mp[me] &amp;= mask;<br>
+        Board-&gt;mp[piece] &amp;= mask;<br>
+        Board-&gt;md1 &amp;= mask;<br>
+        Board-&gt;md2 &amp;= MaskClearMD2[from];<br>
+        Board-&gt;md3 &amp;= MaskClearMD3[from];<br>
+        Board-&gt;md4 &amp;= MaskClearMD4[from];<br>
+        Board-&gt;opening += PieceSquareValue[piece-2][to][0] - 
+        PieceSquareValue[piece-2][from][0];<br>
+        Board-&gt;endgame += PieceSquareValue[piece-2][to][1] - 
+        PieceSquareValue[piece-2][from][1];<br>
+        mask = Random[piece-2][from] ^ Random[piece-2][to];<br>
+        Board-&gt;key ^= mask;<br>
+        if (PIECE_IS_PAWN(piece)) Board-&gt;pawn_key ^= mask;<br>
+        capture = Board-&gt;square[to];<br>
+        undo-&gt;capture = capture;<br>
+        mask_to = (unsigned __int64)1 &lt;&lt; to;<br>
+        if (capture != 0) {<br>
+        Board-&gt;mp[me ^ 1] &amp;= MaskClearSquare[to];<br>
+        Board-&gt;mp[capture] &amp;= MaskClearSquare[to];<br>
+        Board-&gt;opening -= PieceSquareValue[capture-2][to][0];<br>
+        Board-&gt;endgame -= PieceSquareValue[capture-2][to][1];<br>
+        Board-&gt;key ^= Random[capture-2][to];<br>
+        if (PIECE_IS_PAWN(capture)) Board-&gt;pawn_key ^= Random[capture-2][to];<br>
+        Board-&gt;mat_summ -= MatSummValue[capture - 2];<br>
+        Board-&gt;mat_diff -= MatDiffValue[capture - 2];<br>
+        Board-&gt;ply_nb = 0;<br>
+        }<br>
+        else {<br>
+        Board-&gt;md1 |= mask_to;<br>
+        Board-&gt;md2 |= MaskSetMD2[to];<br>
+        Board-&gt;md3 |= MaskSetMD3[to];<br>
+        Board-&gt;md4 |= MaskSetMD4[to];<br>
+        if (MOVE_IS_CASTLING(move)) move_do_castle(to);<br>
+        }<br>
+        Board-&gt;square[to] = piece;<br>
+        Board-&gt;mp[me] |= mask_to;<br>
+        Board-&gt;mp[piece] |= mask_to;<br>
+        if (PIECE_IS_PAWN(piece)) {<br>
+        Board-&gt;ply_nb = 0;<br>
+        if (MOVE_IS_ENPASSANT(move)) {<br>
+        Board-&gt;square[to ^ 8] = 0;<br>
+        mask = MaskClearSquare[to ^ 8];<br>
+        Board-&gt;mp[((piece - 2) ^ 1) &amp; 1] &amp;= mask;<br>
+        Board-&gt;mp[((piece - 2) ^ 1) + 2] &amp;= mask;<br>
+        Board-&gt;md1 &amp;= mask;<br>
+        Board-&gt;md2 &amp;= MaskClearMD2[to ^ 8];<br>
+        Board-&gt;md3 &amp;= MaskClearMD3[to ^ 8];<br>
+        Board-&gt;md4 &amp;= MaskClearMD4[to ^ 8];<br>
+        Board-&gt;opening -= PieceSquareValue[(piece-2)^1][to^8][0];<br>
+        Board-&gt;endgame -= PieceSquareValue[(piece-2)^1][to^8][1];<br>
+        Board-&gt;key ^= Random[(piece-2)^1][to^8];<br>
+        Board-&gt;pawn_key ^= Random[(piece-2)^1][to^8];<br>
+        Board-&gt;mat_summ -= MatSummValue[(piece-2)^1];<br>
+        Board-&gt;mat_diff -= MatDiffValue[(piece-2)^1];<br>
+        }<br>
+        if (MOVE_IS_PROMOTION(move)) {<br>
+        piece = PIECE_PROMO(move,me);<br>
+        Board-&gt;square[to] = piece;<br>
+        Board-&gt;mp[2 + me] &amp;= MaskClearSquare[to];<br>
+        Board-&gt;mp[piece] |= mask_to;<br>
+        Board-&gt;opening += PieceSquareValue[piece-2][to][0] - 
+        PieceSquareValue[me][to][0];<br>
+        Board-&gt;endgame += PieceSquareValue[piece-2][to][1] - 
+        PieceSquareValue[me][to][1];<br>
+        Board-&gt;key ^= Random[piece-2][to] ^ Random[me][to];<br>
+        Board-&gt;pawn_key ^= Random[me][to];<br>
+        Board-&gt;mat_summ += MatSummValue[piece-2] - MatSummValue[me];<br>
+        Board-&gt;mat_diff += MatDiffValue[piece-2] - MatDiffValue[me];<br>
+        }<br>
+        if ((to ^ from) == 16) { // possible en passant<br>
+        if (MaskEnPassant[me][to &amp; 7] &amp; (Board-&gt;mp[3 - me])) {<br>
+        to = (from + to) / 2;<br>
+        Board-&gt;ep_square = to;<br>
+        Board-&gt;key ^= RandomEP[to &amp; 7];<br>
+        }<br>
+        }<br>
+        }<br>
+        Board-&gt;turn ^= 1;<br>
+        Board-&gt;key ^= RandomTurn;<br>
+        }<br>
+        /////////////////////////////////////////////////////////////////////////<br>
+        void move_do_castle(int to)<br>
+        { Board-&gt;ply_nb = 0;<br>
+        if (to == 6) {<br>
+        Board-&gt;mp[0] ^= 0x00000000000000A0;<br>
+        Board-&gt;mp[8] ^= 0x00000000000000A0;<br>
+        Board-&gt;md1 ^= 0x00000000000000A0;<br>
+        Board-&gt;md2 ^= 0x8000800000000000;<br>
+        Board-&gt;md3 ^= 0x0000000800100000;<br>
+        Board-&gt;md4 ^= 0x0000000000000009;<br>
+        Board-&gt;opening += 208;<br>
+        Board-&gt;key ^= Random[WhiteRook-2][5] ^ Random[WhiteRook-2][7];<br>
+        Board-&gt;square[7] = 0;<br>
+        Board-&gt;square[5] = 8;<br>
+        }<br>
+        else if (to == 2) {<br>
+        Board-&gt;mp[0] ^= 0x0000000000000009;<br>
+        Board-&gt;mp[8] ^= 0x0000000000000009;<br>
+        Board-&gt;md1 ^= 0x0000000000000009;<br>
+        Board-&gt;md2 ^= 0x0000000080000080;<br>
+        Board-&gt;md3 ^= 0x0000000000000201;<br>
+        Board-&gt;md4 ^= 0x0000000010000400;<br>
+        Board-&gt;opening += 312;<br>
+        Board-&gt;key ^= Random[WhiteRook-2][0] ^ Random[WhiteRook-2][3];<br>
+        Board-&gt;square[0] = 0;<br>
+        Board-&gt;square[3] = 8;<br>
+        }<br>
+        else if (to == 62) {<br>
+        Board-&gt;mp[1] ^= 0xA000000000000000;<br>
+        Board-&gt;mp[9] ^= 0xA000000000000000;<br>
+        Board-&gt;md1 ^= 0xA000000000000000;<br>
+        Board-&gt;md2 ^= 0x0100010000000000;<br>
+        Board-&gt;md3 ^= 0x8400000000000000;<br>
+        Board-&gt;md4 ^= 0x0001000800000000;<br>
+        Board-&gt;opening -= 208;<br>
+        Board-&gt;key ^= Random[BlackRook-2][63] ^ Random[BlackRook-2][61];<br>
+        Board-&gt;square[63] = 0;<br>
+        Board-&gt;square[61] = 9;<br>
+        }<br>
+        else if (to == 58) {<br>
+        Board-&gt;mp[1] ^= 0x0900000000000000;<br>
+        Board-&gt;mp[9] ^= 0x0900000000000000;<br>
+        Board-&gt;md1 ^= 0x0900000000000000;<br>
+        Board-&gt;md2 ^= 0x0000000001000001;<br>
+        Board-&gt;md3 ^= 0x0002000010000000;<br>
+        Board-&gt;md4 ^= 0x8200000000000000;<br>
+        Board-&gt;opening -= 312;<br>
+        Board-&gt;key ^= Random[BlackRook-2][56] ^ Random[BlackRook-2][59];<br>
+        Board-&gt;square[56] = 0;<br>
+        Board-&gt;square[59] = 9;<br>
+        }<br>
+        }<br>
+        ////////////////////////////////////////////////////////////////////////////<br>
+        void move_undo_castle(int to)<br>
+        { if (to == 6) {<br>
+        Board-&gt;mp[0] ^= 0x00000000000000A0;<br>
+        Board-&gt;mp[8] ^= 0x00000000000000A0;<br>
+        Board-&gt;md1 ^= 0x00000000000000A0;<br>
+        Board-&gt;md2 ^= 0x8000800000000000;<br>
+        Board-&gt;md3 ^= 0x0000000800100000;<br>
+        Board-&gt;md4 ^= 0x0000000000000009;<br>
+        Board-&gt;square[5] = 0;<br>
+        Board-&gt;square[7] = 8;<br>
+        }<br>
+        else if (to == 2) {<br>
+        Board-&gt;mp[0] ^= 0x0000000000000009;<br>
+        Board-&gt;mp[8] ^= 0x0000000000000009;<br>
+        Board-&gt;md1 ^= 0x0000000000000009;<br>
+        Board-&gt;md2 ^= 0x0000000080000080;<br>
+        Board-&gt;md3 ^= 0x0000000000000201;<br>
+        Board-&gt;md4 ^= 0x0000000010000400;<br>
+        Board-&gt;square[3] = 0;<br>
+        Board-&gt;square[0] = 8;<br>
+        }<br>
+        else if (to == 62) {<br>
+        Board-&gt;mp[1] ^= 0xA000000000000000;<br>
+        Board-&gt;mp[9] ^= 0xA000000000000000;<br>
+        Board-&gt;md1 ^= 0xA000000000000000;<br>
+        Board-&gt;md2 ^= 0x0100010000000000;<br>
+        Board-&gt;md3 ^= 0x8400000000000000;<br>
+        Board-&gt;md4 ^= 0x0001000800000000;<br>
+        Board-&gt;square[61] = 0;<br>
+        Board-&gt;square[63] = 9;<br>
+        }<br>
+        else if (to == 58) {<br>
+        Board-&gt;mp[1] ^= 0x0900000000000000;<br>
+        Board-&gt;mp[9] ^= 0x0900000000000000;<br>
+        Board-&gt;md1 ^= 0x0900000000000000;<br>
+        Board-&gt;md2 ^= 0x0000000001000001;<br>
+        Board-&gt;md3 ^= 0x0002000010000000;<br>
+        Board-&gt;md4 ^= 0x8200000000000000;<br>
+        Board-&gt;square[59] = 0;<br>
+        Board-&gt;square[56] = 9;<br>
+        }<br>
+        }<br>
+        ////////////////////////////////////////////////////////////////////////////<br>
+        // Взятие хода назад - восстановление Board<br>
+        void move_undo(int move, struct undo_t undo[])<br>
+        { int from, to, piece, me;<br>
+        unsigned __int64 mask_from, mask_to;<br>
+        <br>
+        from = MOVE_FROM(move);<br>
+        to = MOVE_TO(move);<br>
+        piece = Board-&gt;square[to];<br>
+        Board-&gt;turn ^= 1;<br>
+        me = Board-&gt;turn;<br>
+        if (MOVE_IS_PROMOTION(move)) {<br>
+        Board-&gt;mp[PIECE_PROMO(move,me)] &amp;= MaskClearSquare[to];<br>
+        piece = me | 2;<br>
+        }<br>
+        Board-&gt;square[from] = piece;<br>
+        Board-&gt;square[to] = undo-&gt;capture;<br>
+        mask_from = (unsigned __int64)1 &lt;&lt; from;<br>
+        Board-&gt;mp[me] |= mask_from;<br>
+        Board-&gt;mp[piece] |= mask_from;<br>
+        Board-&gt;mp[me] &amp;= MaskClearSquare[to];<br>
+        Board-&gt;mp[piece] &amp;= MaskClearSquare[to];<br>
+        Board-&gt;md1 |= mask_from;<br>
+        Board-&gt;md2 |= MaskSetMD2[from];<br>
+        Board-&gt;md3 |= MaskSetMD3[from];<br>
+        Board-&gt;md4 |= MaskSetMD4[from];<br>
+        piece = undo-&gt;capture;<br>
+        if (piece != 0) { // capture<br>
+        mask_to = (unsigned __int64)1 &lt;&lt; to;<br>
+        Board-&gt;mp[me ^ 1] |= mask_to;<br>
+        Board-&gt;mp[piece] |= mask_to;<br>
+        }<br>
+        else {<br>
+        Board-&gt;md1 &amp;= MaskClearSquare[to];<br>
+        Board-&gt;md2 &amp;= MaskClearMD2[to];<br>
+        Board-&gt;md3 &amp;= MaskClearMD3[to];<br>
+        Board-&gt;md4 &amp;= MaskClearMD4[to];<br>
+        if (MOVE_IS_CASTLING(move)) move_undo_castle(to);<br>
+        if (MOVE_IS_ENPASSANT(move)) {<br>
+        to = to ^ 8;<br>
+        piece = (me ^ 1) | 2;<br>
+        Board-&gt;square[to] = piece;<br>
+        mask_to = (unsigned __int64)1 &lt;&lt; to;<br>
+        Board-&gt;mp[me ^ 1] |= mask_to;<br>
+        Board-&gt;mp[2 + (me ^ 1)] |= mask_to;<br>
+        Board-&gt;md1 |= mask_to;<br>
+        Board-&gt;md2 |= MaskSetMD2[to];<br>
+        Board-&gt;md3 |= MaskSetMD3[to];<br>
+        Board-&gt;md4 |= MaskSetMD4[to];<br>
+        }<br>
+        }<br>
+        Board-&gt;flags = undo-&gt;flags;<br>
+        Board-&gt;ep_square = undo-&gt;ep_square;<br>
+        Board-&gt;ply_nb = undo-&gt;ply_nb;<br>
+        Board-&gt;sp = undo-&gt;sp;<br>
+        Board-&gt;opening = undo-&gt;opening;<br>
+        Board-&gt;endgame = undo-&gt;endgame;<br>
+        Board-&gt;key = undo-&gt;key;<br>
+        Board-&gt;pawn_key = undo-&gt;pawn_key;<br>
+        Board-&gt;mat_summ = undo-&gt;mat_summ;<br>
+        Board-&gt;mat_diff = undo-&gt;mat_diff;<br>
+        pos_info_entry--;<br>
+        }<br>
+        //////////////////////////////////////////////////////////////////////////////<br>
+        // Выполнение нулевого хода - просто передаем право хода сопернику<br>
+        void move_do_null(struct undo_null_t * undo)<br>
+        { undo-&gt;ep_square = Board-&gt;ep_square;<br>
+        undo-&gt;ply_nb = Board-&gt;ply_nb;<br>
+        undo-&gt;key = Board-&gt;key;<br>
+        Board-&gt;stack[Board-&gt;sp++] = Board-&gt;key;<br>
+        Board-&gt;key ^= RandomTurn;<br>
+        Board-&gt;turn ^= 1;<br>
+        Board-&gt;ply_nb = 0;<br>
+        if (Board-&gt;ep_square != 0) {<br>
+        Board-&gt;key ^= RandomEP[(Board-&gt;ep_square) &amp; 7];<br>
+        Board-&gt;ep_square = 0;<br>
+        }<br>
+        }<br>
+        /////////////////////////////////////////////////////////////////////////////<br>
+        // Сохраняем лучший ход в таблице History<br>
+        void history_store(struct pos_info_t * pos_info, int move, int depth)<br>
+        { int from, to, piece;<br>
+        <br>
+        if (pos_info-&gt;killer1 != move) {<br>
+        pos_info-&gt;killer2 = pos_info-&gt;killer1;<br>
+        pos_info-&gt;killer1 = move;<br>
+        }<br>
+        from = MOVE_FROM(move);<br>
+        to = MOVE_TO(move);<br>
+        piece = Board-&gt;square[from];<br>
+        History[piece-2][to] += depth * depth;<br>
+        }<br>
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////<br>
+        // Определение оценок ходов в списке list и сортировка списка по оценкам<br>
+        void note_moves(struct list_t * last, struct list_t * moves, struct 
+        pos_info_t * pos_info, int best_move)<br>
+        { struct list_t * pi, *pj;<br>
+        int move, from, to, piece, capture, score;<br>
+        <br>
+        for (pi = last; pi &gt;= moves; pi--) {<br>
+        move = pi-&gt;move;<br>
+        from = MOVE_FROM(move);<br>
+        to = MOVE_TO(move);<br>
+        piece = Board-&gt;square[from];<br>
+        capture = Board-&gt;square[to];<br>
+        if (move == best_move) score = 0x7FFFFFFF;<br>
+        else if (capture != 0) score = 0x7FFFFEFF + (capture * 16) - piece;<br>
+        else if (move == pos_info-&gt;killer1) score = 0x7FFFFEFF;<br>
+        else if (move == pos_info-&gt;killer2) score = 0x7FFFFEFE;<br>
+        else score = History[piece-2][to];<br>
+        for (pj = pi; (pj+1)-&gt;score &gt; score; pj++) {<br>
+        pj-&gt;move = (pj+1)-&gt;move;<br>
+        pj-&gt;score = (pj+1)-&gt;score;<br>
+        }<br>
+        pj-&gt;move = move;<br>
+        pj-&gt;score = score;<br>
+        }<br>
+        }<br>
+        ////////////////////////////////////////////////////////////////////////////<br>
+        //<br>
+        int move_order(int move)<br>
+        { return move;<br>
+        }<br>
+        <br>
+
+        
+
+        </p>
+
+        
+
+        </td>
+  </tr>
+</table>
+
+</body>
+
+</html>

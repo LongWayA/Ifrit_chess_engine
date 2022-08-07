@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+<title>Bitmap_generation_others_moves</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">Bitmap generation others moves</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="0_1_Bitmap_Move_Generation.htm">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+<br>
+<b>БИТОВЫЙ ГЕНЕРАТОР ОСТАЛЬНЫХ ХОДОВ </b>    
+<br> <br>   
+<font size="4">Ходы короля и коня реализуются элементарно</font><br>
+<br>
+// ходы 
+короля--------------------------------------------------------------------------------<br>
+// маска расположения белого короля:<br>
+from_mask = bitboard-&gt;white_piece[N_KING];<br>
+// находим координату фигуры (самый первый(для нашего отображения правый ) 
+установленный бит)<br>
+from = first_one(from_mask);<br>
+// находим маску ходов короля (без взятий):<br>
+move_mask = king_moves_masks[from] &amp; (~bitboard-&gt;all_piece);<br>
+<br>
+Пишем ходы в список:<br>
+while (move_mask !=0){<br>
+&nbsp;&nbsp;&nbsp;
+to = first_one(move_mask);<br>
+&nbsp;&nbsp;&nbsp;
+move_mask = move_mask &amp; (move_mask-1);<br>
+&nbsp;&nbsp;&nbsp;
+list_record_move(N_KING,1,from,to,p,bitboard,list_surplus_moves);<br>
+}//while (move_mask !=0){<br>
+//---------------------------------------------------------------------------<br>
+<br>
+Для коня аналогично.<br>
+Для короля следует посчитать еще и рокировки<br>
+<br>
+// рокировки белого короля<br>
+// если длинная рокировка разрешена<br>
+if(bitboard-&gt;castling_Q){<br>
+&nbsp;&nbsp;
+to = 2;<br>
+&nbsp;&nbsp;
+#if KONTROL_B<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+KONTROL_move(&amp;from,&amp;to,&amp;p);<br>
+&nbsp;&nbsp;
+#endif//KONTROL_B<br>
+&nbsp;&nbsp;
+// поля 1, 2, 3 пустые то добавляем ход<br>
+&nbsp;&nbsp;
+if(((~bitboard-&gt;all_piece) &amp; CASTLING_Q ) == CASTLING_Q ){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// длинная рокировка белых 0-0-0 - проверяем под боем ли поля 2, 3, 4 <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if((White_check_square(2,bitboard)==0)&amp;&amp;(White_check_square(3,bitboard)==0)&amp;&amp;(White_check_square(4,bitboard)==0)){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+list_record_os(N_KING,3,p,from,2,0,list_surplus_moves);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}<br>
+&nbsp;
+}<br>
+}<br>
+<br>
+// если короткая рокировка разрешена, то добавляем ход <br>
+if(bitboard-&gt;castling_K){<br>
+&nbsp;&nbsp;
+to = 6;<br>
+&nbsp;&nbsp;
+#if KONTROL_B<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+KONTROL_move(&amp;from,&amp;to,&amp;p);<br>
+&nbsp;&nbsp;
+#endif//KONTROL_B<br>
+&nbsp;&nbsp;
+//поля 5, 6 пустые то добавляем ход<br>
+&nbsp;&nbsp;
+if( ( (~bitboard-&gt;all_piece) &amp; CASTLING_K ) == CASTLING_K ){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// короткая рокировка белых 0-0 - проверяем под боем ли поля 4, 5, 6<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if((White_check_square(4,bitboard)==0)&amp;&amp;(White_check_square(5,bitboard)==0)&amp;&amp;(White_check_square(6,bitboard)==0)){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+list_record_os(N_KING,4,p,from,6,0,list_surplus_moves);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}<br>
+&nbsp;&nbsp;
+}<br>
+}<br>
+<br>
+<br>
+<font size="4">Ходы слайдеров, т.е. ферзя, ладьи, слона</font><br>
+<br>
+// ходы 
+ферзя----------------------------------------------------------------------------------<br>
+// маска расположения белого ферзя<br>
+from_mask = bitboard-&gt;white_piece[N_QUEEN];<br>
+while(from_mask != 0){<br>
+&nbsp;&nbsp;
+from = first_one(from_mask);<br>
+// надо пояснить, что конструкция типа b = b &amp; (b-1) сбрасывает самый правый 
+единичный бит <br>
+&nbsp;&nbsp;
+from_mask = from_mask &amp; (from_mask-1);<br>
+<br>
+// смотрим в четырех различных направлениях (по типу ладьи)<br>
+//&nbsp;&nbsp; луч вверх-----------------------------------------------------------------<br>
+//&nbsp;&nbsp; 1) находим блокированные биты.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;
+blocking_square_mask = bitboard-&gt;all_piece &amp; rook_up_masks[from];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;
+if(blocking_square_mask != 0){ <br>
+//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2) находим координату первого блокированного бита<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+blocking_coordinate = first_one(blocking_square_mask);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+move_mask = rook_up_masks[from] ^ rook_up_masks[blocking_coordinate] ^ 
+move_masks[blocking_coordinate];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;
+}else{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+move_mask = rook_up_masks[from];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;
+}//if(blocking_square_mask != 0){ <br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;
+while (move_mask !=0){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+to = first_one(move_mask);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+move_mask = move_mask &amp; (move_mask-1);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+list_record_move(N_QUEEN,1,from,to,p,bitboard,list_surplus_moves);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;
+}//while (move_mask !=0){<br>
+//---------------------------------------------------------------------------<br>
+<br>
+// луч влево-----------------------------------------------------------------<br>
+&nbsp;&nbsp;&nbsp;
+blocking_square_mask = bitboard-&gt;all_piece &amp; rook_left_masks[from];<br>
+&nbsp;&nbsp;&nbsp;
+if(blocking_square_mask != 0){ <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+blocking_coordinate = last_one(blocking_square_mask);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+move_mask = rook_left_masks[from] ^ rook_left_masks[blocking_coordinate] ^ 
+move_masks[blocking_coordinate];<br>
+&nbsp;&nbsp;&nbsp;
+}else{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+move_mask = rook_left_masks[from];<br>
+&nbsp;&nbsp;&nbsp;
+}//if(blocking_square_mask != 0){ <br>
+<br>
+&nbsp;&nbsp;&nbsp;
+while (move_mask !=0){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+to = first_one(move_mask);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+move_mask = move_mask &amp; (move_mask-1);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+list_record_move(N_QUEEN,1,from,to,p,bitboard,list_surplus_moves);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;
+}//while (move_mask !=0){<br>
+//---------------------------------------------------------------------------<br>
+<br>
+…<br>
+<br>
+<font size="4">В приведенном коде все очевидно. Поясню на примере идею генерации.</font><br>
+<br>
+Допустим, мы хотим посчитать ходы ферзя вверх, а на пути стоит конь.<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 n 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 q 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+<br>
+Позиция коня дает нам блокированный бит.<br>
+Сначала находим блокированные биты.<br>
+blocking_square_mask = bitboard-&gt;all_piece &amp; rook_up_masks[from];<br>
+…<br>
+Находим координату первого блокированного бита<br>
+blocking_coordinate = first_one(blocking_square_mask);<br>
+<br>
+теперь у нас есть матрицы:<br>
+rook_up_masks[from]<br>
+1 ходов ферзя вверх<br>
+0 0 0 1 0 0 0 0<br>
+0 0 0 1 0 0 0 0<br>
+0 0 0 1 0 0 0 0<br>
+0 0 0 1 0 0 0 0<br>
+0 0 0 1 0 0 0 0<br>
+0 0 0 q 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+<br>
+rook_up_masks[blocking_coordinate]<br>
+2 хода вверх из блокированного бита<br>
+0 0 0 1 0 0 0 0<br>
+0 0 0 1 0 0 0 0<br>
+0 0 0 1 0 0 0 0<br>
+0 0 0 n 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+<br>
+move_masks[blocking_coordinate]<br>
+3 просто блокированный бит<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 1 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+<br>
+Составляя композицию матриц через «исключающее или», получаем матрицу ходов.<br>
+move_mask = rook_up_masks[from] ^ rook_up_masks[blocking_coordinate] ^ 
+move_masks[blocking_coordinate];<br>
+<br>
+В данном случае это один ход.<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 1 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+<br>
+Осталось только извлечь из нее ходы и записать их в список<br>
+while (move_mask !=0){<br>
+to = first_one(move_mask);<br>
+move_mask = move_mask &amp; (move_mask-1);<br>
+list_record_move(N_QUEEN,1,from,to,p,bitboard,list_surplus_moves);<br>
+}//while (move_mask !=0){<br>
+<br>
+Остальные направления аналогично двум вышерассмотренным.<br>
+<br>
+<br>
+<font size="4">Ходы пешки</font><br>
+<br>
+from_mask = bitboard-&gt;white_piece[N_PAWN];<br>
+while(from_mask != 0){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;
+from = first_one(from_mask);<br>
+&nbsp;&nbsp;&nbsp;
+//выделяем одну пешку <br>
+&nbsp;&nbsp;&nbsp;
+one_pawn_mask = from_mask &amp; move_masks[from];<br>
+&nbsp;&nbsp;&nbsp;
+from_mask = from_mask &amp; (from_mask-1);<br>
+<br>
+// 1 находим простые ходы белых пешек на одно поле вперед<br>
+&nbsp;&nbsp;&nbsp;
+move_mask = (one_pawn_mask &lt;&lt; 8) &amp; (~(bitboard-&gt;all_piece));<br>
+//&nbsp; 2 находим ходы пешек на 2 поля вперед <br>
+//&nbsp; в начале оставляем только пешки, стоящие на 2 горизонтали<br>
+&nbsp;&nbsp;&nbsp;
+move_mask_d = one_pawn_mask &amp; LINE_1;<br>
+//&nbsp; отметаем пешки, если они чем-то заблокированы<br>
+&nbsp;&nbsp;&nbsp;
+move_mask_d = (move_mask_d &lt;&lt;8) &amp; (~(bitboard-&gt;all_piece));<br>
+//&nbsp; оставшимися пешками делаем ход<br>
+&nbsp;&nbsp;&nbsp;
+move_mask_d = (move_mask_d &lt;&lt; 8) &amp; (~(bitboard-&gt;all_piece));<br>
+<br>
+//&nbsp; здесь все ходы пешки как на одно, так и на два поля вперед<br>
+&nbsp;&nbsp;&nbsp;
+move_mask = (move_mask | move_mask_d) ;<br>
+<br>
+//&nbsp; ходы без превращений<br>
+&nbsp;&nbsp;&nbsp;
+move_mask = move_mask &amp; ~LINE_7;<br>
+<br>
+&nbsp;&nbsp;&nbsp;
+while (move_mask !=0){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+to = first_one(move_mask);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+move_mask = move_mask &amp; (move_mask-1);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+list_record_move(N_PAWN,1,from,to,p,bitboard,list_surplus_moves);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;
+}//while (move_mask !=0){<br>
+}//while(from_mask != 0){<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>
+
+</html>

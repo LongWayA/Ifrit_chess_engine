@@ -1,0 +1,994 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<title>Search_c</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center">Search_c</h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="/index.html">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+
+        
+
+        <p align="justify">
+        ////////////////////////////////////////////////////////////////////////////<br>
+        void start_go(char string[])<br>
+        { const char * ptr;<br>
+        int infinite, ponder;<br>
+        int depth, mate, movestogo, zapas;<br>
+        __int64 nodes;<br>
+        int binc, btime, movetime, winc, wtime;<br>
+        int time, inc, alloc;<br>
+        struct board_t BoardSave[1];<br>
+        <br>
+        infinite = 0;<br>
+        ponder = 0;<br>
+        depth = -1;<br>
+        mate = -1;<br>
+        movestogo = -1;<br>
+        nodes = -1;<br>
+        binc = -1;<br>
+        btime = -1;<br>
+        movetime = -1;<br>
+        winc = -1;<br>
+        wtime = -1;<br>
+        ptr = strtok(string,&quot; &quot;);<br>
+        for (ptr = strtok(NULL,&quot; &quot;); ptr != NULL; ptr = strtok(NULL,&quot; &quot;)) {<br>
+        if (!strcmp(ptr,&quot;binc&quot;)) { ptr = strtok(NULL,&quot; &quot;); binc = atoi(ptr); }<br>
+        else if (!strcmp(ptr,&quot;btime&quot;)) { ptr = strtok(NULL,&quot; &quot;); btime = atoi(ptr); 
+        }<br>
+        else if (!strcmp(ptr,&quot;depth&quot;)) { ptr = strtok(NULL,&quot; &quot;); depth = atoi(ptr); 
+        }<br>
+        else if (!strcmp(ptr,&quot;infinite&quot;)) { infinite = 1; }<br>
+        else if (!strcmp(ptr,&quot;mate&quot;)) { ptr = strtok(NULL,&quot; &quot;); mate = atoi(ptr); 
+        }<br>
+        else if (!strcmp(ptr,&quot;movestogo&quot;)) { ptr = strtok(NULL,&quot; &quot;); movestogo = 
+        atoi(ptr); }<br>
+        else if (!strcmp(ptr,&quot;movetime&quot;)) { ptr = strtok(NULL,&quot; &quot;); movetime = 
+        atoi(ptr); }<br>
+        else if (!strcmp(ptr,&quot;nodes&quot;)) { ptr = strtok(NULL,&quot; &quot;); sscanf(ptr,&quot;%I64d&quot;,&amp;nodes); 
+        }<br>
+        else if (!strcmp(ptr,&quot;ponder&quot;)) { ponder = 1; }<br>
+        else if (!strcmp(ptr,&quot;winc&quot;)) { ptr = strtok(NULL,&quot; &quot;); winc = atoi(ptr); 
+        }<br>
+        else if (!strcmp(ptr,&quot;wtime&quot;)) { ptr = strtok(NULL,&quot; &quot;); wtime = atoi(ptr); 
+        }<br>
+        }<br>
+        best_move = 0;<br>
+        best_score = 0;<br>
+        depth_score = 0;<br>
+        check_nb = 1024;<br>
+        start_time = GetTickCount();<br>
+        can_stop = 0;<br>
+        bad_1 = bad_2 = change = easy = flag = 0;<br>
+        *pv_str = 0;<br>
+        stop_search = 0;<br>
+        depth_is_limited = time_is_limited = 0;<br>
+        if (depth &gt;= 0) {<br>
+        depth_is_limited = 1;<br>
+        depth_limit = depth;<br>
+        }<br>
+        else if (mate &gt;= 0) {<br>
+        depth_is_limited = 1;<br>
+        depth_limit = mate * 2 - 1;<br>
+        }<br>
+        if ((Board-&gt;turn) == 0) { time = wtime; inc = winc; }<br>
+        else { time = btime; inc = binc; }<br>
+        zapas = 0;<br>
+        if (movestogo &lt;= 0) movestogo = 30;<br>
+        if (movestogo &gt; 30) { movestogo = 30; zapas = 1; }<br>
+        time_max = 100000;<br>
+        if (inc &lt; 0) inc = 0;<br>
+        if (movetime &gt;= 0) {<br>
+        time_is_limited = 1;<br>
+        time_max = movetime;<br>
+        time_limit_1 = movetime * 5;<br>
+        time_limit_2 = movetime;<br>
+        }<br>
+        else if (time &gt;= 0) { // контроль времени<br>
+        time_is_limited = 1;<br>
+        if (zapas) time_max = ((time / 10) * 9) - 5000; // максимальное время<br>
+        else time_max = time - 2000;<br>
+        if (time_max &lt; 0) time_max = 0;<br>
+        alloc = (time_max + inc * (movestogo - 1)) / movestogo;<br>
+        if (alloc &gt; time_max) alloc = time_max;<br>
+        time_limit_1 = alloc; // нижняя граница контроля времени<br>
+        alloc = (time_max + inc * (movestogo - 1)) / 2; // половина от 
+        оставшегося<br>
+        if (alloc &lt; time_limit_1) alloc = time_limit_1;<br>
+        if (alloc &gt; time_max) alloc = time_max;<br>
+        time_limit_2 = alloc; // верхняя граница контроля<br>
+        // Есть мысль верхнюю границу брать не 1/2 а 1/3 от оставшегося,<br>
+        // а то бывает долго думает в таких случаях, и потом попадает в цейтнот.<br>
+        }<br>
+        Infinite = 0;<br>
+        if (infinite || ponder) Infinite = 1;<br>
+        Searching = 1;<br>
+        Delay = 0;<br>
+        memcpy(BoardSave, Board, sizeof(struct board_t));<br>
+        start_search();<br>
+        memcpy(Board, BoardSave, sizeof(struct board_t));<br>
+        search_time = GetTickCount() - start_time;<br>
+        if (search_time &lt; 0) search_time = 0;<br>
+        Searching = 0;<br>
+        Delay = Infinite;<br>
+        if (!Delay) send_best_move();<br>
+        }<br>
+        ////////////////////////////////////////////////////////////////////////////<br>
+        void start_search()<br>
+        { int num_moves, time;<br>
+        __int64 speed;<br>
+        struct undo_t undo[1];<br>
+        int i, k, legal, move, score, from ,to, piece, capture, depth, value;<br>
+        struct entry_t * entry;<br>
+        <br>
+        true_nodes = 0;<br>
+        pos_info_entry = Pos_info;<br>
+        memset(list_root, 0, 256 * sizeof(struct list_t));<br>
+        if (evaluate(pos_info_entry)) {<br>
+        gen_evasions(list_root, ~(pos_info_entry-&gt;mob[1]));<br>
+        }<br>
+        else {<br>
+        gen_captures(list_root, Board-&gt;mp[White], Board-&gt;mp[Black]);<br>
+        for (i = 0; list_root[i].move != 0; i++);<br>
+        gen_quiet_moves(list_root + i, pos_info_entry-&gt;mob[1], -1, -1, -1);<br>
+        for (k = i; list_root[k].move != 0; k++) list_root[k].score = 0;<br>
+        }<br>
+        if (setjmp(jmp_buffer) != 0) return;<br>
+        num_moves = 0;<br>
+        for (i = 0; list_root[i].move != 0; i++) {<br>
+        move_do(list_root[i].move, undo);<br>
+        evaluate(pos_info_entry);<br>
+        legal = !ILLEGAL_POSITION;<br>
+        move_undo(list_root[i].move, undo);<br>
+        if (legal) { list_root[num_moves].move = list_root[i].move; num_moves++; 
+        }<br>
+        }<br>
+        list_root[num_moves].move = 0;<br>
+        <br>
+        // Следующую строку можно добавлять только после грамотного написания 
+        MultiPV,<br>
+        // иначе может быть ошибка.<br>
+        // if (num_moves &lt;= 1) { depth_is_limited = 1; depth_limit = 4; }<br>
+        <br>
+        trans_set_date((trans_date + 1) % DateSize);<br>
+        for (i = 0; i &lt; 256; i++) {<br>
+        (Pos_info + i)-&gt;killer1 = 0;<br>
+        (Pos_info + i)-&gt;killer2 = 0;<br>
+        }<br>
+        memset(History, 0x100, 12 * 64 * sizeof(int));<br>
+        entry = trans_entry + (KEY_INDEX &amp; trans_mask);<br>
+        for (i = 0; i &lt; ClusterSize; i++, entry++) if (entry-&gt;lock == KEY_LOCK) 
+        trans_move = entry-&gt;move;<br>
+        if (num_moves &gt;= 2) {<br>
+        for (i = num_moves - 1; i &gt;= 0; i--) {<br>
+        move = list_root[i].move;<br>
+        if (move == trans_move) score = 0x7FFFFFFF;<br>
+        else {<br>
+        from = MOVE_FROM(move);<br>
+        to = MOVE_TO(move);<br>
+        piece = Board-&gt;square[from];<br>
+        capture = Board-&gt;square[to];<br>
+        if (capture != 0) score = (capture * 16) - piece + 0x7FFFFEFF;<br>
+        else score = move_order(move);<br>
+        }<br>
+        for (k = i; score &lt; list_root[k + 1].score; k++) {<br>
+        list_root[k].move = list_root[k + 1].move;<br>
+        list_root[k].score = list_root[k + 1].score;<br>
+        }<br>
+        list_root[k].move = move;<br>
+        list_root[k].score = score;<br>
+        }<br>
+        }<br>
+        for (depth = 1; depth &lt; 72; depth++) {<br>
+        if (Post) fprintf(stdout,&quot;info depth %d\n&quot;,depth);<br>
+        bad_1 = change = 0;<br>
+        value = full_root(depth);<br>
+        if (best_score &lt;= -32000 || best_score &gt;= 32000) break; // мат<br>
+        if (depth == 1 &amp;&amp; num_moves &gt;= 2 &amp;&amp; list_root[0].score &gt;= list_root[1].score 
+        + 150) easy = 1;<br>
+        if (depth &gt; 1) { bad_2 = bad_1; bad_1 = 0; }<br>
+        if (depth &gt;= 5) can_stop = 1;<br>
+        depth_score = best_score;<br>
+        if (depth_is_limited &amp;&amp; depth &gt;= depth_limit) break;<br>
+        time = GetTickCount() - start_time;<br>
+        if (time &lt; 0) time = 0;<br>
+        if (Post) {<br>
+        speed = 0;<br>
+        if (time &gt; 0) speed = (true_nodes * 1000) / time;<br>
+        fprintf(stdout,&quot;info depth %d time %d nodes %I64d nps %I64d\n&quot;,<br>
+        depth,time,true_nodes,speed);<br>
+        }<br>
+        if (time_is_limited) {<br>
+        if (time &gt;= time_limit_1 &amp;&amp; !bad_2) flag = 1;<br>
+        else if (time &gt;= (time_limit_1 / 6) &amp;&amp; easy) flag = 1;<br>
+        else if (time &gt;= (time_limit_1 / 2) &amp;&amp; !bad_2 &amp;&amp; !change) flag = 1;<br>
+        if (can_stop &amp;&amp; flag) stop_search = 1;<br>
+        }<br>
+        if (stop_search) break;<br>
+        }<br>
+        }<br>
+        ////////////////////////////////////////////////////////////////////////////<br>
+        void disp_pv()<br>
+        { int i, j, pos, move, score, time;<br>
+        __int64 speed, nodes;<br>
+        char string[10] = &quot;cp&quot;;<br>
+        char multi[100] = &quot;&quot;;<br>
+        int pv[256];<br>
+        FILE * ft;<br>
+        <br>
+        for (i = 0; i &lt; MultiPV; i++) for (j = i + 1; j &lt; MultiPV; j++) {<br>
+        if (multipv[j].score &gt; multipv[i].score) {<br>
+        memcpy(pv, multipv[i].pv, 256 * sizeof(int));<br>
+        memcpy(multipv[i].pv, multipv[j].pv, 256 * sizeof(int));<br>
+        memcpy(multipv[j].pv, pv, 256 * sizeof(int));<br>
+        score = multipv[i].score;<br>
+        multipv[i].score = multipv[j].score;<br>
+        multipv[j].score = score;<br>
+        nodes = multipv[i].nodes;<br>
+        multipv[i].nodes = multipv[j].nodes;<br>
+        multipv[j].nodes = nodes;<br>
+        time = multipv[i].time;<br>
+        multipv[i].time = multipv[j].time;<br>
+        multipv[j].time = time;<br>
+        speed = multipv[i].speed;<br>
+        multipv[i].speed = multipv[j].speed;<br>
+        multipv[j].speed = speed;<br>
+        }<br>
+        }<br>
+        best_move = multipv[0].pv[0];<br>
+        memcpy(best_pv, multipv[0].pv, 256 * sizeof(int));<br>
+        for (i = 0; i &lt; MultiPV; i++) {<br>
+        if (multipv[i].score &lt; -32000) break;<br>
+        pos = 0;<br>
+        pv_str[0] = 0;<br>
+        for (j = 0; multipv[i].pv[j] != 0; j++) {<br>
+        if (pos &gt; 0) { pv_str[pos] = ' '; pos++; }<br>
+        move = multipv[i].pv[j];<br>
+        pv_str[pos++] = ((move &gt;&gt; 6) &amp; 7) + 'a';<br>
+        pv_str[pos++] = ((move &gt;&gt; 9) &amp; 7) + '1';<br>
+        pv_str[pos++] = (move &amp; 7) + 'a';<br>
+        pv_str[pos++] = ((move &gt;&gt; 3) &amp; 7) + '1';<br>
+        if (MOVE_IS_PROMOTION(move)) {<br>
+        if ((move &amp; 0x7000) == FlagPromoQueen) pv_str[pos++] = 'q';<br>
+        else if ((move &amp; 0x7000) == FlagPromoRook) pv_str[pos++] = 'r';<br>
+        else if ((move &amp; 0x7000) == FlagPromoBishop) pv_str[pos++] = 'b';<br>
+        else if ((move &amp; 0x7000) == FlagPromoKnight) pv_str[pos++] = 'n';<br>
+        }<br>
+        pv_str[pos] = 0;<br>
+        }<br>
+        score = multipv[i].score;<br>
+        if (best_score &lt; -30000 || best_score &gt; 30000) {<br>
+        if (j &amp; 1) score = j / 2 + 1; else score = - (j / 2);<br>
+        strcpy(string,&quot;mate&quot;);<br>
+        }<br>
+        if (MultiPV &gt; 1) sprintf(multi,&quot;multipv %d&quot;,i+1);<br>
+        if (Post) {<br>
+        fprintf(stdout,&quot;info depth %d %s score %s %d time %d nodes %I64d nps 
+        %I64d pv %s\n&quot;,<br>
+        best_depth,multi,string,score,<br>
+        multipv[i].time,multipv[i].nodes,multipv[i].speed,pv_str);<br>
+        }<br>
+        if (testing) {<br>
+        ft = fopen(&quot;test.txt&quot;,&quot;a&quot;);<br>
+        fprintf(ft,&quot;%2.2d : %s = %d %s (%I64d)\n&quot;,<br>
+        best_depth,pv_str,score,string,multipv[i].nodes);<br>
+        fclose(ft);<br>
+        }<br>
+        }<br>
+        }<br>
+        ////////////////////////////////////////////////////////////////////////////<br>
+        void pv_cat(int dst[], const int src[], int move)<br>
+        { *dst++ = move;<br>
+        while ((*dst++ = *src++) != 0);<br>
+        }<br>
+        ////////////////////////////////////////////////////////////////////////////<br>
+        int full_root(int depth)<br>
+        { struct undo_t undo[1];<br>
+        int i, j, move, piece, new_depth, flag_add_depth, in_check;<br>
+        int value, best_value, alpha, num_moves, time;<br>
+        int pv_cnt = 0, min_value, min_index;<br>
+        __int64 speed;<br>
+        int new_pv[256];<br>
+        char string[20];<br>
+        <br>
+        alpha = -31500;<br>
+        best_value = -32500;<br>
+        best_depth = depth;<br>
+        for (i = 0; i &lt; MultiPV; i++) {<br>
+        multipv[i].score = -32500;<br>
+        multipv[i].time = 0;<br>
+        multipv[i].speed = 0;<br>
+        multipv[i].nodes = 0;<br>
+        }<br>
+        for (num_moves = 0; list_root[num_moves].move != 0; num_moves++) 
+        list_root[num_moves].score = 0;<br>
+        for (i = 0; (move = list_root[i].move) != 0; i++) {<br>
+        if (Post &amp;&amp; depth &gt; 10 &amp;&amp; time_max &gt; 10000) {<br>
+        move_to_string(move, string);<br>
+        fprintf(stdout,&quot;info currmove %s currmovenumber %d\n&quot;,string,i+1);<br>
+        }<br>
+        piece = Board-&gt;square[MOVE_FROM(move)];<br>
+        flag_add_depth = 0;<br>
+        if (PIECE_IS_PAWN(piece))<br>
+        if (((move &gt;&gt; 3) &amp; 7) == 6 || ((move &gt;&gt; 3) &amp; 7) == 1)<br>
+        if (see_move(move)) flag_add_depth = 1;<br>
+        move_do(move, undo);<br>
+        in_check = evaluate(pos_info_entry);<br>
+        new_depth = depth - 1;<br>
+        if (flag_add_depth || in_check) new_depth++;<br>
+        if (best_value != -32500 &amp;&amp; new_depth &gt; 0) {<br>
+        if (in_check) value = -full_check_search(-alpha, new_depth, 3, new_pv);<br>
+        else value = -full_search(-alpha, new_depth, 3, new_pv);<br>
+        if (value &gt; alpha) {<br>
+        change = 1; easy = flag = 0;<br>
+        value = -full_pv_search(-31500, -alpha, new_depth, in_check, new_pv);<br>
+        }<br>
+        }<br>
+        else value = -full_pv_search(-31500, -alpha, new_depth, in_check, new_pv);<br>
+        move_undo(move, undo);<br>
+        if (value &lt;= alpha) list_root[i].score = 0;<br>
+        else if (value &gt;= 31500) list_root[i].score = 63000;<br>
+        else list_root[i].score = value + 31500;<br>
+        if (value &gt; best_value) {<br>
+        // Ох, и криво написан MultiPV - с кучей багов. Надо бы переписать !!!<br>
+        if (pv_cnt &lt; MultiPV) {<br>
+        pv_cat(multipv[pv_cnt].pv, new_pv, move);<br>
+        multipv[pv_cnt].score = value;<br>
+        multipv[pv_cnt].nodes = true_nodes;<br>
+        time = GetTickCount() - start_time;<br>
+        if (time &lt; 0) time = 0;<br>
+        speed = 0;<br>
+        if (time &gt; 0) speed = (true_nodes * 1000) / time;<br>
+        multipv[pv_cnt].time = time;<br>
+        multipv[pv_cnt].speed = speed;<br>
+        pv_cnt++;<br>
+        }<br>
+        if (pv_cnt == MultiPV) {<br>
+        min_value = 32500;<br>
+        min_index = 0;<br>
+        for (j = 0; j &lt; MultiPV; j++) if (multipv[j].score &lt; min_value) {<br>
+        min_value = multipv[j].score;<br>
+        min_index = j;<br>
+        }<br>
+        if (value &gt; min_value) {<br>
+        pv_cat(multipv[min_index].pv, new_pv, move);<br>
+        multipv[min_index].score = value;<br>
+        multipv[min_index].nodes = true_nodes;<br>
+        time = GetTickCount() - start_time;<br>
+        if (time &lt; 0) time = 0;<br>
+        speed = 0;<br>
+        if (time &gt; 0) speed = (true_nodes * 1000) / time;<br>
+        multipv[min_index].time = time;<br>
+        multipv[min_index].speed = speed;<br>
+        }<br>
+        if (best_value == -32500 || value &gt; alpha) {<br>
+        best_move = move;<br>
+        best_score = value;<br>
+        best_depth = depth;<br>
+        if (depth &gt; 1 &amp;&amp; value &lt; depth_score - 50) { bad_1 = 1; easy = flag = 0; 
+        }<br>
+        }<br>
+        best_value = value;<br>
+        if (best_value &gt; alpha) {<br>
+        alpha = best_value;<br>
+        if (alpha &gt;= 31500) break;<br>
+        }<br>
+        }<br>
+        }<br>
+        }<br>
+        if (time_max &gt; 10000 || depth &gt; 5) disp_pv();<br>
+        list_root[num_moves].score = 0;<br>
+        for (i = num_moves - 2; i &gt;= 0; i--) {<br>
+        move = list_root[i].move;<br>
+        value = list_root[i].score;<br>
+        for (j = i; value &lt; list_root[j+1].score; j++) {<br>
+        list_root[j].score = list_root[j+1].score;<br>
+        list_root[j].move = list_root[j+1].move;<br>
+        }<br>
+        list_root[j].move = move;<br>
+        list_root[j].score = value;<br>
+        }<br>
+        return best_value;<br>
+        }<br>
+        //////////////////////////////////////////////////////////////////////////////<br>
+        int full_search(int beta, int depth, int search_parm, int * pv)<br>
+        { struct moves_info_t moves_info[1];<br>
+        struct undo_t undo[1];<br>
+        struct undo_null_t undo_null[1];<br>
+        int i, value, new_value, turn, move, new_depth, in_check, best_value, 
+        moves_cnt, trans_depth;<br>
+        unsigned __int64 mask;<br>
+        struct entry_t * entry;<br>
+        int new_pv[256];<br>
+        <br>
+        true_nodes++;<br>
+        *pv = 0;<br>
+        for (i = 4; i &lt;= Board-&gt;ply_nb; i+= 2) if (Board-&gt;stack[Board-&gt;sp - i] 
+        == Board-&gt;key) return 0;<br>
+        entry = trans_entry + (KEY_INDEX &amp; trans_mask);<br>
+        moves_info-&gt;trans_move = 0;<br>
+        trans_depth = 0;<br>
+        undo_null-&gt;ply_nb = 0;<br>
+        for (i = 0; i &lt; ClusterSize; i++, entry++) if (entry-&gt;lock == KEY_LOCK) 
+        {<br>
+        entry-&gt;date = (unsigned char)trans_date;<br>
+        moves_info-&gt;trans_move = (int)entry-&gt;move;<br>
+        trans_depth = (int)entry-&gt;max_depth;<br>
+        if (entry-&gt;min_depth &gt;= depth &amp;&amp; entry-&gt;min_value &gt;= beta) {<br>
+        best_trans_move = (int)entry-&gt;move;<br>
+        return entry-&gt;min_value;<br>
+        }<br>
+        if (entry-&gt;max_depth &gt;= depth &amp;&amp; entry-&gt;max_value &lt; beta) return 
+        entry-&gt;max_value;<br>
+        break;<br>
+        }<br>
+        value = pos_info_entry-&gt;value + 125;<br>
+        if (value &lt; beta) {<br>
+        if (depth == 1) {<br>
+        new_value = qu_search(beta-1, beta, 0, new_pv);<br>
+        if (new_value &gt;= value) return new_value; else return value;<br>
+        }<br>
+        value += 175;<br>
+        if (value &lt; beta &amp;&amp; depth &lt;= 3) {<br>
+        new_value = qu_search(beta-1, beta, depth*8-8, new_pv);<br>
+        if (new_value &lt; beta) {<br>
+        if (new_value &gt;= value) return new_value; else return value;<br>
+        }<br>
+        }<br>
+        }<br>
+        if (depth &gt;= 2 &amp;&amp; pos_info_entry-&gt;value &gt;= beta) {<br>
+        turn = Board-&gt;turn;<br>
+        mask = Board-&gt;mp[10+turn] | Board-&gt;mp[8+turn] |<br>
+        Board-&gt;mp[6 +turn] | Board-&gt;mp[4+turn];<br>
+        if (mask != 0 &amp;&amp; (search_parm &amp; 1) &amp;&amp; (search_parm &amp; 2)) {<br>
+        move_do_null(undo_null);<br>
+        (pos_info_entry + 1)-&gt;mob[0] = pos_info_entry-&gt;mob[1];<br>
+        (pos_info_entry + 1)-&gt;mob[1] = pos_info_entry-&gt;mob[0];<br>
+        (pos_info_entry + 1)-&gt;value = 6 - (pos_info_entry-&gt;value);<br>
+        pos_info_entry++;<br>
+        if (depth &lt;= 4) new_value = -qu_search(-beta, 1-beta, 0, new_pv);<br>
+        else new_value = -full_search(1-beta, depth-4, 7, new_pv);<br>
+        Board-&gt;turn ^= 1;<br>
+        Board-&gt;sp--;<br>
+        Board-&gt;ep_square = undo_null-&gt;ep_square;<br>
+        Board-&gt;ply_nb = undo_null-&gt;ply_nb;<br>
+        Board-&gt;key = undo_null-&gt;key;<br>
+        pos_info_entry--;<br>
+        <br>
+        // верификация пустого хода - тоже из одной из Белок, что дает - 
+        неизвестно.<br>
+        if (depth &gt; 5 &amp;&amp; new_value &gt;= beta) new_value = 
+        full_search(beta,depth-5,0,new_pv);<br>
+        <br>
+        if (new_value &gt;= beta) {<br>
+        trans_min_store((char)depth, (__int16)new_value);<br>
+        best_trans_move = 0;<br>
+        return new_value;<br>
+        }<br>
+        }<br>
+        }<br>
+        search_parm |= 2;<br>
+        if (depth &gt;= 4 &amp;&amp; moves_info-&gt;trans_move == 0 &amp;&amp; depth &gt; trans_depth+2 
+        &amp;&amp; (search_parm &amp; 1)) {<br>
+        if (pos_info_entry-&gt;value &gt;= beta || depth &gt;= 6) {<br>
+        if (full_search(beta, depth-2, 3, new_pv) &gt;= beta) 
+        moves_info-&gt;trans_move = best_trans_move;<br>
+        }<br>
+        }<br>
+        moves_info-&gt;entry = 0;<br>
+        moves_info-&gt;next = moves_info-&gt;list;<br>
+        best_value = -32500;<br>
+        moves_cnt = 0;<br>
+        move = next_move(moves_info, pos_info_entry);<br>
+        if (move == 0) return 0;<br>
+        while (move != 0) {<br>
+        move_do(move, undo);<br>
+        in_check = evaluate(pos_info_entry);<br>
+        if (ILLEGAL_POSITION) move_undo(move, undo);<br>
+        else {<br>
+        new_depth = depth - 1;<br>
+        if (in_check) new_depth++;<br>
+        else if (depth &gt;= 3 &amp;&amp; moves_info-&gt;entry == 5 &amp;&amp; moves_cnt &gt;= 4) 
+        new_depth--;<br>
+        if (new_depth &lt;= 0) new_value = -qu_search(-beta, 1-beta, 0, new_pv);<br>
+        else if (in_check) new_value = -full_check_search(1-beta, new_depth, 
+        search_parm^1, new_pv);<br>
+        else new_value = -full_search(1-beta, new_depth, search_parm^1, new_pv);<br>
+        if (new_depth == depth-2 &amp;&amp; new_value &gt;= beta)<br>
+        new_value = -full_search(1-beta, new_depth+1, 0, new_pv);<br>
+        move_undo(move, undo);<br>
+        moves_cnt++;<br>
+        if (new_value &gt; best_value) {<br>
+        best_value = new_value;<br>
+        pv_cat(pv, new_pv, move);<br>
+        if (new_value &gt;= beta) {<br>
+        if (!MOVE_IS_PROMOTION(move) &amp;&amp; !MOVE_IS_ENPASSANT(move) &amp;&amp; 
+        Board-&gt;square[MOVE_TO(move)] == 0)<br>
+        history_store(pos_info_entry, move, depth);<br>
+        best_trans_move = move;<br>
+        trans_move_store((unsigned __int16)move, (char)depth, 
+        (__int16)new_value);<br>
+        return new_value;<br>
+        }<br>
+        }<br>
+        search_parm &amp;= 6;<br>
+        }<br>
+        move = next_move(moves_info, pos_info_entry);<br>
+        }<br>
+        if (best_value == -32500) { best_trans_move = 0; return 0; }<br>
+        trans_max_store((char)depth, (_int16)best_value);<br>
+        check_nb--;<br>
+        if (check_nb &lt;= 0) {<br>
+        check_nb = 1024;<br>
+        search_check();<br>
+        }<br>
+        return best_value;<br>
+        }<br>
+        ///////////////////////////////////////////////////////////////////////////////<br>
+        int full_check_search(int beta, int depth, int search_parm, int * pv)<br>
+        { struct undo_t undo[1];<br>
+        struct list_t moves[32];<br>
+        struct list_t *last, *moveptr;<br>
+        int i, move, new_depth, new_value, in_check, best_value;<br>
+        struct entry_t * entry;<br>
+        int new_pv[256];<br>
+        <br>
+        true_nodes++;<br>
+        *pv = 0;<br>
+        for (i = 4; i &lt;= Board-&gt;ply_nb; i+= 2) if (Board-&gt;stack[Board-&gt;sp - i] 
+        == Board-&gt;key) return 0;<br>
+        entry = trans_entry + (KEY_INDEX &amp; trans_mask);<br>
+        move = 0;<br>
+        for (i = 0; i &lt; ClusterSize; i++, entry++) if (entry-&gt;lock == KEY_LOCK) 
+        {<br>
+        entry-&gt;date = (unsigned char)trans_date;<br>
+        move = (int)entry-&gt;move;<br>
+        if (entry-&gt;min_depth &gt;= depth &amp;&amp; entry-&gt;min_value &gt;= beta) return 
+        entry-&gt;min_value;<br>
+        if (entry-&gt;max_depth &gt;= depth &amp;&amp; entry-&gt;max_value &lt; beta) return 
+        entry-&gt;max_value;<br>
+        break;<br>
+        }<br>
+        last = gen_evasions(moves, ~(pos_info_entry-&gt;mob[1]));<br>
+        if (last &gt; moves) note_moves(last, moves, pos_info_entry, move);<br>
+        best_value = -32000;<br>
+        for (moveptr = moves; moveptr-&gt;move != 0; moveptr++) {<br>
+        move = moveptr-&gt;move;<br>
+        move_do(move, undo);<br>
+        in_check = evaluate(pos_info_entry);<br>
+        if (ILLEGAL_POSITION) move_undo(move, undo);<br>
+        else {<br>
+        new_depth = depth - 1;<br>
+        if (last == moves || in_check) new_depth++;<br>
+        if (new_depth &lt;= 0) new_value = -qu_search(-beta, 1-beta, 0, new_pv);<br>
+        else if (in_check) new_value = -full_check_search(1-beta, new_depth, 
+        search_parm^1, new_pv);<br>
+        else new_value = -full_search(1-beta, new_depth, search_parm^1, new_pv);<br>
+        move_undo(move, undo);<br>
+        if (new_value &gt; best_value) {<br>
+        best_value = new_value;<br>
+        pv_cat(pv, new_pv, move);<br>
+        if (new_value &gt;= beta) {<br>
+        trans_move_store((__int16)move, (char)depth, (__int16)new_value);<br>
+        return new_value;<br>
+        }<br>
+        }<br>
+        search_parm &amp;= 6;<br>
+        }<br>
+        }<br>
+        trans_max_store((char)depth, (__int16)best_value);<br>
+        return best_value;<br>
+        }<br>
+        ////////////////////////////////////////////////////////////////////////////////////<br>
+        int full_pv_search(int alpha, int beta, int depth, int in_check, int * 
+        pv)<br>
+        { int flag_one_move, flag_add_depth, flag_in_check;<br>
+        struct undo_t undo[1];<br>
+        struct moves_info_t moves_info[1];<br>
+        struct list_t * last;<br>
+        int i, move, new_depth, new_value, best_value, best_move;<br>
+        struct entry_t * entry;<br>
+        int new_pv[256];<br>
+        <br>
+        if (depth &lt;= 0) return qu_search(alpha, beta, 0, pv);<br>
+        true_nodes++;<br>
+        *pv = 0;<br>
+        if (Board-&gt;ply_nb &gt; 100) return 0;<br>
+        for (i = 4; i &lt;= Board-&gt;ply_nb; i += 2) if (Board-&gt;stack[Board-&gt;sp - i] 
+        == Board-&gt;key) return 0;<br>
+        entry = trans_entry + (KEY_INDEX &amp; trans_mask);<br>
+        moves_info-&gt;trans_move = 0;<br>
+        for (i = 0; i &lt; ClusterSize; i++, entry++) if (entry-&gt;lock == KEY_LOCK) 
+        {<br>
+        moves_info-&gt;trans_move = entry-&gt;move;<br>
+        break;<br>
+        }<br>
+        if (depth &gt;= 2 &amp;&amp; moves_info-&gt;trans_move == 0) {<br>
+        full_pv_search(alpha, beta, depth-1, in_check, new_pv);<br>
+        moves_info-&gt;trans_move = best_trans_move;<br>
+        }<br>
+        flag_one_move = 0;<br>
+        moves_info-&gt;entry = 0;<br>
+        if (in_check) {<br>
+        last = gen_evasions(moves_info-&gt;list, ~(pos_info_entry-&gt;mob[1]));<br>
+        flag_one_move = 1;<br>
+        if (last &gt; moves_info-&gt;list) {<br>
+        note_moves(last, moves_info-&gt;list, pos_info_entry, 
+        moves_info-&gt;trans_move);<br>
+        flag_one_move = 0;<br>
+        }<br>
+        moves_info-&gt;entry = 7;<br>
+        }<br>
+        moves_info-&gt;next = moves_info-&gt;list;<br>
+        best_value = -32500;<br>
+        best_move = 0;<br>
+        while ((move = next_move(moves_info, pos_info_entry)) != 0) {<br>
+        flag_add_depth = 0;<br>
+        if (flag_one_move) flag_add_depth = 1;<br>
+        else {<br>
+        if (pos_info_entry != Pos_info &amp;&amp; ((((pos_info_entry-1)-&gt;move) ^ move) &amp; 
+        0x3F) == 0 &amp;&amp;<br>
+        (pos_info_entry-&gt;value + 50 &lt; -(pos_info_entry-1)-&gt;value) &amp;&amp; 
+        see_move(move) != 0) flag_add_depth = 1;<br>
+        if (PIECE_IS_PAWN(Board-&gt;square[MOVE_FROM(move)]) &amp;&amp;<br>
+        ((((unsigned __int64)1) &lt;&lt; (MOVE_TO(move))) &amp; 0x00FF00000000FF00) != 0 
+        &amp;&amp;<br>
+        see_move(move) != 0) flag_add_depth = 1;<br>
+        }<br>
+        move_do(move, undo);<br>
+        flag_in_check = evaluate(pos_info_entry);<br>
+        if (ILLEGAL_POSITION) move_undo(move, undo);<br>
+        else {<br>
+        new_depth = depth - 1;<br>
+        if (flag_add_depth || flag_in_check) new_depth++;<br>
+        (pos_info_entry-1)-&gt;move = move;<br>
+        if (best_value == -32500) new_value = -full_pv_search(-beta, -alpha, 
+        new_depth, flag_in_check, new_pv);<br>
+        else {<br>
+        if (new_depth &lt;= 0) new_value = -qu_search(-alpha-1, -alpha, 0, new_pv);<br>
+        else {<br>
+        if (flag_in_check) new_value = -full_check_search(-alpha, new_depth, 3, 
+        new_pv);<br>
+        else new_value = -full_search(-alpha, new_depth, 3, new_pv);<br>
+        }<br>
+        if (new_value &gt; alpha) new_value = -full_pv_search(-beta, -alpha, 
+        new_depth, flag_in_check, new_pv);<br>
+        }<br>
+        move_undo(move, undo);<br>
+        if (new_value &gt; best_value) {<br>
+        best_value = new_value;<br>
+        pv_cat(pv, new_pv, move);<br>
+        if (new_value &gt; alpha) {<br>
+        alpha = new_value;<br>
+        best_move = move;<br>
+        if (new_value &gt;= beta) {<br>
+        best_trans_move = move;<br>
+        if (!MOVE_IS_PROMOTION(move) &amp;&amp; !MOVE_IS_ENPASSANT(move) &amp;&amp; 
+        Board-&gt;square[MOVE_TO(move)] == 0)<br>
+        history_store(pos_info_entry, move, depth);<br>
+        trans_move_store((unsigned __int16)move, (char)depth, 
+        (__int16)new_value);<br>
+        return new_value;<br>
+        }<br>
+        }<br>
+        }<br>
+        }<br>
+        }<br>
+        best_trans_move = best_move;<br>
+        if (best_value == -32500) best_value = (-in_check) &amp; 0xFFFF8300;<br>
+        else {<br>
+        if (best_move != 0) {<br>
+        if (!MOVE_IS_PROMOTION(best_move) &amp;&amp; !MOVE_IS_ENPASSANT(best_move) &amp;&amp; 
+        Board-&gt;square[MOVE_TO(best_move)] == 0)<br>
+        history_store(pos_info_entry, best_move, depth);<br>
+        trans_store((unsigned __int16)best_move, (char)depth, 
+        (__int16)best_value);<br>
+        }<br>
+        else trans_max_store((char)depth, (__int16)best_value);<br>
+        }<br>
+        return best_value;<br>
+        }<br>
+        /////////////////////////////////////////////////////////////////////////////<br>
+        int qu_search(int alpha, int beta, int depth, int * pv)<br>
+        { unsigned __int64 mask_w, mask_b;<br>
+        struct undo_t undo[1];<br>
+        struct list_t list[64];<br>
+        struct list_t * pi, * pj;<br>
+        int i, move, score, next_move, next_score, new_value, best_value, 
+        in_check;<br>
+        int piece, to;<br>
+        int new_pv[256];<br>
+        <br>
+        true_nodes++;<br>
+        *pv = 0;<br>
+        for (i = 4; i &lt;= Board-&gt;ply_nb ; i += 2) if (Board-&gt;stack[Board-&gt;sp - i] 
+        == Board-&gt;key) return 0;<br>
+        mask_w = Board-&gt;mp[White];<br>
+        mask_b = Board-&gt;mp[Black];<br>
+        best_value = pos_info_entry-&gt;value;<br>
+        if (pos_info_entry-&gt;value &gt; alpha) {<br>
+        alpha = pos_info_entry-&gt;value;<br>
+        if (alpha &gt;= beta) return alpha;<br>
+        }<br>
+        else if (pos_info_entry-&gt;value &lt; (alpha - 250)) {<br>
+        // delta pruning: если оценка позиции хуже alpha,<br>
+        // то из взятий убираем &quot;слабые&quot; взятия через маски mask_w и mask_b<br>
+        best_value = pos_info_entry-&gt;value + 250;<br>
+        mask_w ^= Board-&gt;mp[WhitePawn];<br>
+        mask_b ^= Board-&gt;mp[BlackPawn];<br>
+        // В оригинальной версии Стрелки исключались только взятия пешек<br>
+        // Следующие исключения - Белка 1.8.12 (+13 пунктов !!!)<br>
+        if (pos_info_entry-&gt;value &lt; (alpha - 450)) {<br>
+        best_value = pos_info_entry-&gt;value + 450;<br>
+        mask_w ^= Board-&gt;mp[WhiteKnight];<br>
+        mask_b ^= Board-&gt;mp[BlackKnight];<br>
+        mask_w ^= Board-&gt;mp[WhiteBishop];<br>
+        mask_b ^= Board-&gt;mp[BlackBishop];<br>
+        if (pos_info_entry-&gt;value &lt; (alpha - 650)) {<br>
+        best_value = pos_info_entry-&gt;value + 650;<br>
+        mask_w ^= Board-&gt;mp[WhiteRook];<br>
+        mask_b ^= Board-&gt;mp[BlackRook];<br>
+        if (pos_info_entry-&gt;value &lt; (alpha - 1050)) {<br>
+        best_value = pos_info_entry-&gt;value + 1050;<br>
+        mask_w ^= Board-&gt;mp[WhiteQueen];<br>
+        mask_b ^= Board-&gt;mp[BlackQueen];<br>
+        }<br>
+        }<br>
+        }<br>
+        }<br>
+        gen_captures(list, mask_w, mask_b);<br>
+        for (pi = list; pi-&gt;move != 0; pi++) {<br>
+        next_move = pi-&gt;move;<br>
+        next_score = pi-&gt;score;<br>
+        for (pj = pi + 1; pj-&gt;move != 0; pj++) {<br>
+        move = pj-&gt;move;<br>
+        score = pj-&gt;score;<br>
+        if (score &gt; next_score) {<br>
+        pj-&gt;score = next_score;<br>
+        pj-&gt;move = next_move;<br>
+        next_score = score;<br>
+        next_move = move;<br>
+        }<br>
+        }<br>
+        if (depth &gt; 0 || see_move(next_move) != 0) {<br>
+        move_do(next_move, undo);<br>
+        in_check = evaluate(pos_info_entry);<br>
+        if (ILLEGAL_POSITION) move_undo(next_move, undo);<br>
+        else {<br>
+        if (in_check) new_value = -qu_check_search(-beta, -alpha, depth-1, 
+        new_pv);<br>
+        else new_value = -qu_search(-beta, -alpha, depth-8, new_pv);<br>
+        move_undo(next_move, undo);<br>
+        if (new_value &gt; best_value) {<br>
+        best_value = new_value;<br>
+        pv_cat(pv, new_pv, next_move);<br>
+        if (new_value &gt; alpha) {<br>
+        alpha = new_value;<br>
+        if (new_value &gt;= beta) return new_value;<br>
+        }<br>
+        }<br>
+        }<br>
+        }<br>
+        }<br>
+        if (depth &lt;= -6) return best_value;<br>
+        // в генерации шахов нужно &quot;вернуть&quot; слабые взятия, отброшенные по delta 
+        pruning;<br>
+        // делаем это через маски ~mask_w и ~mask_b<br>
+        gen_checks(list, ~mask_w, ~mask_b);<br>
+        for (pi = list; pi-&gt;move != 0; pi++) {<br>
+        move = pi-&gt;move;<br>
+        // ход может быть с превращением, а в gen_checks это не учитывается,<br>
+        // поэтому для таких случаев добавляем флаг превращения в ферзя;<br>
+        // слабые превращения здесь учитывать не будем.<br>
+        piece = Board-&gt;square[MOVE_FROM(move)];<br>
+        to = MOVE_TO(move);<br>
+        if (PIECE_IS_PAWN(piece) &amp;&amp; (to &gt; 55 || to &lt; 8) &amp;&amp; 
+        !MOVE_IS_PROMOTION(move))<br>
+        move |= FlagPromoQueen;<br>
+        if (depth &gt; 0 || see_move(move) != 0) {<br>
+        move_do(move, undo);<br>
+        eval_mob(pos_info_entry);<br>
+        if (ILLEGAL_POSITION) move_undo(move, undo);<br>
+        else {<br>
+        new_value = -qu_check_search(-beta, -alpha, depth-1, new_pv);<br>
+        move_undo(move, undo);<br>
+        if (new_value &gt; best_value) {<br>
+        best_value = new_value;<br>
+        pv_cat(pv, new_pv, move);<br>
+        if (new_value &gt; alpha) {<br>
+        alpha = new_value;<br>
+        if (new_value &gt;= beta) return new_value;<br>
+        }<br>
+        }<br>
+        }<br>
+        }<br>
+        }<br>
+        return best_value;<br>
+        }<br>
+        /////////////////////////////////////////////////////////////////////////////<br>
+        int qu_check_search(int alpha, int beta, int depth, int * pv)<br>
+        { struct undo_t undo[1];<br>
+        struct list_t moves[32];<br>
+        struct list_t * last, * pi;<br>
+        int i, from, move, to, piece, capture, score, new_value, in_check, 
+        best_value, sub_depth;<br>
+        int new_pv[256];<br>
+        <br>
+        true_nodes++;<br>
+        *pv = 0;<br>
+        for (i = 4; i &lt;= Board-&gt;ply_nb ; i += 2) if (Board-&gt;stack[Board-&gt;sp - i] 
+        == Board-&gt;key) return 0;<br>
+        last = gen_evasions(moves, ~(pos_info_entry-&gt;mob[1]));<br>
+        sub_depth = 1;<br>
+        if (last &gt; moves) {<br>
+        (last+1)-&gt;score = -30000;<br>
+        from = MOVE_FROM(last-&gt;move);<br>
+        to = MOVE_TO(last-&gt;move);<br>
+        piece = Board-&gt;square[from];<br>
+        capture = Board-&gt;square[to];<br>
+        last-&gt;score = (capture * 16 - piece) * capture;<br>
+        sub_depth = 8;<br>
+        for (last = last - 1; last &gt;= moves; last--) {<br>
+        from = MOVE_FROM(last-&gt;move);<br>
+        to = MOVE_TO(last-&gt;move);<br>
+        piece = Board-&gt;square[from];<br>
+        capture = Board-&gt;square[to];<br>
+        score = (capture * 16 - piece) * capture;<br>
+        move = last-&gt;move;<br>
+        for (pi = last; (pi+1)-&gt;score &gt; score; pi++) {<br>
+        pi-&gt;move = (pi+1)-&gt;move;<br>
+        pi-&gt;score = (pi+1)-&gt;score;<br>
+        }<br>
+        pi-&gt;move = move;<br>
+        pi-&gt;score = score;<br>
+        }<br>
+        }<br>
+        best_value = -32000;<br>
+        for (pi = moves; pi-&gt;move != 0; pi++) {<br>
+        move = pi-&gt;move;<br>
+        move_do(move, undo);<br>
+        in_check = evaluate(pos_info_entry);<br>
+        if (ILLEGAL_POSITION) move_undo(move, undo);<br>
+        else {<br>
+        if (in_check) new_value = -qu_check_search(-beta, -alpha, depth-1, 
+        new_pv);<br>
+        else new_value = -qu_search(-beta, -alpha, depth-sub_depth, new_pv);<br>
+        move_undo(move, undo);<br>
+        if (new_value &gt; best_value) {<br>
+        best_value = new_value;<br>
+        pv_cat(pv, new_pv, move);<br>
+        if (new_value &gt; alpha) {<br>
+        alpha = new_value;<br>
+        if (new_value &gt;= beta) return new_value;<br>
+        }<br>
+        }<br>
+        }<br>
+        }<br>
+        return best_value;<br>
+        }<br>
+        //////////////////////////////////////////////////////////////////////////////<br>
+        // генерация ходов для функций типа full_search<br>
+        int next_move(struct moves_info_t * moves_info, struct pos_info_t * 
+        pos_info)<br>
+        { int move, move1, score, score1;<br>
+        struct list_t * next;<br>
+        <br>
+        switch(moves_info-&gt;entry) {<br>
+        case 0: // сначала - trans_move<br>
+        move = moves_info-&gt;trans_move;<br>
+        moves_info-&gt;entry = 1;<br>
+        if (move != 0) { // проверяем trans_move<br>
+        if (Board-&gt;square[MOVE_FROM(move)] != 0) {<br>
+        if ((Board-&gt;square[MOVE_TO(move)] &amp; 0x0E) != 12) {<br>
+        if (!(move &amp; 0x7000)) return(move);<br>
+        if (Board-&gt;square[MOVE_FROM(move)] == ((Board-&gt;turn)^2)) return(move);<br>
+        if (move_is_legal(move, pos_info) != 0) return(move);<br>
+        if (MOVE_TO(move) == Board-&gt;ep_square) return(move);<br>
+        }<br>
+        }<br>
+        }<br>
+        case 1: // после trans_move генерим взятия<br>
+        moves_info-&gt;entry = 2;<br>
+        gen_captures(moves_info-&gt;list, Board-&gt;mp[White], Board-&gt;mp[Black]);<br>
+        moves_info-&gt;bad_cnt = 0;<br>
+        case 2: // проходим по взятиям и берем только хорошие по see_move<br>
+        for (move = moves_info-&gt;next-&gt;move; move != 0; move = 
+        moves_info-&gt;next-&gt;move) {<br>
+        score = moves_info-&gt;next-&gt;score;<br>
+        moves_info-&gt;next++;<br>
+        next = moves_info-&gt;next;<br>
+        for (move1 = next-&gt;move; move1 != 0; next++, move1 = next-&gt;move) {<br>
+        score1 = next-&gt;score;<br>
+        if (score1 &gt; score) {<br>
+        next-&gt;move = move;<br>
+        next-&gt;score = score;<br>
+        move = move1;<br>
+        score = score1;<br>
+        }<br>
+        }<br>
+        if (move != moves_info-&gt;trans_move) {<br>
+        if (see_move(move) != 0) return(move);<br>
+        // плохие взятия заносим в отдельный список bad_captures<br>
+        moves_info-&gt;bad_captures[moves_info-&gt;bad_cnt] = move;<br>
+        moves_info-&gt;bad_cnt++;<br>
+        }<br>
+        }<br>
+        // первый killer<br>
+        move = pos_info-&gt;killer1;<br>
+        moves_info-&gt;bad_captures[moves_info-&gt;bad_cnt] = 0;<br>
+        moves_info-&gt;entry = 3;<br>
+        if (move != moves_info-&gt;trans_move) {<br>
+        if (move_is_legal(move, pos_info) != 0) return(move);<br>
+        }<br>
+        case 3: // второй killer<br>
+        move = pos_info-&gt;killer2;<br>
+        moves_info-&gt;entry = 4;<br>
+        if (move != moves_info-&gt;trans_move) {<br>
+        if (move_is_legal(move, pos_info) != 0) return(move);<br>
+        }<br>
+        case 4: // тихие ходы<br>
+        moves_info-&gt;entry = 5;<br>
+        moves_info-&gt;next = moves_info-&gt;list;<br>
+        gen_quiet_moves(moves_info-&gt;list, pos_info-&gt;mob[1], 
+        moves_info-&gt;trans_move, pos_info-&gt;killer1, pos_info-&gt;killer2);<br>
+        case 5: // проходим по тихим ходам<br>
+        move = moves_info-&gt;next-&gt;move;<br>
+        moves_info-&gt;next++;<br>
+        if (move != 0) return(move);<br>
+        moves_info-&gt;entry = 6;<br>
+        moves_info-&gt;bad_index = 0;<br>
+        case 6: // в последнюю очередь - плохие взятия<br>
+        move = moves_info-&gt;bad_captures[moves_info-&gt;bad_index];<br>
+        moves_info-&gt;bad_index++;<br>
+        break;<br>
+        case 7: // особый случай для evasions<br>
+        move = moves_info-&gt;next-&gt;move;<br>
+        moves_info-&gt;next++;<br>
+        break;<br>
+        }<br>
+        return(move);<br>
+        }<br>
+        <br>
+        void search_check()<br>
+        { int time;<br>
+        <br>
+        while (!stop_search &amp;&amp; input_available()) get_uci_command();<br>
+        time = (int)GetTickCount() - start_time;<br>
+        if (time &lt; 0) time = 0;<br>
+        if (stop_search || (time_is_limited &amp;&amp; can_stop &amp;&amp; time &gt; time_limit_2)) 
+        {<br>
+        stop_search = 1;<br>
+        longjmp(jmp_buffer, 1);<br>
+        }<br>
+        }<br>
+
+        
+
+        </p>
+
+        
+
+        </td>
+  </tr>
+</table>
+
+</body>
+
+</html>

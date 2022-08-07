@@ -1,0 +1,227 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<title>Trans_c</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center">Trans_c</h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="/index.html">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+
+        
+
+        <p align="justify">
+        //////////////////////////////////////////////////////////////////////////<br>
+        // Trans.c - функции работы с таблицей транспозиций<br>
+        //////////////////////////////////////////////////////////////////////////<br>
+        void trans_alloc(int target)<br>
+        { int size;<br>
+        <br>
+        target *= 1024*1024;<br>
+        for (size = 1; size != 0 &amp;&amp; size &lt;= target; size *= 2);<br>
+        size /= 2;<br>
+        size /= sizeof(struct entry_t);<br>
+        trans_size = size + (ClusterSize - 1);<br>
+        trans_mask = size - 2;<br>
+        trans_entry = (struct entry_t *)malloc(trans_size * sizeof(struct 
+        entry_t) + 64);<br>
+        trans_clear();<br>
+        }<br>
+        //////////////////////////////////////////////////////////////////////////<br>
+        void trans_set_date(int date)<br>
+        { int i;<br>
+        <br>
+        trans_date = date;<br>
+        for (i = 0; i &lt; DateSize; i++) {<br>
+        trans_score[i] = (date + 1) * 256;<br>
+        date = trans_date - (i + 1);<br>
+        if (date &lt; 0) date += DateSize;<br>
+        }<br>
+        }<br>
+        //////////////////////////////////////////////////////////////////////////<br>
+        void trans_clear()<br>
+        { struct entry_t * entry;<br>
+        int i;<br>
+        <br>
+        entry = trans_entry;<br>
+        trans_set_date(0);<br>
+        for (i = 0; i &lt; trans_size; i++, entry++) {<br>
+        entry-&gt;lock = 0;<br>
+        entry-&gt;move = 0;<br>
+        entry-&gt;depth = 0;<br>
+        entry-&gt;date = 0;<br>
+        entry-&gt;min_value = 0;<br>
+        entry-&gt;max_value = 0;<br>
+        entry-&gt;move_depth = 0;<br>
+        entry-&gt;flags = 0;<br>
+        entry-&gt;min_depth = 0;<br>
+        entry-&gt;max_depth = 0;<br>
+        }<br>
+        }<br>
+        ////////////////////////////////////////////////////////////////////////////<br>
+        void trans_store(unsigned __int16 move, char depth, __int16 value)<br>
+        { int i, score, best_score;<br>
+        struct entry_t *entry;<br>
+        struct entry_t *best_entry;<br>
+        <br>
+        best_entry = NULL; best_score = 0;<br>
+        entry = trans_entry + (KEY_INDEX &amp; trans_mask);<br>
+        for (i = 0; i &lt; ClusterSize; i++, entry++) {<br>
+        if (entry-&gt;lock == KEY_LOCK) {<br>
+        entry-&gt;date = (unsigned char)trans_date;<br>
+        if (depth &gt; entry-&gt;depth) entry-&gt;depth = depth;<br>
+        if (depth &gt;= entry-&gt;move_depth) {<br>
+        entry-&gt;move_depth = depth;<br>
+        entry-&gt;move = move;<br>
+        }<br>
+        if (depth &gt;= entry-&gt;min_depth) {<br>
+        entry-&gt;min_depth = depth;<br>
+        entry-&gt;min_value = value;<br>
+        }<br>
+        if (depth &gt;= entry-&gt;max_depth) {<br>
+        entry-&gt;max_depth = depth;<br>
+        entry-&gt;max_value = value;<br>
+        }<br>
+        return;<br>
+        }<br>
+        score = trans_score[entry-&gt;date] - (entry-&gt;depth);<br>
+        if (score &gt; best_score) { best_entry = entry; best_score = score; }<br>
+        }<br>
+        best_entry-&gt;lock = KEY_LOCK;<br>
+        best_entry-&gt;date = (unsigned char)trans_date;<br>
+        best_entry-&gt;depth = depth;<br>
+        best_entry-&gt;move_depth = depth;<br>
+        best_entry-&gt;move = move;<br>
+        best_entry-&gt;min_depth = depth;<br>
+        best_entry-&gt;min_value = value;<br>
+        best_entry-&gt;max_depth = depth;<br>
+        best_entry-&gt;max_value = value;<br>
+        }<br>
+        ////////////////////////////////////////////////////////////////////////////<br>
+        void trans_move_store(unsigned __int16 move, char depth, __int16 value)<br>
+        { int i, score, best_score;<br>
+        struct entry_t *entry;<br>
+        struct entry_t *best_entry;<br>
+        <br>
+        if (value &gt;= 31500) depth = 64;<br>
+        best_entry = NULL; best_score = 0;<br>
+        entry = trans_entry + (KEY_INDEX &amp; trans_mask);<br>
+        for (i = 0; i &lt; ClusterSize; i++, entry++) {<br>
+        if (entry-&gt;lock == KEY_LOCK) {<br>
+        entry-&gt;date = (unsigned char)trans_date;<br>
+        if (depth &gt; entry-&gt;depth) entry-&gt;depth = depth;<br>
+        if (depth &gt;= entry-&gt;move_depth) {<br>
+        entry-&gt;move_depth = depth;<br>
+        entry-&gt;move = move;<br>
+        }<br>
+        if (depth &gt;= entry-&gt;min_depth) {<br>
+        entry-&gt;min_depth = depth;<br>
+        entry-&gt;min_value = value;<br>
+        }<br>
+        return;<br>
+        }<br>
+        score = trans_score[entry-&gt;date] - (entry-&gt;depth);<br>
+        if (score &gt; best_score) { best_entry = entry; best_score = score; }<br>
+        }<br>
+        best_entry-&gt;lock = KEY_LOCK;<br>
+        best_entry-&gt;date = (unsigned char)trans_date;<br>
+        best_entry-&gt;depth = depth;<br>
+        best_entry-&gt;move_depth = depth;<br>
+        best_entry-&gt;move = move;<br>
+        best_entry-&gt;min_depth = depth;<br>
+        best_entry-&gt;min_value = value;<br>
+        best_entry-&gt;max_depth = 0;<br>
+        }<br>
+        ////////////////////////////////////////////////////////////////////////////<br>
+        void trans_min_store(char depth, __int16 value)<br>
+        { int i, score, best_score;<br>
+        struct entry_t *entry;<br>
+        struct entry_t *best_entry;<br>
+        <br>
+        if (value &gt;= 31500) depth = 64;<br>
+        best_entry = NULL; best_score = 0;<br>
+        entry = trans_entry + (KEY_INDEX &amp; trans_mask);<br>
+        for (i = 0; i &lt; ClusterSize; i++, entry++) {<br>
+        if (entry-&gt;lock == KEY_LOCK) {<br>
+        entry-&gt;date = (unsigned char)trans_date;<br>
+        if (depth &gt; entry-&gt;depth) entry-&gt;depth = depth;<br>
+        if (depth &gt;= entry-&gt;min_depth) {<br>
+        entry-&gt;min_depth = depth;<br>
+        entry-&gt;min_value = value;<br>
+        }<br>
+        return;<br>
+        }<br>
+        score = trans_score[entry-&gt;date] - (entry-&gt;depth);<br>
+        if (score &gt; best_score) { best_entry = entry; best_score = score; }<br>
+        }<br>
+        best_entry-&gt;lock = KEY_LOCK;<br>
+        best_entry-&gt;date = (unsigned char)trans_date;<br>
+        best_entry-&gt;depth = depth;<br>
+        best_entry-&gt;move_depth = 0;<br>
+        best_entry-&gt;move = 0;<br>
+        best_entry-&gt;min_depth = depth;<br>
+        best_entry-&gt;min_value = value;<br>
+        best_entry-&gt;max_depth = 0;<br>
+        }<br>
+        ////////////////////////////////////////////////////////////////////////////<br>
+        void trans_max_store(char depth, __int16 value)<br>
+        { int i, score, best_score;<br>
+        struct entry_t *entry;<br>
+        struct entry_t *best_entry;<br>
+        <br>
+        if (value &lt;= -31500) depth = 64;<br>
+        best_entry = NULL; best_score = 0;<br>
+        entry = trans_entry + (KEY_INDEX &amp; trans_mask);<br>
+        for (i = 0; i &lt; ClusterSize; i++, entry++) {<br>
+        if (entry-&gt;lock == KEY_LOCK) {<br>
+        entry-&gt;date = (unsigned char)trans_date;<br>
+        if (depth &gt; entry-&gt;depth) entry-&gt;depth = depth;<br>
+        if (depth &gt;= entry-&gt;max_depth) {<br>
+        entry-&gt;max_depth = depth;<br>
+        entry-&gt;max_value = value;<br>
+        }<br>
+        return;<br>
+        }<br>
+        score = trans_score[entry-&gt;date] - (entry-&gt;depth);<br>
+        if (score &gt; best_score) { best_entry = entry; best_score = score; }<br>
+        }<br>
+        best_entry-&gt;lock = KEY_LOCK;<br>
+        best_entry-&gt;date = (unsigned char)trans_date;<br>
+        best_entry-&gt;depth = depth;<br>
+        best_entry-&gt;move_depth = 0;<br>
+        best_entry-&gt;move = 0;<br>
+        best_entry-&gt;min_depth = 0;<br>
+        best_entry-&gt;max_depth = depth;<br>
+        best_entry-&gt;max_value = value;<br>
+        }<br>
+        <br>
+
+        
+
+        </p>
+
+        
+
+        </td>
+  </tr>
+</table>
+
+</body>
+
+</html>

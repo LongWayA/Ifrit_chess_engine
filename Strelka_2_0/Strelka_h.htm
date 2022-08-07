@@ -1,0 +1,206 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<title>Strelka_h</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center">Strelka_h</h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="/index.html">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+
+        
+
+        <p align="justify">
+        #define KEY_INDEX (unsigned int)(Board-&gt;key)<br>
+        #define KEY_LOCK (unsigned int)((Board-&gt;key)&gt;&gt;32)<br>
+        #define LINE1(square) (LineMask[0][square][((Board-&gt;md3)&gt;&gt;LineShift[0][square])&amp;0x3F])<br>
+        #define LINE2(square) (LineMask[1][square][((Board-&gt;md4)&gt;&gt;LineShift[1][square])&amp;0x3F])<br>
+        #define LINE3(square) (LineMask[2][square][((Board-&gt;md1)&gt;&gt;LineShift[2][square])&amp;0x3F])<br>
+        #define LINE4(square) (LineMask[3][square][((Board-&gt;md2)&gt;&gt;LineShift[3][square])&amp;0x3F])<br>
+        #define ILLEGAL_POSITION ((Board-&gt;mp[13 - Board-&gt;turn]&amp;(pos_info_entry-&gt;mob[0])))<br>
+        #define MOVE_FROM(move) ((move&gt;&gt;6)&amp;0x3F)<br>
+        #define MOVE_TO(move) (move&amp;0x3F)<br>
+        #define PIECE_IS_PAWN(piece) ((piece&amp;0x0E)==2)<br>
+        #define MAX_MATERIAL 2*2*3*3*3*3*3*3*9*9<br>
+        #define MOVE_IS_PROMOTION(move) (move&amp;0x4000)<br>
+        #define MOVE_IS_CASTLING(move) ((move&amp;0x7000)==0x2000)<br>
+        #define MOVE_IS_ENPASSANT(move) ((move&amp;0x7000)==0x1000)<br>
+        #define PIECE_PROMO(move,side) (10+side-((move&amp;0x3000)&gt;&gt;11))<br>
+        <br>
+        struct mat_info_t {<br>
+        unsigned __int16 flags;<br>
+        __int16 value;<br>
+        };<br>
+        <br>
+        struct entry_t {<br>
+        unsigned int lock;<br>
+        unsigned __int16 move;<br>
+        char depth;<br>
+        unsigned char date;<br>
+        __int16 min_value;<br>
+        __int16 max_value;<br>
+        char move_depth;<br>
+        unsigned char flags;<br>
+        char min_depth;<br>
+        char max_depth;<br>
+        };<br>
+        <br>
+        struct board_t {<br>
+        int square[64];<br>
+        unsigned __int64 mp[14];<br>
+        unsigned __int64 md1;<br>
+        unsigned __int64 md2;<br>
+        unsigned __int64 md3;<br>
+        unsigned __int64 md4;<br>
+        int turn;<br>
+        int flags;<br>
+        int ep_square;<br>
+        int ply_nb;<br>
+        int sp;<br>
+        int opening;<br>
+        int endgame;<br>
+        unsigned __int64 key;<br>
+        unsigned __int64 pawn_key;<br>
+        int mat_summ;<br>
+        int mat_diff;<br>
+        unsigned __int64 stack[1024];<br>
+        };<br>
+        <br>
+        struct undo_t {<br>
+        int flags;<br>
+        int ep_square;<br>
+        int ply_nb;<br>
+        int sp;<br>
+        int opening;<br>
+        int endgame;<br>
+        unsigned __int64 key;<br>
+        unsigned __int64 pawn_key;<br>
+        int mat_summ;<br>
+        int mat_diff;<br>
+        int capture;<br>
+        };<br>
+        <br>
+        struct list_t {<br>
+        int move;<br>
+        int score;<br>
+        };<br>
+        <br>
+        struct moves_info_t {<br>
+        struct list_t list[128];<br>
+        struct list_t * next;<br>
+        int bad_captures[128];<br>
+        int bad_cnt;<br>
+        int bad_index;<br>
+        int entry;<br>
+        int trans_move;<br>
+        };<br>
+        <br>
+        struct undo_null_t {<br>
+        int ep_square;<br>
+        int ply_nb;<br>
+        unsigned __int64 key;<br>
+        };<br>
+        <br>
+        struct pos_info_t {<br>
+        unsigned __int64 mob[2];<br>
+        int killer1;<br>
+        int killer2;<br>
+        int value;<br>
+        int move;<br>
+        };<br>
+        <br>
+        struct pawn_info_t {<br>
+        unsigned int lock;<br>
+        __int16 opening;<br>
+        __int16 endgame;<br>
+        __int16 sheet_white_king[3];<br>
+        __int16 sheet_black_king[3];<br>
+        unsigned char pass_file[2];<br>
+        __int16 dummy;<br>
+        };<br>
+        <br>
+        void get_uci_command(void);<br>
+        void send_best_move(void);<br>
+        int input_available(void);<br>
+        void move_to_string(int, char []);<br>
+        <br>
+        void board_from_fen(const char []);<br>
+        void board_init(struct board_t *);<br>
+        int popcnt(unsigned __int64);<br>
+        int line_attack(int, int);<br>
+        void init_bitboards(void);<br>
+        void init_evals(void);<br>
+        <br>
+        void trans_alloc(int);<br>
+        void trans_set_date(int);<br>
+        void trans_clear(void);<br>
+        void trans_store(unsigned __int16 move, char depth, __int16 value);<br>
+        void trans_move_store(unsigned __int16 move, char depth, __int16 value);<br>
+        void trans_min_store(char depth, __int16 value);<br>
+        void trans_max_store(char depth, __int16 value);<br>
+        <br>
+        int first_one(unsigned __int64);<br>
+        int last_one(unsigned __int64);<br>
+        int evaluate(struct pos_info_t *);<br>
+        int eval_mob(struct pos_info_t *);<br>
+        struct pawn_info_t * pawn_get_info(void);<br>
+        <br>
+        void start_go(char []);<br>
+        void start_search(void);<br>
+        int full_root(int);<br>
+        int full_search(int, int, int, int *);<br>
+        int full_check_search(int, int, int, int *);<br>
+        int full_pv_search(int, int, int, int, int *);<br>
+        int qu_search(int, int, int, int *);<br>
+        int qu_check_search(int, int, int, int *);<br>
+        int next_move(struct moves_info_t *, struct pos_info_t *);<br>
+        void search_check(void);<br>
+        <br>
+        void move_do(int, struct undo_t *);<br>
+        void move_undo(int, struct undo_t *);<br>
+        void move_do_null(struct undo_null_t *);<br>
+        void move_do_castle(int);<br>
+        void move_undo_castle(int);<br>
+        <br>
+        struct list_t * gen_evasions(struct list_t *, unsigned __int64);<br>
+        void gen_captures(struct list_t *, unsigned __int64, unsigned __int64);<br>
+        void gen_quiet_moves(struct list_t *, unsigned __int64, int, int, int);<br>
+        void gen_checks(struct list_t *, unsigned __int64, unsigned __int64);<br>
+        <br>
+        int see_move(int);<br>
+        int move_is_legal(int, struct pos_info_t *);<br>
+        void history_store(struct pos_info_t *, int, int);<br>
+        void note_moves(struct list_t *, struct list_t *, struct pos_info_t *, 
+        int);<br>
+        int move_order(int);<br>
+        <br>
+
+        
+
+        </p>
+
+        
+
+        </td>
+  </tr>
+</table>
+
+</body>
+
+</html>

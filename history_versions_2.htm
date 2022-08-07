@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+<title>История версий программы Джин</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">История версий программ Джин & Ифрит</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="ifrit_chess_engine.html">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+    <br>
+    <p align="center"><a href="history_versions_1.htm"><font size="4">История версий часть 1</font></a></p>
+
+   
+        <p align="justify">&nbsp;<strong><font size="4">13.4.2008</font></strong></p> 
+        Ifrit_b1_8 <br>     
+        Подправил  нулевой ход. Редукция 3.<br>
+        Подправил оценочную функцию. Добавил мобильность ладей и слонов.<br>
+        <a href="src_ifrit_b/_src_ifrit_b1_8_13_4_2008.zip">Исходники Ifrit_b1_8(94<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b1_8.exe">Ifrit_b1_8(116<span lang="en-us">Kb</span>)</a><br><br>
+
+        <p align="justify">&nbsp;<strong><font size="4">19.4.2008</font></strong></p> 
+        Ifrit_b1_9 <br> 
+        Реализатор ходов разбил на функции для черных и белых. В итоге перебор слегка ускорился (5-10%).<br>    
+        Исправил  нулевой ход. В предыдущей версии забыл пропустить ход.<br>  
+        В результате получал отсечение просмотром на меньшей глубине :) Редукция 3.<br>
+        <a href="src_ifrit_b/_src_ifrit_b1_9_19_4_2008.zip">Исходники Ifrit_b1_9(94<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b1_9.exe">Ifrit_b1_9(116<span lang="en-us">Kb</span>)</a><br><br>
+
+        <p align="justify">&nbsp;<strong><font size="4">20.4.2008</font></strong></p> 
+        Ifrit_b1_9 <br>     
+        Нулевой ход жестко глючит на глубинах 8-9 полуходов. Поэтому Ifrit_b1_9 
+    перезалил с отключенным нулевых ходом.<br>
+
+ 
+         <p align="justify">&nbsp;<strong><font size="4">22.4.2008</font></strong></p> 
+        Ifrit_b1_10 <br> 
+        Нулевой ход подключил.<br> 
+        Без проверки на шах нулевой ход бил короля, а мой генератор не верит в позиции без короля, отсюда и глюки.<br>
+        Так же учел ситуацию с взятием на проходе. <br>
+        <a href="src_ifrit_b/_src_ifrit_b1_10_22_4_2008.zip">Исходники Ifrit_b1_10(95<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b1_10.exe">Ifrit_b1_10(116<span lang="en-us">Kb</span>)</a><br><br>
+
+        <p align="justify">&nbsp;<strong><font size="4">27.4.2008</font></strong></p> 
+        Ifrit_b1_11 <br> 
+        Подправил оценку.<br> 
+        <a href="src_ifrit_b/_src_ifrit_b1_11_27_4_2008.zip">Исходники Ifrit_b1_11(95<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b1_11.exe">Ifrit_b1_11(116<span lang="en-us">Kb</span>)</a><br><br>
+
+
+        <p align="justify">&nbsp;<strong><font size="4">17.5.2008</font></strong></p> 
+        Ifrit_b1_12 <br> 
+        Перешел на новые списки ходов. Пришлось перелопатить всю программу. <br>
+        Теперь вся информация упакована в одно целое(int) число. Списки остались глобальными.<br>
+        Слегка причесал генератор ходов. <br>
+        <a href="src_ifrit_b/_src_ifrit_b1_12_16_5_2008.zip">Исходники Ifrit_b1_12(95<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b1_12.exe">Ifrit_b1_12(116<span lang="en-us">Kb</span>)</a><br><br>
+
+        <p align="justify">&nbsp;<strong><font size="4">18.5.2008</font></strong></p> 
+        Ifrit_b2 <br> 
+        Перешел на стековые списки. Это стало возможным благодаря упаковке информации в одно число.<br>
+        По скорости то же, а программа несколько упростилась, да и в отладке проще.<br>
+        Усложнил оценку позиции, что несколько замедлило перебор.<br> 
+        <a href="src_ifrit_b/_src_ifrit_b2_18_5_2008.zip">Исходники Ifrit_b2(93<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b2.exe">Ifrit_b2(116<span lang="en-us">Kb</span>)</a><br><br>
+
+        <p align="justify">&nbsp;<strong><font size="4">25.5.2008</font></strong></p> 
+        Ifrit_b2_1 <br> 
+        Исправил ошибку инициализации в оценочной функции.<br>
+        Закончил перевод всех функций на новые списки ходов.<br> 
+        <a href="src_ifrit_b/_src_ifrit_b2_1_25_5_2008.zip">Исходники Ifrit_b2_1(92<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b2_1.exe">Ifrit_b2_1(116<span lang="en-us">Kb</span>)</a><br><br>
+
+        <p align="justify">&nbsp;<strong><font size="4">15.6.2008</font></strong></p> 
+        Ifrit_b2_2 <br> 
+        Исправил взятие на проходе в генераторе. Ошибка проявлялась в редком случае когда брать можно двумя пешками.<br>
+        Включил продление на взятиях.<br> 
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b2_2_15_6_2008.zip">Исходники Ifrit_b2_2(92<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b2_2.exe">Ifrit_b2_2(116<span lang="en-us">Kb</span>)</a><br><br>
+        -->
+
+        <p align="justify">&nbsp;<strong><font size="4">5.7.2008</font></strong></p> 
+        Ifrit_b2_3 <br> 
+        Сделал регулируемую хеш таблицу. Теперь пользователь сам определяет сколько памяти выделить под хеш.<br>
+        Перешел на 64 битный хеш ключ. До этого был тестовый 32 битный.<br> 
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b2_3_5_7_2008.zip">Исходники Ifrit_b2_3(94<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b2_3.exe">Ifrit_b2_3(116<span lang="en-us">Kb</span>)</a><br><br>
+        -->
+
+        <p align="justify">&nbsp;<strong><font size="4">12.7.2008</font></strong></p> 
+        Ifrit_b2_4 <br> 
+        Доделал регулируемую хеш таблицу.<br>
+        Добавил второго киллера.<br> 
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b2_4_11_7_2008.zip">Исходники Ifrit_b2_4(94<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b2_4.exe">Ifrit_b2_4(116<span lang="en-us">Kb</span>)</a><br><br>
+        -->
+
+        <p align="justify">&nbsp;<strong><font size="4">2.9.2008</font></strong></p> 
+        Ifrit_b2_5 <br> 
+        Дописал комментарии и привел их в соответствие с последней редакцией кода.<br> 
+        Перехожу на библиотеки &quot;Си ++&quot;. Размер &quot;exe&quot; увеличился где-то раза в два, поэтому решил 
+    &quot;ехе&quot; тоже сжимать в архив.<br> 
+        Исправил таймер.<br> 
+        Исправил вставку второго киллера.<br> 
+        <br>
+        Слегка изменил сортировку:<br> 
+        1) ход из хеша;<br>
+        2) лучшее взятие по mvv/lva;<br>
+        3) киллер 1;<br>
+        4) киллер 2;<br>
+        5) упорядочение по централизации фигур.<br>
+        <br>
+        В целях ввода упорядочения по истории в список ходов добавил оценку для сортировки.<br>
+        Пока использую ее для упорядочения ходов по централизации фигур.<br>
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b2_5_2_9_2008.zip">Исходники Ifrit_b2_5(98<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b2_5.zip">Ifrit_b2_5(93<span lang="en-us">Kb</span>)</a><br><br>
+        -->
+
+        <p align="justify">&nbsp;<strong><font size="4">6.9.2008</font></strong></p> 
+        Выложил "Ifrit история разработки часть 4".<br>
+        Начал описание алогритмов Ifrit_b.<br> 
+        <br><br>
+
+        <p align="justify">&nbsp;<strong><font size="4">15.9.2008</font></strong></p> 
+        Ifrit_b2_6 <br> 
+        Продолжил описание алогритмов Ifrit_b.<br> 
+        Слегка причесал код.<br>
+        Поправил оценочную функцию.<br>
+        Добавил futility pruning.<br> 
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b2_6_15_9_2008.zip">Исходники Ifrit_b2_6(100<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b2_6.zip">Ifrit_b2_6(93<span lang="en-us">Kb</span>)</a><br><br>
+        -->
+
+        <p align="justify">&nbsp;<strong><font size="4">17.9.2008</font></strong></p> 
+        Ifrit_b2_7 <br> 
+        Поправил оценочную функцию.<br>
+        Поправил futility pruning.<br> 
+        Добавил late move reductions.<br> 
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b2_7_17_9_2008.zip">Исходники Ifrit_b2_7(100<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b2_7.zip">Ifrit_b2_7(93<span lang="en-us">Kb</span>)</a><br><br>
+        -->
+
+        <p align="justify">&nbsp;<strong><font size="4">21.9.2008</font></strong></p> 
+        Ifrit_b2_8 <br> 
+        Переписал форсированный поиск.<br>
+        Добавил internal iterative deepening.<br> 
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b2_8_21_9_2008.zip">Исходники Ifrit_b2_8(100<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b2_8.zip">Ifrit_b2_8(93<span lang="en-us">Kb</span>)</a><br><br>
+        -->
+
+       <p align="justify">&nbsp;<strong><font size="4">12.10.2008</font></strong></p> 
+        Ifrit_b2_9 <br> 
+        Добавил history heuristic(эвристику истории).<br> 
+        Исправил тестовый модуль(после добавления динамического хеша выдавал ошибку инициализации хеш-таблицы)<br>
+        Исправил баг в генераторе ходов(при возврате пешки на два поля всегда писал взятие на проходе = 0)<br>
+        Интересно что этот баг никак не отражался на трех известных тестовых позициях!<br>
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b2_9_12_10_2008.zip">Исходники Ifrit_b2_9(102<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b2_9.zip">Ifrit_b2_9(93<span lang="en-us">Kb</span>)</a><br><br>
+        -->
+
+       <p align="justify">&nbsp;<strong><font size="4">8.11.2008</font></strong></p> 
+        Ifrit_b2_10 <br> 
+        Перешел к бета-версии. Теперь буду тестировать и оптимизировать код.<br>
+        Новые методы добавлять не планирую.<br>
+        Сделал пошаговое вычисление оценки материала, т.е. в корне считаем материал, а потом только корректируем оценку при разменах.<br>
+        В генераторе ходов убрал лишние условия и причесал код.<br>
+        Причесал код в реализаторе ходов.<br>
+        В разделе "Ifrit_b - основные алгоритмы" выложил описание генератора ходов.<br>
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b2_10_8_11_2008.zip">Исходники Ifrit_b2_10(104<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b2_10.zip">Ifrit_b2_10(94<span lang="en-us">Kb</span>)</a><br><br>
+        -->
+
+       <p align="justify">&nbsp;<strong><font size="4">17.11.2008</font></strong></p> 
+        Ifrit_b2_11 <br> 
+        Нашел и исправил баг в реализаторе ходов. Баг связан с флагами рокировки.<br>
+        Подправил форсированный поиск.<br>
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b2_11_17_11_2008.zip">Исходники Ifrit_b2_11(106<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b2_11.zip">Ifrit_b2_11(94<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+         
+       <p align="justify">&nbsp;<strong><font size="4">29.11.2008</font></strong></p> 
+        Ifrit_b2_12 <br> 
+        Подправил форсированный поиск.<br>
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b2_12_29_11_2008.zip">Исходники Ifrit_b2_12(106<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b2_12.zip">Ifrit_b2_12(94<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+         
+       <p align="justify">&nbsp;<strong><font size="4">14.12.2008</font></strong></p> 
+        Ifrit_b3 <br> 
+        Подправил оценку, форсированный поиск, null move, futility pruning.<br> 
+        LMR пока использую как PVS.<br>
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b3_0_14_12_2008.zip">Исходники Ifrit_b3(107<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b3.zip">Ifrit_b3(95<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+         
+       <p align="justify">&nbsp;<strong><font size="4">21.12.2008</font></strong></p> 
+        Ifrit_b3_1 <br> 
+        Подправил futility pruning, LMR.<br> 
+        Изменил запись лучшего варианта в узле.<br>
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b3_1_21_12_2008.zip">Исходники Ifrit_b3_1(107<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b3_1.zip">Ifrit_b3_1(95<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+       <p align="justify">&nbsp;<strong><font size="4">3.1.2009</font></strong></p> 
+        Ifrit_b3_2 <br> 
+        Подправил детектор шахов, форсированный поиск, хеш-таблицу, историю, IID.<br> 
+        В форсированный поиск добавил delta pruning.<br>
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b3_2_3_1_2009.zip">Исходники Ifrit_b3_2(109<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b3_2.zip">Ifrit_b3_2(96<span lang="en-us">Kb</span>)</a><br><br>
+         --> 
+         
+        У Стрелки давно уже свой сайт, поэтому убираю с главной страницы исходники Стрелки в виде html-страниц. <br>
+        <!--
+        <a href="Strelka_2_0/Strelka.htm">Strelka_2_0</a><br>
+         -->
+         
+       <p align="justify">&nbsp;<strong><font size="4">6.1.2009</font></strong></p> 
+        Ifrit_b3_3 <br> 
+        В оценку добавил мобильность ферзя, коня, ладьи, учет атаки окрестности короля.<br>
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b3_3_6_1_2009.zip">Исходники Ifrit_b3_3(110<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b3_3.zip">Ifrit_b3_3(96<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+         
+        <p align="justify">&nbsp;<strong><font size="4">10.1.2009</font></strong></p> 
+        Ifrit_b3_4 <br> 
+        Перешел к сокращенному поиску всех неглавных(не pv) вариантов.<br>
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b3_4_10_1_2009.zip">Исходники Ifrit_b3_4(111<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b3_4.zip">Ifrit_b3_4(101<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+         
+        <p align="justify">&nbsp;<strong><font size="4">17.1.2009</font></strong></p> 
+        Ifrit_b3_5 <br> 
+        В главном варианте(pv variant) LMR не применяем.<br>
+        В главном варианте(pv variant) применяем продления на разменах.<br>
+        <!--
+        <a href="src_ifrit_b/_src_ifrit_b3_5_17_1_2009.zip">Исходники Ifrit_b3_5(111<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_b/Ifrit_b3_5.zip">Ifrit_b3_5(101<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+         
+        <p align="justify">&nbsp;<strong><font size="4">28.1.2009</font></strong></p> 
+        Ifrit_b3_5comment <br> 
+        Добавил еще комментариев. Прокомментировал параметры всех функций. <br>
+        <!--      
+        <a href="src_ifrit_b/_src_ifrit_b3_5_28_1_2009.zip">Исходники Ifrit_b3_5comment(117<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+         
+        <p align="justify">&nbsp;<strong><font size="4">15.2.2009</font></strong></p> 
+        Ifrit_j1 <br> 
+        Перешел на классы. Потеря в скорости перебора ~10%<br>
+        <!--
+        <a href="src_ifrit_j/_src_ifrit_j1_15_2_2009.zip">Исходники Ifrit_j1(120<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j1.zip">Ifrit_j1(102<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+         
+        <p align="justify">&nbsp;<strong><font size="4">27.2.2009</font></strong></p> 
+        Ifrit_j1_refactoring <br> 
+        Расчистил пространство глобальных имен.<br>
+        Указателям присвоил префикс р_.<br>
+        Скрыл внутренние методы классов.<br>
+        <!--
+        <a href="src_ifrit_j/_src_ifrit_j1_refactoring_27_2_2009.zip">Исходники Ifrit_j1_refactoring(120<span lang="en-us">Kb</span>)</a><br>
+        <br>
+         -->
+         
+        <p align="justify">&nbsp;<strong><font size="4">9.3.2009</font></strong></p> 
+        Ifrit_j1_1 <br> 
+        Всем флагам присвоил логический тип и префикс flag_<br>
+        В классе FULLSEARCH модернизировал режимы компиляции.<br>
+        В классе BITBOARDGENERATOR добавил именованных констант.<br>
+        Структуры текущего и лучшего варианта переместил в класс PVSAVE.<br>
+        Проверку трехкратного повторения позиции переместил в класс HASHM.<br> 
+        Добавил распознавание трехкратного повторения позиции в рассчитываемом варианте.<br>
+        <!--
+        <a href="src_ifrit_j/_src_ifrit_j1_1_9_3_2009.zip">Исходники Ifrit_j1_1(121<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j1_1.zip">Ifrit_j1_1(102<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        <p align="justify">&nbsp;<strong><font size="4">11.4.2009</font></strong></p> 
+        Ifrit_j1_1(comment) <br> 
+        Добавил описания классов. Подредактировал код.<br>
+        <!-- 
+        <a href="src_ifrit_j/_src_ifrit_j1_1_comment_11_4_2009.zip">Исходники Ifrit_j1_1(comment)(125<span lang="en-us">Kb</span>)</a><br>
+        <br>
+         -->
+         
+        <p align="justify">&nbsp;<strong><font size="4">13.6.2009</font></strong></p> 
+        Ifrit_j1_2 <br> 
+        Выход версии задержал, так как перебрал и протестировал весь поиск. <br>
+        К следующей версии планирую переписать оценку. <br>
+        <br>
+        Отключил внутренние итерации(internal iterative deepening) так как в моей реализации  они <br>
+        неэффективны. <br>
+        Отключил  delta pruning в форсированном поиске. <br>
+        <br>
+        Добавил комментариев.<br>
+        Сделал остановку поиска, если найден мат.<br>
+        Переделал продления на шахах.<br>
+        Переделал продления на разменах.<br>
+        В нулевом ходе редукцию снизил с 3 до 2.<br>
+        Сделал отключение нулевого хода, когда материала мало и вероятность цугцванга повышается.<br>
+        <br>
+        <!--         
+        <a href="src_ifrit_j/_src_ifrit_j1_2_13_6_2009.zip">Исходники Ifrit_j1_2(127<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j1_2.zip">Ifrit_j1_2(108<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        <p align="justify">&nbsp;<strong><font size="4">28.7.2009</font></strong></p> 
+         Добавил "Дневник разработчика шахматной программы часть 5".<br><br>
+         
+
+        <p align="justify">&nbsp;<strong><font size="4">18.8.2009</font></strong></p> 
+        Ifrit_j1_3 <br> 
+        
+        Исправил ошибку для случая, когда задаем время на ход. Независимо от времени поиск велся на глубине один полуход. <br>
+        Функцию оценки разбил на несколько функций. <br>
+        Параметры оценки вынес во внешний файл. Теперь желающие могут настроить оценку.<br>
+        Сделал экстренный ход, если поиск слишком задержался на глубине.<br>
+        В нулевом ходе редукцию поднял с 2 до 3.<br>
+        <!--           
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j1_3_18_8_2009.zip">Исходники Ifrit_j1_3(131<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j1_3.zip">Ifrit_j1_3(114<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        <p align="justify">&nbsp;<strong><font size="4">29.8.2009</font></strong></p> 
+        Ifrit_j1_4 <br> 
+        
+        Отключил futility pruning. В некоторых задачах решение отодвигает на полуход вглубь.<br>
+        Отключил сортировку по истории.<br>
+        Включил delta pruning.<br>
+        <!--            
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j1_4_29_8_2009.zip">Исходники Ifrit_j1_4(132<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j1_4.zip">Ifrit_j1_4(114<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        <p align="justify">&nbsp;<strong><font size="4">9.9.2009</font></strong></p> 
+        Ifrit_j1_5 <br> 
+        
+        Переписал и протестировал хеш-таблицу.<br>
+        Добавил использование оценки из хеш-таблицы.<br>
+        <!--            
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j1_5_9_9_2009.zip">Исходники Ifrit_j1_5(135<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j1_5.zip">Ifrit_j1_5(110<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        <p align="justify">&nbsp;<strong><font size="4">29.9.2009</font></strong></p> 
+        Ifrit_j1_6 <br> 
+        
+        Исправил и протестировал использование оценки из хеш-таблицы.<br>
+        Отключил delta pruning.<br>
+        Отключил продление на разменах в главном варианте.<br>
+        Полностью удалил internal iterative deepening.<br>
+        <!--            
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j1_6_29_9_2009.zip">Исходники Ifrit_j1_6(135<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j1_6.zip">Ifrit_j1_6(108<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        <p align="justify">&nbsp;<strong><font size="4">18.10.2009</font></strong></p> 
+        Ifrit_j1_7 <br> 
+        
+        Доработал и протестировал использование оценки из хеш-таблицы.<br>
+        Добавил сортировку  корневого списка ходов. Сортируем по оценкам из предыдущих итераций. <br>
+        Оценка позиции примитивная. Материал + pst. Внешний файл не используем. <br>
+        <!--                   
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j1_7_18_10_2009.zip">Исходники Ifrit_j1_7(137<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j1_7.zip">Ifrit_j1_7(102<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        <p align="justify">&nbsp;<strong><font size="4">25.10.2009</font></strong></p> 
+        Ifrit_j1_8 <br> 
+        
+        В нулевой ход добавил динамическую редукцию.<br>
+        В нулевой ход добавил проверку на цугцванг.<br>
+        Линию варианта пишем только в главном(pv) поиске. <br>
+        Включил продление на разменах в главном(pv) поиске. <br>
+        <!--                   
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j1_8_25_10_2009.zip">Исходники Ifrit_j1_8(137<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j1_8.zip">Ifrit_j1_8(101<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        Ifrit_j1_7 64 bit компиляция от <b>Dann Corbit</b> <br>
+        <!--         
+        <a href="Dann_Corbit/Ifrit_j1_7_src_Dann_Corbit_revision.zip">Исходники Ifrit_j1_7 64 bit (129<span lang="en-us">Kb</span>)</a><br>
+        <a href="Dann_Corbit/Ifrit_j1_7_64bit.zip">Ifrit_j1_7 64 bit (100<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        <p align="justify">&nbsp;<strong><font size="4">2.11.2009</font></strong></p> 
+        Ifrit_j1_9 <br> 
+        
+        Подправил нулевой ход.<br>
+        Переписал детектор трехкратного повтора позиций.<br>
+        <!--                      
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j1_9_2_11_2009.zip">Исходники Ifrit_j1_9(139<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j1_9.zip">Ifrit_j1_9(98<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        <p align="justify">&nbsp;<strong><font size="4">14.11.2009</font></strong></p> 
+        Ifrit_j2_0 <br> 
+        
+        Почистил код.<br>
+        Удалил сортировку по истории.<br>
+        Отключил продление на разменах в главном варианте.<br>
+        Подправил оценку позиции.<br>
+        <!--                       
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j2_0_14_11_2009.zip">Исходники Ifrit_j2_0(128<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j2_0.zip">Ifrit_j2_0(99<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+         
+        <p align="justify">&nbsp;<strong><font size="4">15.11.2008</font></strong></p> 
+        Выложил "Ifrit. История разработки. Часть 6".<br>
+           <br><br>
+
+        <p align="justify">&nbsp;<strong><font size="4">17.11.2009</font></strong></p> 
+        Ifrit_j2_1 <br> 
+        
+        Вернул постоянную редукцию нулевого хода 4.<br>
+        Включил продления на разменах в главном варианте.<br>
+        Доработал мобильность фигур и атаку на короля.<br>
+        Подправил оценку позиции.<br>
+        <!--                       
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j2_1_17_11_2009.zip">Исходники Ifrit_j2_1(128<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j2_1.zip">Ifrit_j2_1(99<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        <p align="justify">&nbsp;<strong><font size="4">20.11.2009</font></strong></p> 
+        Ifrit_j2_2 <br> 
+        
+        Доработал delta pruning.<br>
+        Продление на размене заменил на продление побеждающего взятия.<br>
+        Подправил оценку позиции.<br>
+        <!--                       
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j2_2_20_11_2009.zip">Исходники Ifrit_j2_2(128<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j2_2.zip">Ifrit_j2_2(100<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        <p align="justify">&nbsp;<strong><font size="4">28.11.2009</font></strong></p> 
+        Ifrit_j2_3 <br> 
+        
+        Переписал LMR.<br>
+        Отключил мобильность.<br>
+        Подправил оценку позиции.<br>
+        <!--                      
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j2_3_28_11_2009.zip">Исходники Ifrit_j2_3(131<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j2_3.zip">Ifrit_j2_3(99<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        <p align="justify">&nbsp;<strong><font size="4">13.12.2009</font></strong></p> 
+        Ifrit_j2_4 <br> 
+        
+        Подправил таймер.<br>
+        Переписал распределение времени на ход.<br>
+        Маленькое изменение в кэшировании хода.<br>
+        <!--                      
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j2_4_13_12_2009.zip">Исходники Ifrit_j2_4(131<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j2_4.zip">Ifrit_j2_4(98<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+       <p align="justify">&nbsp;<strong><font size="4">17.12.2009</font></strong></p> 
+       
+        Добавил ссылку на турнир.<br>
+        Ифрит играет в турнире <b>17th Amateur Series Division 8</b>, который проводит  <b>Graham Banks</b> <br>
+        Подробности смотрите на форуме. <br>
+        Ifrit j2.4 is playing in tournament:<br>
+        <font size="4"> <a href="http://www.kirill-kryukov.com/chess/discussion-board/viewtopic.php?f=7&t=4762">17th Amateur Series Division 8</a></font><br>
+
+        <p align="justify">&nbsp;<strong><font size="4">20.12.2009</font></strong></p> 
+        Ifrit_j2_5 <br> 
+        
+        Переписал LMR.<br>
+        Добавил возраст записи в хеш-таблицу.<br>
+        <!--                      
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j2_5_20_12_2009.zip">Исходники Ifrit_j2_5(132<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j2_5.zip">Ifrit_j2_5(98<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+         
+        <p align="justify">&nbsp;<strong><font size="4">26.12.2009</font></strong></p> 
+        Ifrit_j2_6 <br> 
+        
+        Подправил запись в хеш-таблицу.<br>
+        Подправил использование оценки из хеш-таблицы.<br> 
+        <!--                      
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j2_6_26_12_2009.zip">Исходники Ifrit_j2_6(133<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j2_6.zip">Ifrit_j2_6(98<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        <p align="justify">&nbsp;<strong><font size="4">10.1.2010</font></strong></p> 
+        Ifrit_j2_7 <br> 
+        
+        Попытался оптимизировать код.<br>
+        Уменьшил размер записи хеш-таблицы.<br> 
+        Оптимизировал переменные.<br><br>
+        <!--        
+        Ifrit_j2_7 64 bit компиляция от <b>Dann Corbit</b> <br>
+        <a href="Dann_Corbit/64_src_ifrit_j2_7_10_1_2010.zip">Исходники Ifrit_j2_7 64 bit (150<span lang="en-us">Kb</span>)</a><br>
+        <a href="Dann_Corbit/64_ifrit_j2_7_10_1_2010.zip">Ifrit_j2_7 64 bit (117<span lang="en-us">Kb</span>)</a><br>   
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j2_7_10_1_2010.zip">Исходники Ifrit_j2_7(135<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j2_7.zip">Ifrit_j2_7(100<span lang="en-us">Kb</span>)</a><br><br>
+         -->
+
+        <p align="justify">&nbsp;<strong><font size="4">28.1.2010</font></strong></p> 
+        Ifrit_j2_8 <br> 
+        
+        В очередной раз переписал запись в хеш-таблицу.<br>
+        Теперь в одной ячейке таблицы храню две позиции - первая для сортировки ходов, а вторая для отсечки по оценке .<br>
+        <br>
+        По совету Dann Corbit убрал избыточный вывод из UCI.<br> 
+        Кстати, именно по совету Dann Corbit в свое время я начал переход на чистый C++.<br> 
+                     
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j2_8_28_1_2010.zip">Исходники Ifrit_j2_8(135<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j2_8.zip">Ifrit_j2_8(97<span lang="en-us">Kb</span>)</a><br><br>
+        
+
+        <p align="justify">&nbsp;<strong><font size="4">15.2.2010</font></strong></p> 
+        Ifrit_j2_9 <br> 
+        
+        Немного изменил запись в хеш-таблицу.<br> 
+                      
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j2_9_15_2_2010.zip">Исходники Ifrit_j2_9(135<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j2_9.zip">Ifrit_j2_9(99<span lang="en-us">Kb</span>)</a><br><br>
+
+        <p align="justify">&nbsp;<strong><font size="4">17.2.2010</font></strong></p> 
+        Ifrit_j2_9 <br> 
+        
+        Заменил exe файл. Вернул статическую линковку библиотек.<br><br>
+
+        
+        <p align="justify">&nbsp;<strong><font size="4">25.4.2010</font></strong></p> 
+        Ifrit_j3 <br> 
+        
+        Отключил два предупреждения компилятора. Подробности в файле a_Structure.h <br>
+        Константы в генераторе вынес в отдельный файл d_Bitboard_const.h. <br>
+        Косметическая правка кода генератора. <br>
+        Заменил классы пространствами имен(namespace). <br>
+        Переименовал некоторые модули. <br>
+              
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j3_25_4_2010.zip">Исходники Ifrit_j3(133<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j3.zip">Ifrit_j3(96<span lang="en-us">Kb</span>)</a><br><br>
+        
+    
+       <p align="justify">&nbsp;<strong><font size="4">3.5.2010</font></strong></p> 
+        Ifrit_j3_1 <br> 
+        
+        Привел в порядок пространства имен(namespace). <br>
+        Заменил макроопределения(macros) константами. <br>
+        Добавил модуль j_ZObrist. <br>
+        Подправил код. <br>
+        Заменил ник(nickname) на имя. <br>
+              
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j3_1_3_5_2010.zip">Исходники Ifrit_j3_1(134<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j3_1.zip">Ifrit_j3_1(96<span lang="en-us">Kb</span>)</a><br><br>
+      
+      
+        <p align="justify">&nbsp;<strong><font size="4">29.5.2010</font></strong></p> 
+        Ifrit_j3_2 <br>
+         
+        Отформатировал в новом стиле весь код программы. <br>
+        (Около 30 часов непрерывного щелканья по клавишам tab и enter :) <br><br>
+        Добавил модуль g_Search_root. <br>
+        Отключил продления на разменах. <br>
+              
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j3_2_29_5_2010.zip">Исходники Ifrit_j3_2(136<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j3_2.zip">Ifrit_j3_2(96<span lang="en-us">Kb</span>)</a><br><br>
+
+
+        <p align="justify">&nbsp;<strong><font size="4">3.7.2010</font></strong></p> 
+        Ifrit_j3_3 <br>
+         
+  
+        Удалил продления на разменах. <br>
+        Удалил futility pruning. <br>
+        Выделил PVS в функцию. <br>
+        Выделил LMR в функцию. <br>
+        Переписал оценку(evaluate). <br>
+        Исправил ошибку в LMR(lmr_reduction была глобальной). <br> 
+        Поправил delta pruning.<br>        
+              
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j3_3_3_7_2010.zip">Исходники Ifrit_j3_3(137<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j3_3.zip">Ifrit_j3_3(95<span lang="en-us">Kb</span>)</a><br><br>
+
+
+         <p align="justify">&nbsp;<strong><font size="4">11.7.2010</font></strong></p> 
+        Ifrit_j3_4 <br>
+         
+        Переписал контроль времени. <br>      
+              
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j3_4_11_7_2010.zip">Исходники Ifrit_j3_4(138<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j3_4.zip">Ifrit_j3_4(96<span lang="en-us">Kb</span>)</a><br><br>
+    
+    
+        <p align="justify">&nbsp;<strong><font size="4">14.7.2010</font></strong></p> 
+        Выложил "Ifrit. История разработки. Часть 7".<br>
+        <br><br>
+
+        <p align="justify">&nbsp;<strong><font size="4">25.7.2010</font></strong></p> 
+        Ifrit_j3_5 <br>
+
+        Добавил Futility pruning.<br>  
+        Добавил Razoring.<br>
+        Подправил оценку.<br>  
+        
+        Вроде прирост есть. Но есть ли 100 пунктов затрудняюсь сказать. Слишком неровная игра.<br>                   
+              
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j3_5_25_7_2010.zip">Исходники Ifrit_j3_5(139<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j3_5.zip">Ifrit_j3_5(96<span lang="en-us">Kb</span>)</a><br><br>
+
+    
+       <p align="justify">&nbsp;<strong><font size="4">8.8.2010</font></strong></p> 
+        Ifrit_j3_6 <br>
+
+        Подправил Futility pruning.<br>  
+        Подправил Razoring.<br>          
+              
+        <br>
+        <a href="src_ifrit_j/_src_ifrit_j3_6_8_8_2010.zip">Исходники Ifrit_j3_6(139<span lang="en-us">Kb</span>)</a><br>
+        <a href="bin_ifrit_j/Ifrit_j3_6.zip">Ifrit_j3_6(98<span lang="en-us">Kb</span>)</a><br><br>
+        <br><br>
+
+        <p>&nbsp;<p>&nbsp;<p>&nbsp;<p>&nbsp;<p>&nbsp;<p>&nbsp;<p><br>
+
+
+
+        </td>
+  </tr>
+</table>
+
+</body>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+<title>Null_move_pruning</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">Null move pruning</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="0_0_Structure_Ifrit_b.htm">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+ <br>   
+ Идея нулевого хода заключается в том, что если мы пропускаем ход, а противник 
+ все равно не смог улучшить оценку, значит, эту <br>
+ ветку можно подрезать. Есть исключения это позиции цугцванга, в которых пропуск 
+ хода упускает победу или вообще ведет к <br>
+ поражению. Выигрыш в скорости получается, потому что мы перебираем на меньшую 
+ глубину. Это так называемый коэффициент <br>
+ редукции, который колеблется от 2 до 4.<br>
+ Нулевой ход следует вызывать один раз в ветке, иначе поиск вырождается. Не 
+ должно быть шаха в узле иначе следующим ходом <br>
+ противник побьет нашего короля. Ход не должен быть взятием, так как такие ветки 
+ нежелательно отсекать.<br>
+ <br>
+ Приведем код из Ифрита(Ifrit_b_2_5):<br>
+ Это за белых. За черных аналогично.<br>
+ <br>
+ // мы пропускаем свой ход и если даже при такой форе противник не находит<br>
+ // лучшего хода эту ветку можно подрезать<br>
+ // &gt;3 потому что нужно оставить глубину на подрезку при нулевом ходе<br>
+ // нулевой ход начинает работать при максимальной глубине 6, начиная с глубины 
+ 3 (6-2=4&gt;3)&amp;&amp;(depth &gt; 2)<br>
+ if ((null_m == 0) &amp;&amp; ((depth_max - depth) &gt; 3 ) &amp;&amp; (description_move != 2) &amp;&amp; (check 
+ == 0))<br>
+ {<br>
+ &nbsp;
+ запоминаем состояние взятия на проходе<br>
+ &nbsp;
+ taking_passage_yes_mem = bitboard-&gt;taking_passage_yes;<br>
+ &nbsp;
+ taking_passage_x_mem = bitboard-&gt;taking_passage_x;<br>
+ &nbsp;
+ taking_passage_y_mem = bitboard-&gt;taking_passage_y;<br>
+ &nbsp;
+ bitboard-&gt;taking_passage_yes = 0;<br>
+ &nbsp;
+ null_m=1;// два раза метод в одной ветке не вызываем<br>
+ &nbsp;
+ depth_max_z= depth_max;//<br>
+ <br>
+ &nbsp;
+ value=Black(check,bitboard,alpha,beta,depth_max_z,depth+4,nodes,pv_current,pv_best,((list_surplus_moves.move[1]&gt;&gt;6) 
+ &amp; 63), <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ three_moves,br,null_m); <br>
+ <br>
+ &nbsp;
+ восстанавливаем состояние взятия на проходе <br>
+ &nbsp;
+ bitboard-&gt;taking_passage_yes = taking_passage_yes_mem;<br>
+ &nbsp;
+ bitboard-&gt;taking_passage_x = taking_passage_x_mem ;<br>
+ &nbsp;
+ bitboard-&gt;taking_passage_y = taking_passage_y_mem ;<br>
+ <br>
+ &nbsp;
+ //был ход черных, при котором они пытались найти минимальную оценку, т.е. 
+ улучшали бетту<br>
+ &nbsp;
+ //теперь опять ход черных и если мы не смогли улучшить бету, т.е. наша оценка 
+ больше<br>
+ &nbsp;
+ //или равна бете, значит, можно отсечь, т.к. ветка нам не интересна<br>
+ &nbsp;
+ if(value&gt;=beta) return beta ;<br>
+ &nbsp;
+ null_m=0;<br>
+ }<br>
+ <br>
+ Посмотрим на то, как эффективно это у нас работает.<br>
+ <br>
+ NegaScout со всеми сортировками (хеш-таблица + сортировка взятий + киллер + 
+ централизация)<br>
+ 8/8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 00:03&nbsp;&nbsp; 757.361&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 547.080&nbsp;&nbsp; +0,12&nbsp;&nbsp; e2e4 e7e5 Ng1f3 Ng8f6 d2d4 e5xd4 Qd1xd4 Bf8e7<br>
+ 9/9&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 00:14&nbsp;&nbsp; 7.830.431&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 842.030&nbsp;&nbsp; +0,29&nbsp;&nbsp; e2e4 e7e5 Ng1f3 Bf8d6 d2d4 e5xd4 Qd1xd4 Ng8f6 
+ Bf1c4<br>
+ 10/10&nbsp; 01:31&nbsp;&nbsp; 34.288.860&nbsp;&nbsp;&nbsp;&nbsp; 561.720&nbsp;&nbsp; +0,04&nbsp;&nbsp; Nb1c3 d7d5 d2d4 Bc8f5 Ng1f3 Ng8f6 Bc1f4 
+ Nb8c6 e2e3 Qd8d7<br>
+ <br>
+ NegaScout со всеми сортировками + нулевой ход + продление на шахах<br>
+ 8/8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 00:02&nbsp;&nbsp; 716.673&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 524.087&nbsp;&nbsp; +0,12&nbsp;&nbsp; e2e4 e7e5 Ng1f3 Ng8f6 d2d4 e5xd4 Qd1xd4 Bf8e7<br>
+ 9/10&nbsp;&nbsp;&nbsp; 00:04&nbsp;&nbsp; 551.952&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 541.953&nbsp;&nbsp; +0,21&nbsp;&nbsp; e2e4 d7d5 e4xd5 Qd8xd5 Ng1f3 Qd5e4+ Bf1e2 
+ Bc8f5 d2d3 Qe4d5<br>
+ 10/11&nbsp; 00:32&nbsp;&nbsp; 13.001.137&nbsp;&nbsp;&nbsp; 518.485&nbsp;&nbsp; +0,10&nbsp;&nbsp; Nb1c3 d7d5 d2d4 Bc8f5 Nc3xd5 Qd8xd5 Qd1d2 
+ Nb8d7 Ke1d1 Bf5xc2+ Kd1xc2<br>
+ 11/11&nbsp; 01:06&nbsp;&nbsp; 3.103.866&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 514.697&nbsp;&nbsp; +0,22&nbsp;&nbsp; e2e4 e7e5 Ng1f3 Nb8c6 Bf1b5 Nc6d4 Nf3xd4 
+ e5xd4 Bb5c4 Bf8e7 f2f4<br>
+ <br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>
+
+</html>

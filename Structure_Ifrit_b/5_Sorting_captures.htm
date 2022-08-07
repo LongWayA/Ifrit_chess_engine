@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+<title>Sorting_captures</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">Sorting captures</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="0_0_Structure_Ifrit_b.htm">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%"> 
+ <br>   
+ <p>Конечно же, здесь мы будем говорить о mvv/lva. Эта аббревиатура 
+ расшифровывается как «most valuable victim / least valuable aggressor». Если 
+ перевести на русский, то это звучит как наиболее ценная жертва/наименее ценный 
+ агрессор. Суть данной сортировки отраженна очень точно.<br>
+ Несмотря на ее простоту, она принципиально важна, когда мы в быстром поиске 
+ считаем только взятия. Именно эта сортировка позволяет просчитывать взятия до 
+ конца, не зарываясь при этом.<br>
+ <br>
+ Оцениваем взятия следующим образом:<br>
+ взятая фигура – берущая фигура<br>
+ <br>
+ Потом сортируем по величине оценки, начиная с максимальной и дальше по 
+ убыванию.<br>
+ <br>
+ Оценка для сортировки у меня следующая:<br>
+ 1 - пешка 2 - конь 3 - слон 4 - ладья 5 - ферзь 6 – король<br>
+ <br>
+ Например, мы пешкой съели ферзя, тогда оценка будет<br>
+ 5 – 1 = 4<br>
+ <br>
+ или мы ладьей съели ферзя, тогда оценка будет<br>
+ 5 – 4 = 1<br>
+ <br>
+ или конем съели ладью <br>
+ 4 – 2 = 2<br>
+ <br>
+ Ясно, что после сортировки на первом месте будет 4, на втором 2 на третьем 1.<br>
+ <br>
+ <br>
+ В Ифрите (Ifrit_b2_6) реализация следующая:<br>
+ <br>
+ оценку даем в генераторе ходов<br>
+ // записываем оценку взятия(mvv/lva в моем понимании) для последующей 
+ сортировки<br>
+ list_surplus_moves-&gt;sorting_score[p] = capture - name;<br>
+ <br>
+ а сортируем в отдельной функции после генерации всех ходов.<br>
+ for (n = 0 ; n &lt; captures ; n++){ <br>
+ &nbsp;
+ for (int i = n + 1 ; i &lt; captures ; i++){<br>
+ <br>
+ &nbsp;
+ if(list_surplus_moves-&gt;sorting_score[n] &lt; list_surplus_moves-&gt;sorting_score[i]){
+ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ // сохраняем данные из n <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ move_s = list_surplus_moves-&gt;move[n];<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ score_s = list_surplus_moves-&gt;sorting_score[n];<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ // копируем из i в n<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ list_surplus_moves-&gt;move[n] = list_surplus_moves-&gt;move[i];<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ list_surplus_moves-&gt;sorting_score[n] = list_surplus_moves-&gt;sorting_score[i];<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;
+ // восстанавливаем запись<br>
+ &nbsp;&nbsp;&nbsp;
+ list_surplus_moves-&gt;move[i] = move_s;<br>
+ &nbsp;&nbsp;&nbsp;
+ list_surplus_moves-&gt;sorting_score[i] = score_s;<br>
+ <br>
+ &nbsp;&nbsp;
+ }// if(list_surplus_moves-&gt;sorting_score[n] &lt; list_surplus_moves-&gt;sorting_score[i]){
+ <br>
+ &nbsp;
+ }//for (int i=0;i&lt;m;i++){<br>
+ }//for (int n=0;n&lt;m;n++){ <br>
+ <br>
+ <br>
+ Пробовал также схему <br>
+ 100 * взятая фигура – берущая фигура<br>
+ <br>
+ В результате получилось:<br>
+ <br>
+ взятая фигура – берущая фигура<br>
+ 9/9&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 00:45&nbsp;&nbsp;&nbsp; 25.499.252&nbsp;&nbsp;&nbsp; 780.290&nbsp;&nbsp;&nbsp; +0,29&nbsp;&nbsp; e2e4 e7e5 Ng1f3 Bf8d6 d2d4 e5xd4 Qd1xd4 
+ Ng8f6 Bf1c4<br>
+ 10/10&nbsp;&nbsp; 04:41&nbsp;&nbsp; 102.801.673&nbsp;&nbsp; 559.898&nbsp;&nbsp;&nbsp; +0,09&nbsp;&nbsp; e2e4 e7e5 Ng1f3 Ng8f6 d2d4 e5xd4 e4e5 
+ Qd8e7 Qd1xd4 Nb8c6<br>
+ <br>
+ 100 * взятая фигура – берущая фигура<br>
+ 9/9&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 00:43&nbsp;&nbsp;&nbsp; 25.307.131&nbsp;&nbsp;&nbsp; 795.960&nbsp;&nbsp;&nbsp; +0,29&nbsp;&nbsp; e2e4 e7e5 Ng1f3 Bf8d6 Bf1c4 Ng8f6 d2d4 e5xd4 
+ Qd1xd4<br>
+ 10/10&nbsp; 04:57&nbsp;&nbsp; 123.698.495&nbsp;&nbsp; 603.137&nbsp;&nbsp;&nbsp; +0,09&nbsp;&nbsp; e2e4 e7e5 Ng1f3 Ng8f6 d2d4 e5xd4 e4e5 
+ Qd8e7 Qd1xd4 Nb8c6<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>
+
+</html>

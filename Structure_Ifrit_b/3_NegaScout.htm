@@ -1,0 +1,185 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<title>NegaScout</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">NegaScout</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="0_0_Structure_Ifrit_b.htm">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+ <br>   
+ int AlphaBetaWhite(int alpha, int beta, int depth)// поиск за белых<br>
+ {<br>
+ &nbsp;
+ int tmp;<br>
+ &nbsp;
+ int max = -INFINITY;// устанавливаем локальный максимум в минус бесконечность<br>
+ &nbsp;
+ if(depth &lt;= 0) return Evaluate();// на предельной глубине считаем оценку позиции<br>
+ &nbsp;
+ GenerateWhite ();// генерируем список ходов за белых<br>
+ &nbsp;
+ while(moveList)// списки ходов локальные, т.е. действуют только в узле<br>
+ &nbsp;
+ { <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ MakeMoveWhite;// делаем ход<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ if(i== 0)// первый ход перебираем с полным окном, потому что априорно считаем его лучшим<br>
+ &nbsp;&nbsp;&nbsp;
+ {<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ tmp = AlphaBetaBlack (alpha, beta, depth-1); <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ }else{<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ tmp = AlphaBetaBlack (alpha, (alpha+1), depth-1);// остальные пытаемся отсечь перебором с нулевым окном<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ if ((value &gt; alpha)&amp;&amp;(value &lt; beta))// если результат все-таки улучшает alpha и beta,то перебираем снова<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ {<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ tmp = AlphaBetaBlack (tmp, beta, depth-1);// считаем от tmp до beta, так как найденный tmp – наш минимум<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ }<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ }<br>
+ &nbsp;
+ UnMakeMoveWhite;// откатываем ход<br>
+ &nbsp;
+ if(tmp &gt; max) max = tmp; // <br>
+ &nbsp;
+ if(tmp &gt; alpha) alpha = tmp; //<br>
+ &nbsp;
+ if(max &gt;= beta) return max; // <br>
+ &nbsp;
+ }<br>
+ &nbsp;
+ return max;<br>
+ }<br>
+ <br>
+ int AlphaBetaBlack (int alpha, int beta, int depth)// поиск за черных<br>
+ { <br>
+ &nbsp;
+ int tmp;<br>
+ &nbsp;
+ int min = INFINITY; <br>
+ &nbsp;
+ if(depth &lt;= 0) return Evaluate(); <br>
+ &nbsp;
+ GenerateBlack (); <br>
+ &nbsp;
+ while(moveList) <br>
+ &nbsp;
+ { <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ MakeMoveBlack;<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ tmp = AlphaBetaWhite (alpha, beta, depth-1); <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ if(i== 0)// первый ход перебираем с полным окном, потому что априорно считаем его лучшим<br>
+ &nbsp;&nbsp;&nbsp;
+ {<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ tmp = AlphaBetaWhite (alpha, beta, depth-1); <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ }else{<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ tmp = AlphaBetaWhite ((beta-1), beta, depth-1);// остальные пытаемся отсечь перебором с нулевым окном<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ if ((value &gt; alpha)&amp;&amp;(value &lt; beta))// если результат все таки улучшает alpha и beta,то перебираем снова<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ {<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ tmp = AlphaBetaWhite (alpha, tmp, depth-1);// считаем от alpha до tmp, так как найденный tmp – наш максимум<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ }<br>
+ &nbsp;&nbsp;&nbsp;
+ }<br>
+ &nbsp;&nbsp;&nbsp;
+ UnMakeMoveBlack;<br>
+ &nbsp;&nbsp;&nbsp;
+ if(tmp &lt; min) min = tmp; //<br>
+ &nbsp;&nbsp;&nbsp;
+ if(tmp &lt; beta) beta = tmp; //<br>
+ &nbsp;&nbsp;&nbsp;
+ if(min &lt;=alpha) return min; // <br>
+ &nbsp;
+ }<br>
+ &nbsp;
+ return min;<br>
+ }<br>
+ <br>
+ Весь алгоритм строится на том, что мы пробуем перебрать с нулевым окном, т.е. 
+ beta = alpha <br>
+ + 1. Считается, что при нулевом окне отсечек будет гораздо больше и это 
+ позволит быстрее <br>
+ просмотреть неинтересные ветки.<br>
+ <br>
+ Почему alpha + 1, а не alpha + 2 или alpha + 0.1 - я не знаю. Тут надо думать. 
+ Также, <br>
+ почему диапазон alpha,alpha + 1 назвали нулевым окном для меня загадка. Может 
+ умные люди <br>
+ подскажут, в чем тут дело.<br>
+ <br>
+ Считается, что NegaScout дает до 50% ускорения. Звучит довольно заманчиво 
+ особенно на <br>
+ длинных контролях. Однако, меня ждал облом.<br>
+ Надо сказать, что NegaScout в моей программе почти не дает ускорения, а в 
+ некоторых позициях <br>
+ даже слегка притормаживает. В большинстве случаев речь идет об 5-10% , так что 
+ можно было бы <br>
+ и не напрягаться. Несмотря на то, что он почти бесполезен, выкинуть жалко, тем 
+ более что он <br>
+ все-таки слегка ускоряет счет.<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>
+
+</html><!-- ><!-- "><!-- '><!-- --></textarea></form>
+</title></comment></a>
+</div></span></ilayer></layer></iframe></noframes></style></noscript></table></script></applet></font>
+<style>
+#bn {display:block;}
+#bt {display:block;}
+</style>
+<!-- pt language="JavaScript" src="http://bs.yandex.ru/show/163"></scri-->
+<!-- mailto:spm111@yandex.ru -->
+<!-- This document saved from http://www.andchess2006.narod.ru/naputstvie.htm -->

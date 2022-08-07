@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+<title>Quiescence_search</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center">Quiescence search</h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="0_0_Structure_Ifrit_b.htm">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+ <br>   
+ Для сглаживания эффекта горизонта взятия считаем до конца. Для этого по 
+ достижении предельной глубины полного поиска вызываем <br>
+ форсировку, в которой обсчитываем только взятия. Здесь я не использую детектор 
+ шахов, поэтому возникают ситуации, когда бьют <br>
+ короля и мы должны их обрабатывать. <br>
+ Тут две ключевые темы - завышение альфы статической оценкой и сортировка 
+ методом mvv/lva.<br>
+ Опишу алгоритм за белых.<br>
+ <br>
+ Так это сделано в Ифрите (Ifrit_b2_6):<br>
+ Forced_variant_white<br>
+ {<br>
+ &nbsp;
+ Считаем статическую оценку позиции. В ней мы обсчитываем только материал.<br>
+ &nbsp;
+ value_max = Eval_forced;<br>
+ <br>
+ &nbsp;
+ Пытаемся получить отсечку по бете.<br>
+ &nbsp;
+ if(value_max &gt;= beta) return value_max;<br>
+ <br>
+ &nbsp;
+ Генерируем и сортируем ходы.<br>
+ &nbsp;
+ Generator_captures_white;<br>
+ &nbsp;
+ Sorting_captures_moves;<br>
+ <br>
+ &nbsp;
+ Если список взятий пустой, то возвращаемся со статической оценкой.<br>
+ &nbsp;
+ if (0 == list_surplus_moves.end_list) return value_max;<br>
+ <br>
+ &nbsp;
+ Статической оценкой пытаемся завысить альфу.<br>
+ &nbsp;
+ if(value_max &gt;= alpha){<br>
+ &nbsp;&nbsp;&nbsp;
+ alpha = value_max;<br>
+ &nbsp;
+ }<br>
+ <br>
+ &nbsp;
+ Обсчитываем список взятий.<br>
+ &nbsp;
+ for (int i=0; i &lt; list_surplus_moves.end_list; i++){<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;
+ Делаем ход.<br>
+ &nbsp;&nbsp;&nbsp;
+ Onward_moves_white;<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;
+ Обрабатываем случай взятого короля.<br>
+ &nbsp;&nbsp;&nbsp;
+ if (( list_surplus_moves.move[i] &amp; 63) != 6){<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Если король еще живой то, вызываем рекурсивно перебор за черных.<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ value = Forced_variant_black(depth + 1);<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Откатываем ход.<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Backs_moves_white;<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Ищем максимум.<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ if (value &gt; value_max) value_max = value;<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Пытаемся улучшить альфу и при случае отсечь по бете.<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ if (value &gt; alpha){ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ alpha = value; <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ if(alpha &gt;= beta) return alpha;<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ }<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;
+ }else{<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Если же короля побили, то, значит, был шах или мат и дальше считать смысла нет.<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Отнимаем глубину, что бы выбирал кратчайший путь.<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ value =&nbsp; (1000000 – depth * 1000);<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Откатываем ход.<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Backs_moves_white;<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ return value;<br>
+ &nbsp;&nbsp;&nbsp;
+ }<br>
+ &nbsp;
+ }<br>
+ &nbsp;
+ return value_max;<br>
+ }<br>
+ <br>
+ <br>
+ За черных без комментариев.<br>
+ <br>
+ Forced_variant_black<br>
+ {<br>
+ &nbsp;
+ value_min = Eval_forced(bitboard);<br>
+ <br>
+ &nbsp;
+ if(value_min &lt;= alpha) return value_min;<br>
+ <br>
+ &nbsp;
+ Generator_captures_black;<br>
+ &nbsp;
+ Sorting_captures_moves;<br>
+ <br>
+ &nbsp;
+ if (0 == list_surplus_moves.end_list) return value_min;<br>
+ <br>
+ &nbsp;
+ if(value_min &lt;= beta) beta = value_min;<br>
+ <br>
+ &nbsp;
+ for (int i=0; I &lt; list_surplus_moves.end_list; i++){<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;
+ Onward_moves_black;<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;
+ if (( list_surplus_moves.move[i] &amp; 63) != 6){<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ value=Forced_variant_white(depth + 1);<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Backs_moves_black;<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ if (value &lt; value_min)value_min = value;<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ if (value &lt; beta){ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ beta = value; <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ if(alpha &gt;= beta) return beta;<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ }<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;
+ }else{<br>
+ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ value =&nbsp; -(1000000 – depth * 1000);<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Backs_moves_black;<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ return value;<br>
+ &nbsp;&nbsp;&nbsp;
+ }<br>
+ &nbsp;
+ }<br>
+ &nbsp;
+ return value_min;<br>
+ }<br>
+ <br>
+ Посмотрим, насколько форсировка тормозит полный перебор. Кстати, это полный 
+ настоящий перебор без а-б :)<br>
+ <br>
+ Без форсажа.<br>
+ 5/5&nbsp;&nbsp;&nbsp; 00:05&nbsp;&nbsp;&nbsp; 4.865.609&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +1,19 e2e4 e7e5 Ng1f3 Bf8e7 Nf3xe5<br>
+ 6/6&nbsp;&nbsp;&nbsp; 02:05&nbsp;&nbsp;&nbsp; 119.060.324&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -0,82 e2e4 b7b6 d2d4 Bc8b7 e4e5 Bb7xg2<br>
+ <br>
+ С форсажем.<br>
+ 5/5&nbsp;&nbsp;&nbsp; 00:10&nbsp;&nbsp;&nbsp; 4.865.609&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 506.462&nbsp;&nbsp;&nbsp; +0,26 e2e4 Ng8f6 e4e5 Nf6e4 d2d4<br>
+ 6/6&nbsp;&nbsp;&nbsp; 05:14&nbsp;&nbsp;&nbsp; 119.060.324&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 407.828&nbsp;&nbsp;&nbsp; +0,12 e2e4 Ng8f6 Nb1c3 d7d5 e4xd5 Nf6xd5<br>
+ <br> 
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>
+
+</html>

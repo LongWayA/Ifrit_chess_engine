@@ -1,0 +1,109 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<title>Логика работы программы Ифрит</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">Логика работы программы Ифрит</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="/index.html">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+        <p align="justify">&nbsp;</p>
+
+        
+
+        <p align="justify"><b><font size="4">1.</font></b> Программа запустилась, прошла инициализацию и перешла в режим 
+        слушания входного консольного потока. Теперь, получив команду от 
+        оболочки, программа обработает ее(2) и снова перейдет в режим ожидания 
+        очередной команды.<br>
+        <b>
+        <i>Реализация находится в файле a_main.cpp, функция int main(int argc, char 
+        * argv[]).</i></b><br>
+        <br>
+        <b><font size="4">2.</font></b> Обработка команды от оболочки происходит следующим образом.<br>
+        Вообще, чтобы понять обработку нужно знать протокол <a href="UCI.htm">UCI.(смотреть здесь)</a><br>
+        <br>
+        На входе у нас есть текстовая строка с командой мы сравниваем ее с 
+        образцами команд и если совпадает, то переходим к требуемым действиям. 
+        (в си++ это можно сделать через strcmp())<br>
+        Команды следующие:<br>
+        &quot;uci&quot;<br>
+        в ответ на нее печатаем имя проги и автора, например:<br>
+        &quot;id name Ifrit_C19 Debug&quot;<br>
+        &quot;id author ChessTerminator75&quot;<br>
+        <br>
+        &quot;isready&quot;<br>
+        в ответ печатаем:<br>
+        &quot;readyok&quot;,<br>
+        т.е. передаем, что к работе готовы.<br>
+        <br>
+        &quot;quit&quot;<br>
+        завершаем работу.<br>
+        <br>
+        Следующие команды проверяем не на полное совпадение, а на существование 
+        в начале строки искомой подстроки. (в си++ это можно сделать через 
+        strstr())<br>
+        Команда может быть вида:<br>
+        &quot;position startpos&quot; - тут мы начинаем игру с начала<br>
+        или<br>
+        &quot;position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 &quot; 
+        - тут мы начинаем игру с расставленной в оболочке позиции,<br>
+        или<br>
+        &quot;go depth 6&quot; - запустить обсчет на глубине 6 полуходов<br>
+        и т.д.<br>
+        <br>
+        Встретив<br>
+        &quot;position &quot;,<br>
+        запускаем разбор входящей позиции (3).<br>
+        <br>
+        Встретив<br>
+        &quot;go &quot;,<br>
+        запускаем движок на обдумывание (4).<br>
+        <br>
+        На самом деле команд в протоколе значительно больше, но в моем движке 
+        реализованы пока только эти, и еще при переборе &quot;stop&quot; для остановки 
+        счета и выдачи лучшего на данный момент хода.<br>
+        <b><i>Реализация находится в файле b_Protokol_UCI.cpp.</i></b><br>
+        <b><i>Функция void Parse_Protokol_UCI(char string_in[],int r,T_board_list_816 
+        * board_list_816).</i></b><br>
+        <br>
+        <b><font size="4">3.</font></b><span lang="ru">Разбор входящей позиции.</span></p>
+
+        
+
+        <p align="justify"><font size="4"><b>4.</b></font><span lang="ru">Запускаем 
+        движок на обдумывание.</span><br>
+        &nbsp;</p>
+
+        
+
+        <p align="justify"><br>
+
+        
+
+        </p>
+
+        
+
+        </td>
+  </tr>
+</table>
+
+</body>
+
+</html>

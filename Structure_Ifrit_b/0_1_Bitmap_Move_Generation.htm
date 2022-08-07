@@ -1,0 +1,145 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<title>Bitmap_Move_Generation</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">Bitmap Move Generation</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="0_0_Structure_Ifrit_b.htm">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+В этой статье я попытаюсь описать свой битбоард генератор ходов. Генератор 
+используется в <br>
+Ифрите серии б(Ifrit_b).<br>
+<br>
+Генератор состоит из двух частей: генератора списка ходов и реализатора ходов.<br>
+Генератор списка ходов выдает список избыточных ходов.<br>
+Т.е. на вход поступает доска, а на выходе получаем список избыточных ходов. 
+Таким <br>
+образом, генератор псевдолегальный, т.е. он не проверяет под шахом ли наш король 
+после <br>
+нашего хода. Проверка на легальность проводится в поиске.<br>
+Реализатор ходов делает ходы из списка. т.е. на вход поступает список а на 
+выходе доска с реализованным ходом.<br>
+
+Так как описание получилось большим, я разбил его на несколько подразделов.<br>
+<br>
+1) <a href="0_1_1_Bitboard_representation.htm">БИТОВОЕ ПРЕДСТАВЛЕНИЕ ДОСКИ</a><br> 
+2) <a href="0_1_2_List_representation.htm">ОРГАНИЗАЦИЯ СПИСКА ХОДОВ</a><br> 
+3) <a href="0_1_3_Bitmap_generation_captures.htm">БИТОВЫЙ ГЕНЕРАТОР ВЗЯТИЙ + ПРЕВРАЩЕНИЯ ПЕШКИ</a><br> 
+4) <a href="0_1_4_Bitmap_generation_others_moves.htm">БИТОВЫЙ ГЕНЕРАТОР ОСТАЛЬНЫХ ХОДОВ</a><br> 
+5) <a href="0_1_5_Move_up.htm">РЕАЛИЗАЦИЯ ХОДА ВПЕРЕД</a><br> 
+6) <a href="0_1_6_Move_down.htm">РЕАЛИЗАЦИЯ ХОДА НАЗАД</a><br> 
+7) <!--<a href="0_1_7_First_one.htm">-->ФУНКЦИИИ "FIRST ONE" и "LAST ONE"<!--</a>--><br> 
+<br>
+<br>
+<br>
+<span lang="ru"><font size="4">Тестирование &quot;чистого&quot; генератора ходов.</font></span><br>
+<br>
+В таблице колонки: <br>
+Глубина перебора, время перебора, количество узлов на слое, скорость перебора .<br>
+<br>
+начальная позиция<br>
+FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+<br>
+Ifrit_b2_11 Beta:<br>
+1&nbsp;&nbsp;&nbsp;&nbsp; 00:00&nbsp;&nbsp;&nbsp; 20&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+-<br>
+2&nbsp;&nbsp;&nbsp;&nbsp; 00:00&nbsp;&nbsp;&nbsp; 400&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+- <br>
+3&nbsp;&nbsp;&nbsp;&nbsp; 00:00&nbsp;&nbsp;&nbsp; 8.902&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+- <br>
+4&nbsp;&nbsp;&nbsp;&nbsp; 00:00&nbsp;&nbsp;&nbsp; 197.281&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+12.912.687<br>
+5&nbsp;&nbsp;&nbsp;&nbsp; 00:00&nbsp;&nbsp;&nbsp; 4.865.609&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+10.479.776<br>
+6&nbsp;&nbsp;&nbsp;&nbsp; 00:12&nbsp;&nbsp;&nbsp; 119.060.324&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+10.912.750<br>
+7&nbsp;&nbsp;&nbsp;&nbsp; 05:30&nbsp;&nbsp;&nbsp; 3.195.901.860&nbsp;&nbsp; 
+10.428.062<br>
+Баг в Арене. Ифрит выдает
+3195901860,&nbsp; а Арена печатает 3.195.900&nbsp;860<br>
+<br>
+превращения<br>
+FEN: n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1
+<br>
+Ifrit_b2_11&nbsp; Beta:<br>
+1&nbsp;&nbsp;&nbsp;&nbsp; 00:00&nbsp;&nbsp;&nbsp; 24&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+- <br>
+2&nbsp;&nbsp;&nbsp;&nbsp; 00:00&nbsp;&nbsp;&nbsp; 496&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+-<br>
+3&nbsp;&nbsp;&nbsp;&nbsp; 00:00&nbsp;&nbsp;&nbsp; 9.483&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+- <br>
+4&nbsp;&nbsp;&nbsp;&nbsp; 00:00&nbsp;&nbsp;&nbsp; 182.838&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+12.856.066<br>
+5&nbsp;&nbsp;&nbsp;&nbsp; 00:00&nbsp;&nbsp;&nbsp; 3.605.103&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+8.999.867<br>
+6&nbsp;&nbsp;&nbsp;&nbsp; 00:09&nbsp;&nbsp;&nbsp; 71.179.139&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+8.755.936<br>
+<br>
+хорошая тестовая позиция<br>
+FEN: r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1
+<br>
+Ifrit_b2_11&nbsp; Beta:<br>
+1&nbsp;&nbsp;&nbsp;&nbsp; 00:00&nbsp;&nbsp;&nbsp; 48<br>
+2&nbsp;&nbsp;&nbsp;&nbsp; 00:00&nbsp;&nbsp;&nbsp; 2.039<br>
+3&nbsp;&nbsp;&nbsp;&nbsp; 00:00&nbsp;&nbsp;&nbsp; 97.862&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6.663.266<br>
+4&nbsp;&nbsp;&nbsp;&nbsp; 00:00&nbsp;&nbsp;&nbsp; 4.085.603&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+10.704.736<br>
+5&nbsp;&nbsp;&nbsp;&nbsp; 00:19&nbsp;&nbsp;&nbsp; 193.690.690&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+10.355.133<br>
+6&nbsp;&nbsp;&nbsp;&nbsp; 13:29&nbsp;&nbsp;&nbsp; 8.031.647.685&nbsp;&nbsp; 10.416.288<br>
+Баг в Арене. Ифрит выдает
+8031647685,&nbsp; а Арена печатает 8.031.645&nbsp;685<br>
+<br>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>
+
+</html><!-- ><!-- "><!-- '><!-- --></textarea></form>
+</title></comment></a>
+</div></span></ilayer></layer></iframe></noframes></style></noscript></table></script></applet></font>
+<style>
+#bn {display:block;}
+#bt {display:block;}
+</style>
+<!-- pt language="JavaScript" src="http://bs.yandex.ru/show/163"></scri-->
+<!-- mailto:spm111@yandex.ru -->
+<!-- This document saved from http://www.andchess2006.narod.ru/naputstvie.htm -->

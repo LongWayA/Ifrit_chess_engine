@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+<title>Save_variant</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center">Save variant</h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="0_0_Structure_Ifrit_b.htm">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+ <br>  
+ Как записать, сохранить и вывести вариант, насчитанный во время перебора? Надо 
+ сразу сказать, что тут я все придумал сам и до <br>
+ сих пор не сравнивал с другими прогами. Так что опишу как есть на данный 
+ момент.<br>
+ <br>
+ Спускаясь в глубину, мы в каждом узле записываем ход в текущий вариант (pv_current)<br>
+ Структура для текущего варианта выглядит так:<br>
+ // линия варианта (при форсировке взятий нужно 32 полухода + 40 для основного = 
+ 72)<br>
+ struct T_PV {<br>
+ &nbsp;
+ // описание хода смотреть в струкутре T_list_surplus_moves<br>
+ &nbsp;
+ int move[100]; <br>
+ <br>
+ &nbsp;
+ // оценка варианта<br>
+ &nbsp;
+ int score_move;<br>
+ <br>
+ &nbsp;
+ // длина варианта<br>
+ &nbsp;
+ int depth_max;<br>
+ };<br>
+ <br>
+ Надо сказать, что линия текущего варианта глобальна, т.е. в ней сохраняем 
+ только одну ветку, в которую спускаемся. Запись <br>
+ идет после генерации каждого легального хода.<br>
+ <br>
+ void Update_PV_current(int i,int depth,T_PV * pv_current,const 
+ T_list_surplus_moves * list_surplus_moves){<br>
+ &nbsp;
+ // из списка возможных ходов копируем текущий ход в текущий вариант на текущей 
+ глубине.<br>
+ &nbsp;
+ // мы видим, что текущий вариант прописывается до рекурсивного вызова функции 
+ Alpha-beta, т.е. <br>
+ &nbsp;
+ // мы разматываем нить погружаясь в глубину <br>
+ &nbsp;
+ // запись в структуре PV_current верна сверху и до текущей глубины <br>
+ &nbsp;
+ // то, что расположенно ниже данного уровня не правильно, так как относится к 
+ предыдущему узлу.<br>
+ &nbsp;
+ pv_current-&gt;move[depth] = list_surplus_moves-&gt;move[i];<br>
+ }<br>
+ <br>
+ И так к тому времени как мы опустились на самое дно, у нас есть линия варианта 
+ записанная в pv_current.<br>
+ На дне мы оцениваем позицию и переписываем текущий вариант в лучший вариант.<br>
+ <br>
+ void Update_PV_best_max_depth(int score,int depth,T_PV * pv_best,T_PV * 
+ pv_current){<br>
+ &nbsp;
+ // мы достигли предельной глубины и статически оценили получившуюся позицию<br>
+ &nbsp;
+ // погружаясь на глубину мы на каждом полуходе заносили ходы варианта в 
+ структуру PV_current<br>
+ &nbsp;
+ // теперь мы перепишем его в структуру PV_best и прицепим оценку позиции<br>
+ &nbsp;
+ // у нас получился вариант приводящий к данной позиции и плюс оценка этой 
+ позиции<br>
+ &nbsp;
+ // ну и еще конечно длина варианта<br>
+ &nbsp;
+ // внимание тут цикл идет от 0 до Depth-1<br>
+ &nbsp;
+ // именно так ведь у нас начальная глубина 0<br>
+ &nbsp;
+ for (int n = 0; n &lt; depth; n++){<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ pv_best-&gt;move[n ]= pv_current-&gt;move[n] ;<br>
+ &nbsp;
+ }// for (int n = 0; n &lt; Depth; n++){<br>
+ &nbsp;
+ pv_best-&gt;score_move = score;<br>
+ &nbsp;
+ // запоминаем глубину варианта<br>
+ &nbsp;
+ pv_best-&gt;depth_max =depth;<br>
+ }<br>
+ <br>
+ В результате в лучшем варианте у нас оказывается записанной оценка позиции и 
+ линия, которая привела к этой позиции. С этими <br>
+ данными мы начинаем подъем на поверхность.<br>
+ <br>
+ Но узлов много и во всех идет перезапись, а текущий вариант и лучший вариант у 
+ нас глобальные. Поэтому в каждом узле мы <br>
+ должны запоминать лучший вариант. Делаем это в локальной структуре 
+ PV_best_point.<br>
+ <br>
+ void Update_PV_best_point(T_PV * PV_best_point,T_PV * PV_best){<br>
+ &nbsp;
+ // лучший вариант, который функция перебора выдает наверх содержится в 
+ структуре PV_best<br>
+ &nbsp;
+ // мы не только присваиваем оценку но и вариант соответствующий ей<br>
+ &nbsp;
+ // присвоение идет структуре уникальной для каждого узла PV_best_point<br>
+ &nbsp;
+ // здесь мы перезаписываем лучший вариант соответствующий лучшей оценке<br>
+ &nbsp;
+ for (int n=0;n&lt;PV_best-&gt;depth_max;n++){<br>
+ &nbsp;&nbsp;&nbsp;
+ PV_best_point-&gt;move[n]=PV_best-&gt;move[n];<br>
+ &nbsp;
+ }//for (int n=0;n&lt;(Depth_Max);n++){<br>
+ &nbsp;
+ PV_best_point-&gt;score_move =PV_best-&gt;score_move;<br>
+ &nbsp;
+ // <br>
+ &nbsp;
+ PV_best_point-&gt;depth_max =PV_best-&gt;depth_max;<br>
+ }<br>
+ <br>
+ Работает это следующим образом, мы из узла ныряем вглубь и возвращаемся с 
+ лучшим вариантом, который если он улучшает оценку, <br>
+ записываем в лучший вариант для узла.<br>
+ <br>
+ Когда мы покидаем этот узел, всплывая наверх, мы лучший вариант из узла 
+ записываем в глобальный лучший вариант.<br>
+ <br>
+ void Update_PV_best_point(T_PV * PV_best_point,T_PV * PV_best){<br>
+ &nbsp;
+ // лучший вариант, который функция перебора выдает наверх, содержится в 
+ структуре PV_best<br>
+ &nbsp;
+ // мы не только присваиваем оценку но и вариант соответствующий ей<br>
+ &nbsp;
+ // присвоение идет структуре уникальной для каждого узла PV_best_point<br>
+ &nbsp;
+ // здесь мы перезаписываем лучший вариант соответствующий лучшей оценке<br>
+ &nbsp;
+ for (int n=0;n&lt;PV_best-&gt;depth_max;n++){<br>
+ &nbsp;&nbsp;&nbsp;
+ PV_best_point-&gt;move[n]=PV_best-&gt;move[n];<br>
+ &nbsp;
+ }//for (int n=0;n&lt;(Depth_Max);n++){<br>
+ &nbsp;
+ PV_best_point-&gt;score_move =PV_best-&gt;score_move;<br>
+ &nbsp;
+ // <br>
+ &nbsp;
+ PV_best_point-&gt;depth_max =PV_best-&gt;depth_max;<br>
+ }<br>
+ <br>
+ При всплытии остается только лучший вариант, а все остальное теряется.<br>
+ <br> 
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>
+
+</html>

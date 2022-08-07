@@ -1,0 +1,755 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<title>PARSE_C</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center">PARSE_C</h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="/index.html">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+
+        
+
+        <p align="justify">
+        /******************************************************************<br>
+        Parse.c - Функции обработки команд UCI<br>
+        *******************************************************************/<br>
+        #include &lt;stdio.h&gt;<br>
+        #include &lt;windows.h&gt;<br>
+        #include &quot;strelka.h&quot;<br>
+        <br>
+        extern const int White;<br>
+        extern const int Black;<br>
+        extern const int FlagCastle;<br>
+        extern const int FlagEnpassant;<br>
+        extern const int FlagPromoQueen;<br>
+        extern const int FlagPromoRook;<br>
+        extern const int FlagPromoBishop;<br>
+        extern const int FlagPromoKnight;<br>
+        <br>
+        extern struct board_t Board[1];<br>
+        extern int stop_search;<br>
+        extern int best_move;<br>
+        extern int best_score;<br>
+        extern int best_depth;<br>
+        extern int best_pv[];<br>
+        extern char start_pos[];<br>
+        extern __int64 true_nodes;<br>
+        extern int start_time, search_time;<br>
+        extern int testing;<br>
+        extern int History[12][64];<br>
+        extern struct pawn_info_t * pawn_entry;<br>
+        extern struct entry_t * trans_entry;<br>
+        extern struct pos_info_t Pos_info[];<br>
+        extern struct pos_info_t * pos_info_entry;<br>
+        extern struct list_t list_root[];<br>
+        <br>
+        extern int Searching;<br>
+        extern int Infinite;<br>
+        extern int Delay;<br>
+        extern int Post;<br>
+        extern int MultiPV;<br>
+        <br>
+        void parse_position(char []);<br>
+        int parse_move(char []);<br>
+        <br>
+        void move_to_string(int move, char string[])<br>
+        { int pos = 0;<br>
+        <br>
+        string[pos++] = ((move &gt;&gt; 6) &amp; 7) + 'a';<br>
+        string[pos++] = ((move &gt;&gt; 9) &amp; 7) + '1';<br>
+        string[pos++] = (move &amp; 7) + 'a';<br>
+        string[pos++] = ((move &gt;&gt; 3) &amp; 7) + '1';<br>
+        if (MOVE_IS_PROMOTION(move)) {<br>
+        if ((move &amp; 0x7000) == FlagPromoQueen) string[pos++] = 'q';<br>
+        else if ((move &amp; 0x7000) == FlagPromoRook) string[pos++] = 'r';<br>
+        else if ((move &amp; 0x7000) == FlagPromoBishop) string[pos++] = 'b';<br>
+        else if ((move &amp; 0x7000) == FlagPromoKnight) string[pos++] = 'n';<br>
+        }<br>
+        string[pos] = 0;<br>
+        }<br>
+        <br>
+        int move_from_string(char cmove[])<br>
+        { int from, to, move;<br>
+        <br>
+        from = ((cmove[1] - '1') * 8) + (cmove[0] - 'a');<br>
+        to = ((cmove[3] - '1') * 8) + (cmove[2] - 'a');<br>
+        move = (from &lt;&lt; 6) | to;<br>
+        if (Board-&gt;square[from] == 12 &amp;&amp; ((from - to) == 2 || (to - from) == 2)) 
+        move |= FlagCastle;<br>
+        if (Board-&gt;square[from] == 13 &amp;&amp; ((from - to) == 2 || (to - from) == 2)) 
+        move |= FlagCastle;<br>
+        if (Board-&gt;ep_square != 0 &amp;&amp; to == Board-&gt;ep_square) move |= 
+        FlagEnpassant;<br>
+        if (cmove[4] != 0) {<br>
+        if (cmove[4] == 'q') move |= FlagPromoQueen;<br>
+        else if (cmove[4] == 'r') move |= FlagPromoRook;<br>
+        else if (cmove[4] == 'b') move |= FlagPromoBishop;<br>
+        else if (cmove[4] == 'n') move |= FlagPromoKnight;<br>
+        }<br>
+        return move;<br>
+        }<br>
+        <br>
+        int input_available()<br>
+        { static int init = 0, is_pipe;<br>
+        static HANDLE stdin_h;<br>
+        DWORD val;<br>
+        <br>
+        if (stdin-&gt;_cnt &gt; 0) return 1;<br>
+        if (!init) {<br>
+        init = 1;<br>
+        stdin_h = GetStdHandle(STD_INPUT_HANDLE);<br>
+        is_pipe = !GetConsoleMode(stdin_h,&amp;val);<br>
+        if (!is_pipe) {<br>
+        SetConsoleMode(stdin_h,val&amp;~(ENABLE_MOUSE_INPUT|ENABLE_WINDOW_INPUT));<br>
+        FlushConsoleInputBuffer(stdin_h);<br>
+        }<br>
+        }<br>
+        if (is_pipe) {<br>
+        if (!PeekNamedPipe(stdin_h,NULL,0,NULL,&amp;val,NULL)) return 1;<br>
+        return val &gt; 0;<br>
+        }<br>
+        else {<br>
+        GetNumberOfConsoleInputEvents(stdin_h,&amp;val);<br>
+        return val &gt; 1;<br>
+        }<br>
+        return 0;<br>
+        }<br>
+        <br>
+        void send_best_move()<br>
+        { char string[20], ponder[20];<br>
+        int time;<br>
+        __int64 speed = 0;<br>
+        <br>
+        if (!Post) return;<br>
+        time = GetTickCount() - start_time;<br>
+        if (time &gt; 0) speed = (true_nodes * 1000) / time;<br>
+        fprintf(stdout,&quot;info time %d nodes %I64d nps %I64d\n&quot;,time,true_nodes,speed);<br>
+        move_to_string(best_move, string);<br>
+        if (best_pv[0] == best_move &amp;&amp; best_pv[1] != 0) {<br>
+        move_to_string(best_pv[1], ponder);<br>
+        fprintf(stdout,&quot;bestmove %s ponder %s\n&quot;,string,ponder);<br>
+        }<br>
+        else fprintf(stdout,&quot;bestmove %s\n&quot;,string);<br>
+        }<br>
+        <br>
+        #ifdef TEST_VER<br>
+        <br>
+        void run_epd_test(char string[])<br>
+        { char fen[1000];<br>
+        char *epd_file;<br>
+        FILE * finp;<br>
+        FILE * ft;<br>
+        FILE * fst;<br>
+        int n = 0;<br>
+        int time = 0;<br>
+        __int64 cnt = 0;<br>
+        char *go_str = &quot;go depth 10&quot;;<br>
+        int count_ok = 0;<br>
+        int move;<br>
+        char *ptr;<br>
+        char str[256];<br>
+        int count_key = 0, ok_key = 0;<br>
+        <br>
+        epd_file = strchr(string,' ');<br>
+        if (epd_file == NULL) return;<br>
+        epd_file++;<br>
+        if (strlen(epd_file) == 0) return;<br>
+        if ((finp = fopen(epd_file, &quot;r&quot;)) == NULL) {<br>
+        fprintf(stdout,&quot;Can't Open File %s\n&quot;, epd_file);<br>
+        return;<br>
+        }<br>
+        testing = 1; Post = 0;<br>
+        ft = fopen(&quot;test.txt&quot;, &quot;w&quot;); fclose(ft);<br>
+        fst = fopen(&quot;stat.txt&quot;, &quot;w&quot;); fclose(fst);<br>
+        while (!feof(finp)) {<br>
+        if (!fgets(fen, (int)sizeof(fen), finp)) continue;<br>
+        if (!memcmp(fen,&quot;ucinewgame&quot;,10)) { trans_clear(); continue; }<br>
+        n++;<br>
+        fprintf(stdout,&quot;P%4.4d &quot;,n);<br>
+        ft = fopen(&quot;test.txt&quot;,&quot;a&quot;);<br>
+        fprintf(ft,&quot;P%4.4d\n&quot;,n);<br>
+        fclose(ft);<br>
+        board_from_fen(fen);<br>
+        move = 0;<br>
+        if (ptr = strstr(fen,&quot;bm &quot;)) move = move_from_string(ptr + 3);<br>
+        if (strstr(fen,&quot;; key&quot;)) count_key++;<br>
+        <br>
+        // trans_clear();<br>
+        // memset(History, 0, 12*64*sizeof(int));<br>
+        // memset(pawn_entry, 0, 0xC00000);<br>
+        <br>
+        strcpy(str,go_str);<br>
+        start_go(str);<br>
+        if (move != 0 &amp;&amp; best_move == move) {<br>
+        count_ok++;<br>
+        if (strstr(fen,&quot;; key&quot;)) ok_key++;<br>
+        }<br>
+        ft = fopen(&quot;test.txt&quot;,&quot;a&quot;);<br>
+        fprintf(ft,&quot;Nodes : %I64d\n\n&quot;,true_nodes);<br>
+        fclose(ft);<br>
+        cnt += true_nodes;<br>
+        time += search_time;<br>
+        fprintf(stdout,&quot;Nodes = %I64d Time = %d Ok = %d/%d Key = %d/%d\n&quot;,<br>
+        cnt,time,count_ok,n,ok_key,count_key);<br>
+        if ((n % 50) == 0) {<br>
+        fst = fopen(&quot;stat.txt&quot;,&quot;a&quot;);<br>
+        fprintf(fst,&quot;P%4.4d Nodes = %I64d Time = %d Ok = %d/%d Key = %d/%d\n&quot;,<br>
+        n,cnt,time,count_ok,n,ok_key,count_key);<br>
+        fclose(fst);<br>
+        }<br>
+        }<br>
+        fst = fopen(&quot;stat.txt&quot;,&quot;a&quot;);<br>
+        fprintf(fst,&quot;P%4.4d Nodes = %I64d Time = %d Ok = %d/%d Key = %d/%d\n&quot;,<br>
+        n,cnt,time,count_ok,n,ok_key,count_key);<br>
+        fclose(fst);<br>
+        fclose(finp);<br>
+        exit(0);<br>
+        }<br>
+        <br>
+        void gen_legal_moves()<br>
+        { int i, k, num_moves, legal;<br>
+        struct undo_t undo[1];<br>
+        <br>
+        pos_info_entry = Pos_info;<br>
+        memset(list_root, 0, 256 * sizeof(struct list_t));<br>
+        if (evaluate(pos_info_entry)) {<br>
+        gen_evasions(list_root, ~(pos_info_entry-&gt;mob[1]));<br>
+        }<br>
+        else {<br>
+        gen_captures(list_root, Board-&gt;mp[White], Board-&gt;mp[Black]);<br>
+        for (i = 0; list_root[i].move != 0; i++);<br>
+        gen_quiet_moves(list_root + i, pos_info_entry-&gt;mob[1], -1, -1, -1);<br>
+        for (k = i; list_root[k].move != 0; k++) list_root[k].score = 0;<br>
+        }<br>
+        num_moves = 0;<br>
+        for (i = 0; list_root[i].move != 0; i++) {<br>
+        move_do(list_root[i].move, undo);<br>
+        evaluate(pos_info_entry);<br>
+        legal = !ILLEGAL_POSITION;<br>
+        move_undo(list_root[i].move, undo);<br>
+        if (legal) { list_root[num_moves].move = list_root[i].move; num_moves++; 
+        }<br>
+        }<br>
+        list_root[num_moves].move = 0;<br>
+        }<br>
+        <br>
+        int parse_move(char cmove[])<br>
+        { int i, move, from, to, piece, pos, findmove;<br>
+        int left, right, match, matches;<br>
+        char stroka[20];<br>
+        char c, pt = 0, promotion = 0, file = 0, rank = 0;<br>
+        char ptypes[14] = {0,0,'P','P','N','N','B','B','R','R','Q','Q','K','K'};<br>
+        <br>
+        gen_legal_moves();<br>
+        if (strstr(cmove,&quot;O-O-O&quot;) || strstr(cmove,&quot;0-0-0&quot;) || 
+        strstr(cmove,&quot;000&quot;)) {<br>
+        for (i = 0; (move = list_root[i].move) != 0; i++) {<br>
+        from = MOVE_FROM(move);<br>
+        to = MOVE_TO(move);<br>
+        piece = Board-&gt;square[from];<br>
+        if ((piece &amp; 0x0E) == 12 &amp;&amp; (from - to) == 2) return move;<br>
+        }<br>
+        return 0;<br>
+        }<br>
+        if (strstr(cmove,&quot;O-O&quot;) || strstr(cmove,&quot;0-0&quot;) || strstr(cmove,&quot;00&quot;)) {<br>
+        for (i = 0; (move = list_root[i].move) != 0; i++) {<br>
+        from = MOVE_FROM(move);<br>
+        to = MOVE_TO(move);<br>
+        piece = Board-&gt;square[from];<br>
+        if ((piece &amp; 0x0E) == 12 &amp;&amp; (to - from) == 2) return move;<br>
+        }<br>
+        return 0;<br>
+        }<br>
+        // удаляем символы 'x' '=' '+' '#' и переводим в верхний регистр<br>
+        memset(stroka, 0, 20); pos = 0;<br>
+        for (i = 0; (c = cmove[i]) != 0; i++) if (!strchr(&quot;x=+#&quot;, c)) <br>
+        stroka[pos++] = strchr(&quot;qrn&quot;, c) ? toupper(c) : c;<br>
+        left = 0; right = strlen(stroka) - 1;<br>
+        if (strstr(stroka, &quot;/ep&quot;)) right -= 3;<br>
+        // смотрим превращение пешки<br>
+        if (strchr(&quot;QRBN&quot;, stroka[right])) promotion = stroka[right--];<br>
+        // тип ходящей фигуры - символ 'K' 'Q' 'R' 'B' 'N' 'P'<br>
+        if (left &lt; right) {<br>
+        if (strchr(&quot;KQRBN&quot;, stroka[left])) pt = stroka[left++];<br>
+        else pt = 'P'; // если не указана фигура, то это пешка<br>
+        }<br>
+        // определяем позицию to<br>
+        if (left &lt; right) {<br>
+        if (stroka[right] &lt; '1' || stroka[right] &gt; '8' ||<br>
+        stroka[right - 1] &lt; 'a' || stroka[right - 1] &gt; 'h') return 0;<br>
+        to = ((stroka[right] - '1') * 8) + (stroka[right - 1] - 'a');<br>
+        right -= 2;<br>
+        }<br>
+        else return 0;<br>
+        // определяем file, rank<br>
+        if (left &lt;= right) {<br>
+        if (strchr(&quot;abcdefgh&quot;, stroka[left])) file = stroka[left++];<br>
+        if (strchr(&quot;12345678&quot;, stroka[left])) rank = stroka[left];<br>
+        }<br>
+        matches = 0;<br>
+        findmove = 0;<br>
+        for (i = 0; (move = list_root[i].move) != 0; i++) {<br>
+        from = MOVE_FROM(move);<br>
+        piece = ptypes[Board-&gt;square[from]];<br>
+        match = 1;<br>
+        if (piece != pt) match = 0;<br>
+        else if (MOVE_TO(move) != to) match = 0;<br>
+        else if (MOVE_IS_PROMOTION(move) &amp;&amp; 
+        ptypes[PIECE_PROMO(move,Board-&gt;turn)] != promotion) match = 0;<br>
+        else if (file != 0 &amp;&amp; (file - 'a') != (from &amp; 7)) match = 0;<br>
+        else if (rank != 0 &amp;&amp; (rank - '1') != (from &gt;&gt; 3)) match = 0;<br>
+        if (match) { findmove = move; matches++; }<br>
+        }<br>
+        if (matches == 1) return findmove;<br>
+        return 0;<br>
+        }<br>
+        <br>
+        struct pgn_t {<br>
+        char WhitePlayer[100]; // имя игрока, играющего белыми<br>
+        char BlackPlayer[100]; // имя игрока, играющего черными<br>
+        char Winner; // кто выиграл: 0 - ничья, 1 - выигрыш белых, 2 - черных<br>
+        int PlyCount; // количество ходов<br>
+        int Moves[1000];<br>
+        struct {<br>
+        int pv[100];<br>
+        int value;<br>
+        int depth;<br>
+        int time;<br>
+        } comment[1000];<br>
+        } Pgn[1];<br>
+        <br>
+        void parse_comment(char stroka[], struct pgn_t * pgn, int n)<br>
+        { char *ptr = stroka;<br>
+        char cmove[20];<br>
+        int i, move, num_moves = 0;<br>
+        struct undo_t undo[100];<br>
+        int znak, mate;<br>
+        <br>
+        for (i = 0; i &lt; 100; i++) pgn-&gt;comment[n].pv[i] = 0;<br>
+        pgn-&gt;comment[n].value = 0;<br>
+        pgn-&gt;comment[n].depth = 0;<br>
+        pgn-&gt;comment[n].time = 0;<br>
+        i = 0;<br>
+        if (*ptr == '(') {<br>
+        while (num_moves &lt; 100) {<br>
+        ptr++;<br>
+        if (*ptr == ' ' || *ptr == ')') {<br>
+        cmove[i] = 0;<br>
+        move = parse_move(cmove);<br>
+        if (!move) break;<br>
+        move_do(move, undo+num_moves);<br>
+        pgn-&gt;comment[n].pv[num_moves++] = move;<br>
+        if (*ptr == ')') break;<br>
+        i = 0;<br>
+        }<br>
+        else cmove[i++] = *ptr;<br>
+        }<br>
+        while (*ptr++ != ')');<br>
+        ptr++;<br>
+        }<br>
+        for (i = num_moves - 1; i &gt;= 0; i--) move_undo(pgn-&gt;comment[n].pv[i], 
+        undo+i);<br>
+        memset(cmove, 0, 20);<br>
+        i = 0; znak = 0; mate = 0;<br>
+        while (*ptr != 0 &amp;&amp; *ptr != '\n' &amp;&amp; *ptr != '/') {<br>
+        if (*ptr == '+') znak = 0;<br>
+        else if (*ptr == '-') znak = 1;<br>
+        else if (*ptr == 'M') mate = 1;<br>
+        else if (*ptr != '.') cmove[i++] = *ptr;<br>
+        ptr++;<br>
+        }<br>
+        if (cmove[0] != 0) {<br>
+        if (mate) { if (znak) i = -32000; else i = 32000; }<br>
+        else {<br>
+        i = atol(cmove);<br>
+        if (znak) i = -i;<br>
+        }<br>
+        pgn-&gt;comment[n].value = i;<br>
+        }<br>
+        if (*ptr == '/') ptr++;<br>
+        memset(cmove, 0, 20);<br>
+        i = 0;<br>
+        while (*ptr != 0 &amp;&amp; *ptr != '\n' &amp;&amp; *ptr != ' ') cmove[i++] = *ptr++;<br>
+        if (cmove[0] != 0) pgn-&gt;comment[n].depth = atol(cmove);<br>
+        while (*ptr == ' ') ptr++;<br>
+        memset(cmove, 0, 20);<br>
+        i = 0;<br>
+        while (*ptr != 0 &amp;&amp; *ptr != '\n' &amp;&amp; *ptr != ' ') cmove[i++] = *ptr++;<br>
+        if (cmove[0] != 0) pgn-&gt;comment[n].time = atol(cmove);<br>
+        }<br>
+        <br>
+        int get_pgn_game(FILE * finp, struct pgn_t * Pgn)<br>
+        { char c, cc;<br>
+        char stroka[1000];<br>
+        char * ptr;<br>
+        int i, j, in_comment, in_move, comment_pos, move_pos;<br>
+        char cmove[20];<br>
+        int move;<br>
+        struct undo_t undo[1];<br>
+        <br>
+        board_from_fen(start_pos);<br>
+        Pgn-&gt;WhitePlayer[0] = 0;<br>
+        Pgn-&gt;BlackPlayer[0] = 0;<br>
+        Pgn-&gt;Winner = 0;<br>
+        Pgn-&gt;PlyCount = 0;<br>
+        do {<br>
+        fscanf(finp, &quot;%c&quot;, &amp;c);<br>
+        if (c != '1' &amp;&amp; c != '\n' &amp;&amp; !feof(finp)) {<br>
+        fgets(stroka, 1000, finp);<br>
+        if (!stroka) continue;<br>
+        for (i = 0; stroka[i] != 0 &amp;&amp; stroka[i] != ' '; i++) stroka[i] = 
+        toupper(stroka[i]);<br>
+        if (strstr(stroka, &quot;WHITE &quot;)) {<br>
+        ptr = strchr(stroka, '&quot;');<br>
+        strcpy(Pgn-&gt;WhitePlayer, ptr + 1);<br>
+        ptr = strchr(Pgn-&gt;WhitePlayer, '&quot;');<br>
+        if (ptr) *ptr = 0;<br>
+        }<br>
+        if (strstr(stroka, &quot;BLACK &quot;)) {<br>
+        ptr = strchr(stroka, '&quot;');<br>
+        strcpy(Pgn-&gt;BlackPlayer, ptr + 1);<br>
+        ptr = strchr(Pgn-&gt;BlackPlayer, '&quot;');<br>
+        if (ptr) *ptr = 0;<br>
+        }<br>
+        if (strstr(stroka, &quot;RESULT&quot;)) {<br>
+        ptr = strchr(stroka, '&quot;');<br>
+        if (ptr[1] == '0') Pgn-&gt;Winner = 2;<br>
+        else if (ptr[1] == '1' &amp;&amp; ptr[2] == '-') Pgn-&gt;Winner = 1;<br>
+        }<br>
+        if (strstr(stroka, &quot;PLYCOUNT&quot;) != NULL) {<br>
+        ptr = strchr(stroka, '&quot;');<br>
+        Pgn-&gt;PlyCount = strtol(ptr + 1, NULL, 10);<br>
+        }<br>
+        }<br>
+        if (c == '1') fscanf(finp, &quot;%c&quot;, &amp;cc);<br>
+        } while ((c != '1' || cc != '.') &amp;&amp; !feof(finp));<br>
+        if (feof(finp)) return 0;<br>
+        for (j = 0; j &lt; 100; j++) Pgn-&gt;comment[0].pv[j] = 0;<br>
+        Pgn-&gt;comment[0].value = 0;<br>
+        Pgn-&gt;comment[0].depth = 0;<br>
+        Pgn-&gt;comment[0].time = 0;<br>
+        i = 0; in_comment = 0; in_move = 0;<br>
+        do {<br>
+        fscanf(finp, &quot;%c&quot;, &amp;c);<br>
+        if (c == '[') break;<br>
+        if (c == '{') {<br>
+        in_comment = 1;<br>
+        comment_pos = 0;<br>
+        i--;<br>
+        memset(stroka, 0, 1000);<br>
+        continue;<br>
+        }<br>
+        if (c == '}') {<br>
+        if (Pgn-&gt;comment[i].pv[0] == 0) {<br>
+        move_undo(Pgn-&gt;Moves[i], undo);<br>
+        parse_comment(stroka, Pgn, i);<br>
+        move_do(Pgn-&gt;Moves[i], undo);<br>
+        }<br>
+        in_comment = 0;<br>
+        i++;<br>
+        memset(stroka, 0, 1000);<br>
+        continue;<br>
+        }<br>
+        if (c == '\n') c = ' ';<br>
+        if (!in_comment) {<br>
+        if (!in_move &amp;&amp; isalpha(c)) {<br>
+        in_move = 1;<br>
+        move_pos = 1;<br>
+        memset(cmove, 0, 20);<br>
+        cmove[0] = c;<br>
+        continue;<br>
+        }<br>
+        if (in_move &amp;&amp; c == ' ') {<br>
+        move = parse_move(cmove);<br>
+        if (!move) { printf(&quot;Bad move: %s\n&quot;, cmove); return 0; }<br>
+        Pgn-&gt;Moves[i] = move;<br>
+        move_do(move, undo);<br>
+        in_move = 0;<br>
+        i++;<br>
+        for (j = 0; j &lt; 100; j++) Pgn-&gt;comment[i].pv[j] = 0;<br>
+        Pgn-&gt;comment[i].value = 0;<br>
+        Pgn-&gt;comment[i].depth = 0;<br>
+        Pgn-&gt;comment[i].time = 0;<br>
+        memset(stroka, 0, 1000);<br>
+        continue;<br>
+        }<br>
+        }<br>
+        if (in_comment) stroka[comment_pos++] = c;<br>
+        else if (in_move) cmove[move_pos++] = c;<br>
+        } while (!feof(finp));<br>
+        return 1;<br>
+        }<br>
+        <br>
+        void board_to_fen(char fen[])<br>
+        { int i, j, e, piece;<br>
+        char *fig[14] = {&quot; &quot;,&quot; 
+        &quot;,&quot;P&quot;,&quot;p&quot;,&quot;N&quot;,&quot;n&quot;,&quot;B&quot;,&quot;b&quot;,&quot;R&quot;,&quot;r&quot;,&quot;Q&quot;,&quot;q&quot;,&quot;K&quot;,&quot;k&quot;};<br>
+        char *pust[9] = {&quot; &quot;,&quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,&quot;5&quot;,&quot;6&quot;,&quot;7&quot;,&quot;8&quot;};<br>
+        char *file[8] = {&quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;d&quot;,&quot;e&quot;,&quot;f&quot;,&quot;g&quot;,&quot;h&quot;};<br>
+        char *rank[8] = {&quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,&quot;5&quot;,&quot;6&quot;,&quot;7&quot;,&quot;8&quot;};<br>
+        <br>
+        fen[0] = 0;<br>
+        for (i = 56; i &gt;= 0; i -= 8) {<br>
+        e = 0;<br>
+        for (j = 0; j &lt;= 7; j++) {<br>
+        piece = Board-&gt;square[i + j];<br>
+        if (piece != 0) {<br>
+        if (e &gt; 0) {<br>
+        strcat(fen,pust[e]);<br>
+        e = 0;<br>
+        }<br>
+        strcat(fen,fig[piece]);<br>
+        }<br>
+        else e++;<br>
+        }<br>
+        if (e &gt; 0) strcat(fen,pust[e]);<br>
+        if (i &gt; 0) strcat(fen,&quot;/&quot;);<br>
+        }<br>
+        if (Board-&gt;turn) strcat(fen,&quot; b &quot;);<br>
+        else strcat(fen,&quot; w &quot;);<br>
+        if (Board-&gt;flags == 0) strcat(fen,&quot;-&quot;);<br>
+        else {<br>
+        if (Board-&gt;flags &amp; 1) strcat(fen,&quot;K&quot;);<br>
+        if (Board-&gt;flags &amp; 2) strcat(fen,&quot;Q&quot;);<br>
+        if (Board-&gt;flags &amp; 4) strcat(fen,&quot;k&quot;);<br>
+        if (Board-&gt;flags &amp; 8) strcat(fen,&quot;q&quot;);<br>
+        }<br>
+        strcat(fen,&quot; &quot;);<br>
+        if (Board-&gt;ep_square == 0) strcat(fen,&quot;-&quot;);<br>
+        else {<br>
+        strcat(fen,file[Board-&gt;ep_square &amp; 7]);<br>
+        strcat(fen,rank[Board-&gt;ep_square &gt;&gt; 3]);<br>
+        }<br>
+        }<br>
+        <br>
+        void run_pgn_test(char string[])<br>
+        { char * pgn_file;<br>
+        FILE * finp;<br>
+        FILE * ft;<br>
+        FILE * fepd;<br>
+        int i, j, move;<br>
+        char cmove[10];<br>
+        int side, opening;<br>
+        char position[65536];<br>
+        <br>
+        pgn_file = strchr(string,' ');<br>
+        if (pgn_file == NULL) return;<br>
+        pgn_file++;<br>
+        if (strlen(pgn_file) == 0) return;<br>
+        if ((finp = fopen(pgn_file, &quot;r&quot;)) == NULL) {<br>
+        fprintf(stdout,&quot;Can't Open File %s\n&quot;, pgn_file);<br>
+        return;<br>
+        }<br>
+        <br>
+        ft = fopen(&quot;test.txt&quot;,&quot;w&quot;);<br>
+        fepd = fopen(&quot;test.epd&quot;,&quot;w&quot;);<br>
+        while (!feof(finp)) {<br>
+        if (!get_pgn_game(finp, Pgn)) break;<br>
+        if (Pgn-&gt;PlyCount != 0) {<br>
+        fprintf(fepd,&quot;ucinewgame\n&quot;);<br>
+        side = 0;<br>
+        if (!memcmp(Pgn-&gt;BlackPlayer,&quot;Strelka&quot;,7)) side = 1;<br>
+        fprintf(ft,&quot;White : %s\nBlack : %s\n&quot;, Pgn-&gt;WhitePlayer, 
+        Pgn-&gt;BlackPlayer);<br>
+        if (Pgn-&gt;Winner == 0) fprintf(ft,&quot;Winner : Draw&quot;);<br>
+        else if (Pgn-&gt;Winner == 1) fprintf(ft,&quot;Winner : White&quot;);<br>
+        else fprintf(ft,&quot;Winner : Black&quot;);<br>
+        fprintf(ft,&quot;, PlyCount : %d\n\n&quot;,Pgn-&gt;PlyCount);<br>
+        for (i = 0; i &lt; Pgn-&gt;PlyCount; i++) {<br>
+        opening = 0;<br>
+        if (Pgn-&gt;comment[i].pv[0] == 0 &amp;&amp; Pgn-&gt;comment[i].depth == 0) opening = 
+        1;<br>
+        if (!opening &amp;&amp; (i &amp; 1) == side &amp;&amp; Pgn-&gt;comment[i].value &gt; -200) {<br>
+        // не дебют, ход Стрелки и еще не проиграно - сохраняем позицию в EPD<br>
+        strcpy(position,&quot;position startpos moves&quot;);<br>
+        for (j = 0; j &lt; i; j++) {<br>
+        move_to_string(Pgn-&gt;Moves[j], cmove);<br>
+        strcat(position,&quot; &quot;);<br>
+        strcat(position, cmove);<br>
+        }<br>
+        parse_position(position);<br>
+        // преобразуем позицию в FEN<br>
+        board_to_fen(position);<br>
+        // добавляем лучший ход, предложенный ранее соперником или наш текущий<br>
+        if (i &gt; 0 &amp;&amp; Pgn-&gt;comment[i-1].pv[1] != 0) move = 
+        Pgn-&gt;comment[i-1].pv[1];<br>
+        else move = Pgn-&gt;Moves[i];<br>
+        move_to_string(move, cmove);<br>
+        fprintf(fepd,&quot;%s bm %s&quot;,position,cmove);<br>
+        if (i &lt; Pgn-&gt;PlyCount - 2) {<br>
+        if (Pgn-&gt;comment[i].value &gt; Pgn-&gt;comment[i+2].value + 20) {<br>
+        fprintf(fepd,&quot; ; key&quot;);<br>
+        }<br>
+        }<br>
+        fprintf(fepd,&quot;\n&quot;);<br>
+        }<br>
+        if ((i &amp; 1) == 0) fprintf(ft,&quot;%3d. &quot;,(i / 2) + 1);<br>
+        move_to_string(Pgn-&gt;Moves[i], cmove);<br>
+        if (cmove[4] == 0) { cmove[4] = ' '; cmove[5] = 0; }<br>
+        fprintf(ft,&quot;%s &quot;, cmove);<br>
+        if (Pgn-&gt;comment[i].pv[0] == 0 &amp;&amp; Pgn-&gt;comment[i].depth == 0) {<br>
+        fprintf(ft,&quot;opening &quot;);<br>
+        }<br>
+        else {<br>
+        fprintf(ft,&quot;( &quot;);<br>
+        for (j = 0; j &lt; 2; j++) {<br>
+        if (Pgn-&gt;comment[i].pv[j] != 0) {<br>
+        move_to_string(Pgn-&gt;comment[i].pv[j], cmove);<br>
+        if (cmove[4] == 0) { cmove[4] = ' '; cmove[5] = 0; }<br>
+        fprintf(ft,&quot;%s&quot;, cmove);<br>
+        }<br>
+        else fprintf(ft,&quot; &quot;);<br>
+        if (j == 0) fprintf(ft,&quot; &quot;);<br>
+        }<br>
+        fprintf(ft,&quot;)&quot;);<br>
+        fprintf(ft,&quot; %6d/%2d %3d &quot;,<br>
+        Pgn-&gt;comment[i].value,Pgn-&gt;comment[i].depth,Pgn-&gt;comment[i].time);<br>
+        }<br>
+        if ((i &amp; 1) || (i + 1) == Pgn-&gt;PlyCount) fprintf(ft,&quot;\n&quot;);<br>
+        }<br>
+        fprintf(ft,&quot;%c\n&quot;,12);<br>
+        }<br>
+        }<br>
+        fclose(ft);<br>
+        fclose(fepd);<br>
+        <br>
+        fclose(finp);<br>
+        }<br>
+        <br>
+        #endif<br>
+        <br>
+        void parse_position(char string[])<br>
+        { const char * fen;<br>
+        char * moves;<br>
+        const char * ptr;<br>
+        char move_string[256];<br>
+        int move;<br>
+        struct undo_t undo[1];<br>
+        <br>
+        fen = strstr(string,&quot;fen &quot;);<br>
+        moves = strstr(string,&quot;moves &quot;);<br>
+        if (fen != NULL) {<br>
+        if (moves != NULL) moves[-1] = 0; // Das ist UCI<br>
+        board_from_fen(fen+4);<br>
+        }<br>
+        else board_from_fen(start_pos);<br>
+        if (moves != NULL) {<br>
+        ptr = moves+6;<br>
+        while (*ptr != 0) {<br>
+        move_string[0] = *ptr++;<br>
+        move_string[1] = *ptr++;<br>
+        move_string[2] = *ptr++;<br>
+        move_string[3] = *ptr++;<br>
+        if (*ptr == 0 || *ptr == ' ') move_string[4] = 0;<br>
+        else { move_string[4] = *ptr++; move_string[5] = 0; }<br>
+        move = move_from_string(move_string);<br>
+        move_do(move, undo);<br>
+        while (*ptr == ' ') ptr++;<br>
+        }<br>
+        }<br>
+        }<br>
+        <br>
+        void parse_setoption(char string[])<br>
+        { char *name, *value;<br>
+        int size;<br>
+        <br>
+        name = strstr(string,&quot;name &quot;);<br>
+        value = strstr(string,&quot;value &quot;);<br>
+        if (name == NULL || value == NULL || name &gt;= value) return;<br>
+        value[-1] = 0;<br>
+        name += 5;<br>
+        value += 6;<br>
+        if (!memcmp(name,&quot;Hash&quot;,4)) {<br>
+        size = atoi(value);<br>
+        if (size &gt;= 4 &amp;&amp; size &lt;= 1024) {<br>
+        free(trans_entry);<br>
+        trans_alloc(size);<br>
+        }<br>
+        }<br>
+        if (!memcmp(name,&quot;MultiPV&quot;,7)) {<br>
+        size = atoi(value);<br>
+        if (size &gt;= 1 &amp;&amp; size &lt;= 100) {<br>
+        MultiPV = size;<br>
+        }<br>
+        }<br>
+        }<br>
+        <br>
+        void get_uci_command()<br>
+        { char string[65536];<br>
+        char *ptr;<br>
+        <br>
+        (void)fgets(string, 65536, stdin);<br>
+        if (feof(stdin)) exit(0);<br>
+        ptr = strchr(string, '\n');<br>
+        if (ptr != NULL) *ptr = 0;<br>
+        // Parse<br>
+        if (!strcmp(string, &quot;uci&quot;)) {<br>
+        fprintf(stdout,&quot;id name Strelka 2.0 B\n&quot;);<br>
+        fprintf(stdout,&quot;id author Jury Osipov\n&quot;);<br>
+        fprintf(stdout,&quot;option name Hash type spin default 32 min 4 max 
+        1024\n&quot;);<br>
+        fprintf(stdout,&quot;option name MultiPV type spin default 1 min 1 max 
+        100\n&quot;);<br>
+        fprintf(stdout,&quot;uciok\n&quot;);<br>
+        }<br>
+        else if (!strcmp(string,&quot;ucinewgame&quot;)) {<br>
+        if (!Searching &amp;&amp; !Delay) trans_clear();<br>
+        }<br>
+        else if (!strcmp(string,&quot;isready&quot;)) {<br>
+        fprintf(stdout,&quot;readyok\n&quot;);<br>
+        }<br>
+        else if (!strcmp(string,&quot;ponderhit&quot;)) {<br>
+        if (Searching) Infinite = 0;<br>
+        else if (Delay) { send_best_move(); Delay = 0; }<br>
+        }<br>
+        else if (!memcmp(string,&quot;position&quot;,8)) {<br>
+        if (!Searching &amp;&amp; !Delay) parse_position(string);<br>
+        }<br>
+        else if (!memcmp(string,&quot;setoption&quot;,9)) {<br>
+        if (!Searching &amp;&amp; !Delay) parse_setoption(string);<br>
+        }<br>
+        else if (!memcmp(string,&quot;go&quot;,2)) {<br>
+        if (!Searching &amp;&amp; !Delay) start_go(string);<br>
+        }<br>
+        else if (!strcmp(string,&quot;stop&quot;)) {<br>
+        if (Searching) { stop_search = 1; Infinite = 0; }<br>
+        else if (Delay) { send_best_move(); Delay = 0; }<br>
+        }<br>
+        else if (!strcmp(string,&quot;quit&quot;)) exit(0);<br>
+        #ifdef TEST_VER<br>
+        else if (!memcmp(string,&quot;epd&quot;,3)) run_epd_test(string);<br>
+        else if (!memcmp(string,&quot;pgn&quot;,3)) run_pgn_test(string);<br>
+        #endif<br>
+        }<br>
+        <br>
+
+        
+
+        </p>
+
+        
+
+        </td>
+  </tr>
+</table>
+
+</body>
+
+</html>

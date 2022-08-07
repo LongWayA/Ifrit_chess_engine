@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+<title>UCI</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">UCI</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="0_Structure_Ifrit.htm">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+Разбор позиции фен:<br>
+char * StartFen = "fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ";
+ position startpos moves g1f3 d7d5 b2b3 c8g4 c1b2 b8c6 h2h3 
+(castling is done by the kingmove e.g.: e1g1 or e8c8,
+promotion by e7e8q for promotion to queen or e7e8n for promotion to knight). <br>
+
+Находим указатель на fen и указатель на moves,
+если fen присутствует, то в параметре передаем входящую fen, иначе передаем StartFen. 
+Далее бежим по строке, 
+проматываем fen,
+проматываем пробелы,
+заполняем поля за пределами доски 8 на 8 (в целом, у нас доска 8 на 16)
+до тех пор, до тех пор пока не встретится / или пробел (/ - это разделитель вертикалей в доске). 
+Заносим фигуры в массив доски,
+но тут есть один момент: если наткнулись на цифру (а она обозначает количество пустых полей),
+тогда проматываем эти поля, занося попутно их в массив,
+
+далее загоняем рокировку: 
+K-короткая для белых, Q-длинная для белых,  k-короткая для черных, q-длинная для черных
+и взятие на проходе, с6 – это координата битого поля, его переводим в наше представление. 
+Таким образом, фен-позицию мы инициализируем. Далее, если указатель на moves  не пустой, тогда 
+считываем и делаем ходы.
+Т.е. проверяем ход блоком правил, а потом делаем его реализатором ходов.
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>
+
+</html>

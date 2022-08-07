@@ -1,0 +1,601 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<title>EVAL_C</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center">EVAL_C</h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="/index.html">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+
+        
+
+        <p align="justify">
+        ///////////////////////////////////////////////////////////////////////////<br>
+        static __inline int first_one(unsigned __int64 bm)<br>
+        { _asm { mov eax, dword ptr bm[0]<br>
+        test eax, eax<br>
+        jz f_hi<br>
+        bsf eax, eax<br>
+        jmp f_ret<br>
+        f_hi: bsf eax, dword ptr bm[4]<br>
+        add eax, 20h<br>
+        f_ret:<br>
+        }<br>
+        }<br>
+        ///////////////////////////////////////////////////////////////////////////<br>
+        static __inline int last_one(unsigned __int64 bm)<br>
+        { _asm { mov eax, dword ptr bm[4]<br>
+        test eax, eax<br>
+        jz l_lo<br>
+        bsr eax, eax<br>
+        add eax, 20h<br>
+        jmp l_ret<br>
+        l_lo: bsr eax, dword ptr bm[0]<br>
+        l_ret:<br>
+        }<br>
+        }<br>
+        ///////////////////////////////////////////////////////////////////////////<br>
+        // Вычисление статической оценки позиции<br>
+        int evaluate(struct pos_info_t * pos_info)<br>
+        { int wking_square, bking_square, king_attack_nb, king_safety_value;<br>
+        int diff, summ, value, cnt, square, i, k, opening, endgame, phase;<br>
+        unsigned __int64 mask, mob, mob_w, mob_b;<br>
+        unsigned __int64 wking_moves, bking_moves;<br>
+        struct pawn_info_t * entry;<br>
+        unsigned __int16 flags;<br>
+        unsigned char files;<br>
+        <br>
+        diff = Board-&gt;mat_diff; // материальная разница<br>
+        summ = (Board-&gt;mat_summ) &amp; 0x3FFFF; // материальная сумма<br>
+        flags = 0;<br>
+        value = diff * 3399;<br>
+        if (summ &lt; MAX_MATERIAL) {<br>
+        value += Material[summ].value;<br>
+        flags = Material[summ].flags;<br>
+        }<br>
+        // Здесь была ленивая оценка. В одной из Белок была отключена,<br>
+        // и вроде получилось лучше, но данных об этом нет.<br>
+        // Зато такое отключение очень упростило программу,<br>
+        // а на скорости сказалось не очень заметно.<br>
+        opening = value + Board-&gt;opening; // материал + оценки позиций фигур<br>
+        endgame = value + Board-&gt;endgame;<br>
+        wking_square = first_one(Board-&gt;mp[WhiteKing]);<br>
+        wking_moves = MaskKingMoves[wking_square];<br>
+        bking_square = first_one(Board-&gt;mp[BlackKing]);<br>
+        bking_moves = MaskKingMoves[bking_square];<br>
+        king_attack_nb = 0; // здесь будем накапливать оценку безопасности 
+        короля<br>
+        king_safety_value = 0;<br>
+        // Вычисляем по фигурам - их подвижность и атаки на чужого короля<br>
+        // Белые пешки<br>
+        mob_w = Board-&gt;mp[WhitePawn];<br>
+        mob_w = (((mob_w &amp; 0xFFFF7F7F7F7F7F7F) &lt;&lt; 2) | (mob_w &amp; 
+        0x00FEFEFEFEFEFEFE)) &lt;&lt; 7;<br>
+        if (mob_w &amp; bking_moves) king_attack_nb++;<br>
+        // Белые кони<br>
+        for (mask = Board-&gt;mp[WhiteKnight]; mask != 0; mask &amp;= (mask-1)) { // 
+        Идем по списку коней<br>
+        mob = MaskKnightMoves[first_one(mask)]; // маска возможных ходов коня<br>
+        mob_w |= mob; // добавляем к общей маске мобильности белых фигур<br>
+        if (mob &amp; bking_moves) { // есть атака окрестности чужого короля<br>
+        king_attack_nb++; king_safety_value += 941;<br>
+        }<br>
+        mob &amp;= ~(Board-&gt;mp[White]); // из маски подвижности убираем позиции 
+        своих фигур<br>
+        // и определяем количество полей, доступных для хода коня<br>
+        cnt = popcnt(mob);<br>
+        // оценку подвижности добавляем к общей позиционной оценке<br>
+        endgame += cnt * 121;<br>
+        opening += cnt * 14;<br>
+        }<br>
+        // Белые слоны - аналогично<br>
+        for (mask = Board-&gt;mp[WhiteBishop]; mask != 0; mask &amp;= (mask-1)) {<br>
+        square = first_one(mask);<br>
+        mob = LINE1(square) | LINE2(square);<br>
+        mob_w |= mob;<br>
+        if (mob &amp; bking_moves) { king_attack_nb++; king_safety_value += 418; }<br>
+        mob &amp;= ~(Board-&gt;mp[White]);<br>
+        cnt = popcnt(mob);<br>
+        endgame += cnt * 116;<br>
+        opening += cnt * 149;<br>
+        }<br>
+        // Белые ладьи<br>
+        for (mask = Board-&gt;mp[WhiteRook]; mask != 0; mask &amp;= (mask-1)) {<br>
+        square = first_one(mask);<br>
+        mob = LINE3(square) | LINE4(square);<br>
+        mob_w |= mob;<br>
+        if (mob &amp; bking_moves) { king_attack_nb++; king_safety_value += 666; }<br>
+        mob &amp;= ~(Board-&gt;mp[White]);<br>
+        cnt = popcnt(mob);<br>
+        endgame += cnt * 79;<br>
+        opening += cnt * 84;<br>
+        mob = MaskPawnOpenFileW[square];<br>
+        if ((Board-&gt;mp[WhitePawn] &amp; mob) == 0) { // Открытая вертикаль - нет 
+        своих пешек<br>
+        endgame += 256;<br>
+        opening += 64;<br>
+        if ((Board-&gt;mp[BlackPawn] &amp; mob) == 0) { // На вертикали нет и чужих 
+        пешек<br>
+        endgame += 172; opening += 971;<br>
+        }<br>
+        // атака на чужого короля по открытой линии<br>
+        if ((flags &amp; 4) &amp;&amp; (bking_moves &amp; mob)) {<br>
+        opening += 121;<br>
+        if (Board-&gt;mp[BlackKing] &amp; mob) opening += 853;<br>
+        }<br>
+        }<br>
+        if ((square &amp; 0xFFFFFFF8) == 0x30) { // Предпоследняя горизонталь<br>
+        // если есть чужие пешки на предпоследней горизонтали или король на 
+        последней<br>
+        if ((Board-&gt;mp[BlackPawn] &amp; 0x00FF000000000000) || (Board-&gt;mp[BlackKing] 
+        &amp; 0xFF00000000000000)) {<br>
+        endgame += 1026; opening += 246;<br>
+        }<br>
+        }<br>
+        }<br>
+        // Белый ферзь<br>
+        for (mask = Board-&gt;mp[WhiteQueen]; mask != 0; mask &amp;= (mask-1)) {<br>
+        square = first_one(mask);<br>
+        mob = LINE1(square) | LINE2(square) | LINE3(square) | LINE4(square);<br>
+        mob_w |= mob;<br>
+        if (mob &amp; bking_moves) { king_attack_nb++; king_safety_value += 532; }<br>
+        mob &amp;= ~(Board-&gt;mp[White]);<br>
+        cnt = popcnt(mob);<br>
+        endgame += cnt * 37;<br>
+        opening += cnt * 54;<br>
+        if ((square &amp; 0xFFFFFFF8) == 0x30) { // Предпоследняя горизонталь<br>
+        if ((Board-&gt;mp[BlackPawn] &amp; 0x00FF000000000000) || (Board-&gt;mp[BlackKing] 
+        &amp; 0xFF00000000000000)) {<br>
+        endgame += 1420;<br>
+        }<br>
+        }<br>
+        }<br>
+        mob_w |= wking_moves; // Добавляем к оценке подвижность белого короля<br>
+        // Определяем оценку пешечной структуры<br>
+        entry = pawn_get_info();<br>
+        opening += entry-&gt;opening;<br>
+        endgame += entry-&gt;endgame;<br>
+        if (flags &amp; 4) { // Особый тип позиции (определенный суммарный материал)<br>
+        // Только для таких особых позиций определяем безопасность короля<br>
+        opening += (KingAttackWeight[king_attack_nb] * king_safety_value) / 32;<br>
+        i = FileWing[bking_square];<br>
+        k = entry-&gt;sheet_black_king[i];<br>
+        if (((Board-&gt;flags) &amp; 4) &amp;&amp; (entry-&gt;sheet_black_king[2] &lt; k)) k = entry-&gt;sheet_black_king[2];<br>
+        if (((Board-&gt;flags) &amp; 8) &amp;&amp; (entry-&gt;sheet_black_king[0] &lt; k)) k = entry-&gt;sheet_black_king[0];<br>
+        opening += (k + entry-&gt;sheet_black_king[i]) / 2;<br>
+        }<br>
+        // Все то же самое для черных фигур<br>
+        king_attack_nb = 0;<br>
+        king_safety_value = 0;<br>
+        mob_b = Board-&gt;mp[BlackPawn];<br>
+        mob_b = (((mob_b &gt;&gt; 2) &amp; 0x3FBFBFBFBFBFBF80) | (mob_b &amp; 
+        0x7F7F7F7F7F7F7F00)) &gt;&gt; 7;<br>
+        if (mob_b &amp; wking_moves) king_attack_nb++;<br>
+        for (mask = Board-&gt;mp[BlackKnight]; mask != 0; mask &amp;= (mask-1)) {<br>
+        mob = MaskKnightMoves[first_one(mask)];<br>
+        mob_b |= mob;<br>
+        if (mob &amp; wking_moves) { king_attack_nb++; king_safety_value += 941; }<br>
+        mob &amp;= ~(Board-&gt;mp[Black]);<br>
+        cnt = popcnt(mob);<br>
+        endgame -= cnt * 121;<br>
+        opening -= cnt * 14;<br>
+        }<br>
+        for (mask = Board-&gt;mp[BlackBishop]; mask != 0; mask &amp;= (mask-1)) {<br>
+        square = first_one(mask);<br>
+        mob = LINE1(square) | LINE2(square);<br>
+        mob_b |= mob;<br>
+        if (mob &amp; wking_moves) { king_attack_nb++; king_safety_value += 418; }<br>
+        mob &amp;= ~(Board-&gt;mp[Black]);<br>
+        cnt = popcnt(mob);<br>
+        endgame -= cnt * 116;<br>
+        opening -= cnt * 149;<br>
+        }<br>
+        for (mask = Board-&gt;mp[BlackRook]; mask != 0; mask &amp;= (mask-1)) {<br>
+        square = first_one(mask);<br>
+        mob = LINE3(square) | LINE4(square);<br>
+        mob_b |= mob;<br>
+        if (mob &amp; wking_moves) { king_attack_nb++; king_safety_value += 666; }<br>
+        mob &amp;= ~(Board-&gt;mp[Black]);<br>
+        cnt = popcnt(mob);<br>
+        endgame -= cnt * 79;<br>
+        opening -= cnt * 84;<br>
+        mob = MaskPawnOpenFileB[square];<br>
+        if ((Board-&gt;mp[BlackPawn] &amp; mob) == 0) {<br>
+        endgame -= 256;<br>
+        opening -= 64;<br>
+        if ((Board-&gt;mp[WhitePawn] &amp; mob) == 0) { endgame -= 172; opening -= 971; 
+        }<br>
+        if ((flags &amp; 2) &amp;&amp; (wking_moves &amp; mob)) {<br>
+        opening -= 121;<br>
+        if (Board-&gt;mp[WhiteKing] &amp; mob) opening -= 853;<br>
+        }<br>
+        }<br>
+        if ((square &amp; 0xFFFFFFF8) == 8) {<br>
+        if ((Board-&gt;mp[WhitePawn] &amp; 0x000000000000FF00) || (Board-&gt;mp[WhiteKing] 
+        &amp; 0x00000000000000FF)) {<br>
+        endgame -= 1026; opening -= 246;<br>
+        }<br>
+        }<br>
+        }<br>
+        for (mask = Board-&gt;mp[BlackQueen]; mask != 0; mask &amp;= (mask-1)) {<br>
+        square = first_one(mask);<br>
+        mob = LINE1(square) | LINE2(square) | LINE3(square) | LINE4(square);<br>
+        mob_b |= mob;<br>
+        if (mob &amp; wking_moves) { king_attack_nb++; king_safety_value += 532; }<br>
+        mob &amp;= ~(Board-&gt;mp[Black]);<br>
+        cnt = popcnt(mob);<br>
+        endgame -= cnt * 37;<br>
+        opening -= cnt * 54;<br>
+        if ((square &amp; 0xFFFFFFF8) == 8) {<br>
+        if ((Board-&gt;mp[WhitePawn] &amp; 0x000000000000FF00) || (Board-&gt;mp[WhiteKing] 
+        &amp; 0x00000000000000FF)) {<br>
+        endgame -= 1420;<br>
+        }<br>
+        }<br>
+        }<br>
+        mob_b |= bking_moves;<br>
+        if (flags &amp; 2) {<br>
+        opening -= (KingAttackWeight[king_attack_nb] * king_safety_value) / 32;<br>
+        i = FileWing[wking_square];<br>
+        k = entry-&gt;sheet_white_king[i];<br>
+        if (((Board-&gt;flags) &amp; 1) &amp;&amp; entry-&gt;sheet_white_king[2] &lt; k) k = 
+        entry-&gt;sheet_white_king[2];<br>
+        if (((Board-&gt;flags) &amp; 2) &amp;&amp; entry-&gt;sheet_white_king[0] &lt; k) k = 
+        entry-&gt;sheet_white_king[0];<br>
+        opening -= (k + entry-&gt;sheet_white_king[i]) / 2;<br>
+        }<br>
+        // Отдельно считаем оценку проходных пешек - по соответствующим 
+        вертикалям<br>
+        for (files = entry-&gt;pass_file[0]; files != 0; files &amp;= (files - 1)) {<br>
+        mask = Board-&gt;mp[WhitePawn] &amp; MaskFile[BsfByte[files]];<br>
+        square = last_one(mask); // если пешка не одна - берем самую продвинутую<br>
+        mob = MaskPawnOpenFileW[square];<br>
+        opening += PassedPawnValue1[square &gt;&gt; 3]; // оценка в зависимости от 
+        горизонтали<br>
+        endgame += PassedPawnValue2[square &gt;&gt; 3];<br>
+        // В случае отсутствия чужих фигур - у соперника только пешки<br>
+        if ((Board-&gt;mp[BlackQueen] | Board-&gt;mp[BlackRook] |<br>
+        Board-&gt;mp[BlackBishop] | Board-&gt;mp[BlackKnight]) == 0) {<br>
+        if ((mob &amp; Board-&gt;mp[White]) == 0 &amp;&amp; (QuadBlackKing[square][Board-&gt;turn] 
+        &amp; (Board-&gt;mp[BlackKing])) != 0) endgame += 25600;<br>
+        else if ((WhiteKingOpp[square] &amp; Board-&gt;mp[WhiteKing]) != 0) endgame += 
+        25600;<br>
+        }<br>
+        else { // есть фигуры соперника<br>
+        if ((mob &amp; Board-&gt;mp[White]) == 0) endgame += PassedPawnValue3[square &gt;&gt; 
+        3];<br>
+        if ((mob &amp; Board-&gt;mp[Black]) == 0) endgame += PassedPawnValue4[square &gt;&gt; 
+        3];<br>
+        if (((~mob_w) &amp; mob &amp; mob_b) == 0) endgame += PassedPawnValue5[square &gt;&gt; 
+        3];<br>
+        }<br>
+        endgame += Distance[square+8][bking_square] * 
+        PassedPawnValue7[square&gt;&gt;3] -<br>
+        Distance[square+8][wking_square] * PassedPawnValue6[square&gt;&gt;3];<br>
+        }<br>
+        // То же самое для черных проходных пешек<br>
+        for (files = entry-&gt;pass_file[1]; files != 0; files &amp;= (files - 1)) {<br>
+        mask = Board-&gt;mp[BlackPawn] &amp; MaskFile[BsfByte[files]];<br>
+        square = first_one(mask);<br>
+        mob = MaskPawnOpenFileB[square];<br>
+        opening -= PassedPawnValue1[7 - (square &gt;&gt; 3)];<br>
+        endgame -= PassedPawnValue2[7 - (square &gt;&gt; 3)];<br>
+        if ((Board-&gt;mp[WhiteQueen] | Board-&gt;mp[WhiteRook] |<br>
+        Board-&gt;mp[WhiteBishop] | Board-&gt;mp[WhiteKnight]) == 0) {<br>
+        if ((mob &amp; Board-&gt;mp[Black]) == 0 &amp;&amp; (QuadWhiteKing[square][Board-&gt;turn] 
+        &amp; Board-&gt;mp[WhiteKing]) != 0) endgame -= 25600;<br>
+        else if ((BlackKingOpp[square] &amp; Board-&gt;mp[BlackKing]) != 0) endgame -= 
+        25600;<br>
+        }<br>
+        else {<br>
+        if ((mob &amp; Board-&gt;mp[Black]) == 0) endgame -= PassedPawnValue3[7 - 
+        (square &gt;&gt; 3)];<br>
+        if ((mob &amp; Board-&gt;mp[White]) == 0) endgame -= PassedPawnValue4[7 - 
+        (square &gt;&gt; 3)];<br>
+        if (((~mob_b) &amp; mob &amp; mob_w) == 0) endgame -= PassedPawnValue5[7 - 
+        (square &gt;&gt; 3)];<br>
+        }<br>
+        endgame += Distance[square-8][bking_square] * 
+        PassedPawnValue6[7-(square&gt;&gt;3)] -<br>
+        Distance[square-8][wking_square] * PassedPawnValue7[7-(square&gt;&gt;3)];<br>
+        }<br>
+        // Некоторые особые случаи паттернов<br>
+        if ((((Board-&gt;mp[WhiteBishop]) &gt;&gt; 7) &amp; (Board-&gt;mp[BlackPawn]) &amp; 
+        0x0004020200000000) ||<br>
+        (((Board-&gt;mp[WhiteBishop]) &gt;&gt; 9) &amp; (Board-&gt;mp[BlackPawn]) &amp; 
+        0x0020404000000000)) {<br>
+        opening -= 1802; endgame -= 1802;<br>
+        }<br>
+        if (((((Board-&gt;mp[BlackBishop]) &amp; 0x0000000000010102) &lt;&lt; 9) &amp; 
+        Board-&gt;mp[WhitePawn]) ||<br>
+        ((((Board-&gt;mp[BlackBishop]) &amp; 0x0000000000808040) &lt;&lt; 7) &amp; 
+        Board-&gt;mp[WhitePawn])) {<br>
+        opening += 1802; endgame += 1802;<br>
+        }<br>
+        if ((Board-&gt;mp[WhiteBishop] &amp; 0x0000000000000004) &amp;&amp;<br>
+        (Board-&gt;mp[WhitePawn] &amp; 0x0000000000000800) &amp;&amp;<br>
+        (Board-&gt;md1 &amp; 0x0000000000080000)) opening -= 1920;<br>
+        if ((Board-&gt;mp[WhiteBishop] &amp; 0x0000000000000020) &amp;&amp;<br>
+        (Board-&gt;mp[WhitePawn] &amp; 0x0000000000001000) &amp;&amp;<br>
+        (Board-&gt;md1 &amp; 0x0000000000100000)) opening -= 1920;<br>
+        if ((Board-&gt;mp[BlackBishop] &amp; 0x0400000000000000) &amp;&amp;<br>
+        (Board-&gt;mp[BlackPawn] &amp; 0x0008000000000000) &amp;&amp;<br>
+        (Board-&gt;md1 &amp; 0x0000080000000000)) opening += 1920;<br>
+        if ((Board-&gt;mp[BlackBishop] &amp; 0x2000000000000000) &amp;&amp;<br>
+        (Board-&gt;mp[BlackPawn] &amp; 0x0010000000000000) &amp;&amp;<br>
+        (Board-&gt;md1 &amp; 0x0000100000000000)) opening += 1920;<br>
+        if ((Board-&gt;mp[WhiteRook] &amp; 0x0000000000000103) &amp;&amp;<br>
+        (Board-&gt;mp[WhiteKing] &amp; 0x0000000000000006)) opening -= 1920;<br>
+        if ((Board-&gt;mp[WhiteRook] &amp; 0x00000000000080C0) &amp;&amp;<br>
+        (Board-&gt;mp[WhiteKing] &amp; 0x0000000000000060)) opening -= 1920;<br>
+        if ((Board-&gt;mp[BlackRook] &amp; 0x0301000000000000) &amp;&amp;<br>
+        (Board-&gt;mp[BlackKing] &amp; 0x0600000000000000)) opening += 1920;<br>
+        if ((Board-&gt;mp[BlackRook] &amp; 0xC080000000000000) &amp;&amp;<br>
+        (Board-&gt;mp[BlackKing] &amp; 0x6000000000000000)) opening += 1920;<br>
+        <br>
+        if (flags &amp; 1) { // слоновый эндшпиль<br>
+        // Смотрим - разноцветные ли слоны<br>
+        mask = (Board-&gt;mp[BlackBishop]) | (Board-&gt;mp[WhiteBishop]);<br>
+        if ((mask &amp; 0x55AA55AA55AA55AA) &amp;&amp; (mask &amp; 0xAA55AA55AA55AA55)) {<br>
+        opening = opening / 2; endgame = endgame / 2;<br>
+        }<br>
+        }<br>
+        <br>
+        // Считаем интегральную оценку и заносим ее в структуру pos_info,<br>
+        // а также битовые маски подвижности фигур обоих цветов<br>
+        <br>
+        phase = (unsigned int)(flags) &gt;&gt; 4; // стадия игры - число от 0 до 24<br>
+        <br>
+        // В оригинальной Стрелке здесь вместо phase были нелинейные 
+        коэффициенты:<br>
+        // value = ((MatPhase[phase][1] * endgame) + (MatPhase[phase][0] * 
+        opening)) &gt;&gt; 13;<br>
+        // В Белке 1.8.7 заменено на линейные коэффициенты, как у Фрукта (+30 
+        пунктов !!!)<br>
+        <br>
+        value = ((phase * endgame + (24 - phase) * opening) / 24) / 32;<br>
+        <br>
+        if (Board-&gt;turn == 0) {<br>
+        pos_info-&gt;value = value + 3;<br>
+        pos_info-&gt;mob[0] = mob_w;<br>
+        pos_info-&gt;mob[1] = mob_b;<br>
+        mask = (Board-&gt;mp[WhiteKing]) &amp; mob_b; // маска атак чужих фигур на 
+        своего короля<br>
+        }<br>
+        else {<br>
+        pos_info-&gt;value = 3 - value;<br>
+        pos_info-&gt;mob[0] = mob_b;<br>
+        pos_info-&gt;mob[1] = mob_w;<br>
+        mask = (Board-&gt;mp[BlackKing]) &amp; mob_w;<br>
+        }<br>
+        // Возвращаем признак шаха в позиции по наличию в маске подвижности атак 
+        на короля<br>
+        if (mask == 0) return 0;<br>
+        else return 1;<br>
+        }<br>
+        ///////////////////////////////////////////////////////////////////////////<br>
+        // Определение битовых масок подвижности фигур в случае ленивой оценки<br>
+        int eval_mob(struct pos_info_t * pos_info)<br>
+        { unsigned __int64 mob_w, mob_b, mask;<br>
+        int square;<br>
+        <br>
+        mob_w = Board-&gt;mp[WhitePawn];<br>
+        mob_w = (((mob_w &amp; 0xFFFF7F7F7F7F7F7F) &lt;&lt; 2) | (mob_w &amp; 
+        0x00FEFEFEFEFEFEFE)) &lt;&lt; 7;<br>
+        for (mask = Board-&gt;mp[WhiteKnight]; mask != 0; mask &amp;= (mask-1)) {<br>
+        mob_w |= MaskKnightMoves[first_one(mask)];<br>
+        }<br>
+        for (mask = Board-&gt;mp[WhiteBishop]; mask != 0; mask &amp;= (mask-1)) {<br>
+        square = first_one(mask);<br>
+        mob_w |= LINE1(square) | LINE2(square);<br>
+        }<br>
+        for (mask = Board-&gt;mp[WhiteRook]; mask != 0; mask &amp;= (mask-1)) {<br>
+        square = first_one(mask);<br>
+        mob_w |= LINE3(square) | LINE4(square);<br>
+        }<br>
+        for (mask = Board-&gt;mp[WhiteQueen]; mask != 0; mask &amp;= (mask-1)) {<br>
+        square = first_one(mask);<br>
+        mob_w |= LINE1(square) | LINE2(square) | LINE3(square) | LINE4(square);<br>
+        }<br>
+        mob_w |= MaskKingMoves[first_one(Board-&gt;mp[WhiteKing])];<br>
+        <br>
+        mob_b = Board-&gt;mp[BlackPawn];<br>
+        mob_b = (((mob_b &gt;&gt; 2) &amp; 0x3FBFBFBFBFBFBF80) | (mob_b &amp; 
+        0x7F7F7F7F7F7F7F00)) &gt;&gt; 7;<br>
+        for (mask = Board-&gt;mp[BlackKnight]; mask != 0; mask &amp;= (mask-1)) {<br>
+        mob_b |= MaskKnightMoves[first_one(mask)];<br>
+        }<br>
+        for (mask = Board-&gt;mp[BlackBishop]; mask != 0; mask &amp;= (mask-1)) {<br>
+        square = first_one(mask);<br>
+        mob_b |= LINE1(square) | LINE2(square);<br>
+        }<br>
+        for (mask = Board-&gt;mp[BlackRook]; mask != 0; mask &amp;= (mask-1)) {<br>
+        square = first_one(mask);<br>
+        mob_b |= LINE3(square) | LINE4(square);<br>
+        }<br>
+        for (mask = Board-&gt;mp[BlackQueen]; mask != 0; mask &amp;= (mask-1)) {<br>
+        square = first_one(mask);<br>
+        mob_b |= LINE1(square) | LINE2(square) | LINE3(square) | LINE4(square);<br>
+        }<br>
+        mob_b |= MaskKingMoves[first_one(Board-&gt;mp[BlackKing])];<br>
+        <br>
+        if (Board-&gt;turn == 0) {<br>
+        pos_info-&gt;mob[0] = mob_w;<br>
+        pos_info-&gt;mob[1] = mob_b;<br>
+        mask = (Board-&gt;mp[WhiteKing]) &amp; mob_b;<br>
+        }<br>
+        else {<br>
+        pos_info-&gt;mob[0] = mob_b;<br>
+        pos_info-&gt;mob[1] = mob_w;<br>
+        mask = (Board-&gt;mp[BlackKing]) &amp; mob_w;<br>
+        }<br>
+        if (mask == 0) return 0;<br>
+        else return 1;<br>
+        }<br>
+        //////////////////////////////////////////////////////////////////////////////<br>
+        // Оценка пешечной структуры<br>
+        struct pawn_info_t * pawn_get_info()<br>
+        { struct pawn_info_t * entry;<br>
+        unsigned int lock;<br>
+        char open_file;<br>
+        int square;<br>
+        unsigned __int64 mask, mask1, mask2;<br>
+        __int16 opening, endgame;<br>
+        unsigned char wp_pass_file, bp_pass_file;<br>
+        <br>
+        // Сначала ищем сохраненную информацию в таблице Pawn<br>
+        entry = pawn_entry + ((unsigned int)(Board-&gt;pawn_key) &amp; pawn_mask);<br>
+        lock = (unsigned int)((Board-&gt;pawn_key) &gt;&gt; 32);<br>
+        if (entry-&gt;lock == lock) return entry; // Нашли<br>
+        // Не нашли в таблице - считаем<br>
+        opening = endgame = 0; // Общая оценка пешечной структуры<br>
+        wp_pass_file = bp_pass_file = 0; // Здесь будем запоминать открытые 
+        вертикали<br>
+        for (mask = Board-&gt;mp[WhitePawn]; mask != 0; mask &amp;= (mask-1)) { // По 
+        белым пешкам<br>
+        square = first_one(mask);<br>
+        if (MaskPawnDoubled[square] &amp; Board-&gt;mp[WhitePawn]) endgame -= 158;<br>
+        open_file = 1;<br>
+        if (MaskPawnOpenFileW[square] &amp; (Board-&gt;mp[WhitePawn] | 
+        Board-&gt;mp[BlackPawn])) open_file = 0;<br>
+        if ((MaskPawnIsolated[square] &amp; Board-&gt;mp[WhitePawn]) == 0) {<br>
+        if (open_file) { opening -= 923; endgame -= 324; }<br>
+        else { opening -= 79; endgame -= 324; }<br>
+        }<br>
+        else if ((MaskPawnProtectedW[square] &amp; Board-&gt;mp[WhitePawn]) == 0) {<br>
+        if ((MaskPawnAttacksW1[square] &amp; Board-&gt;mp[BlackPawn]) ||<br>
+        ((MaskPawnAttacksW2[square] &amp; Board-&gt;mp[BlackPawn]) &amp;&amp;<br>
+        ((MaskPawnAttacks[0][square] &amp; Board-&gt;mp[WhitePawn])==0))) {<br>
+        if (open_file) opening -= 872; else opening -= 406;<br>
+        endgame -= 297;<br>
+        }<br>
+        }<br>
+        if ((MaskPawnPassedW[square] &amp; Board-&gt;mp[BlackPawn]) == 0) wp_pass_file 
+        |= PawnPassedFile[square &amp; 7];<br>
+        else if (open_file) {<br>
+        mask1 = MaskPawnProtectedW[square] &amp; Board-&gt;mp[WhitePawn];<br>
+        mask2 = MaskPawnPassedW[square] &amp; Board-&gt;mp[BlackPawn];<br>
+        if (popcnt(mask1) &gt;= popcnt(mask2)) {<br>
+        opening += PawnPassedScoreOpening[square &gt;&gt; 3];<br>
+        endgame += PawnPassedScoreEndgame[square &gt;&gt; 3];<br>
+        }<br>
+        }<br>
+        }<br>
+        for (mask = Board-&gt;mp[BlackPawn]; mask != 0; mask &amp;= (mask-1)) { // По 
+        черным<br>
+        square = first_one(mask);<br>
+        if (MaskPawnDoubled[square] &amp; Board-&gt;mp[BlackPawn]) endgame += 158;<br>
+        open_file = 1;<br>
+        if (MaskPawnOpenFileB[square] &amp; (Board-&gt;mp[WhitePawn] | 
+        Board-&gt;mp[BlackPawn])) open_file = 0;<br>
+        if ((MaskPawnIsolated[square] &amp; Board-&gt;mp[BlackPawn]) == 0) {<br>
+        if (open_file) { opening += 923; endgame += 324; }<br>
+        else { opening += 79; endgame += 324; }<br>
+        }<br>
+        else if ((MaskPawnProtectedB[square] &amp; Board-&gt;mp[BlackPawn]) == 0) {<br>
+        if ((MaskPawnAttacksB1[square] &amp; Board-&gt;mp[WhitePawn]) ||<br>
+        ((MaskPawnAttacksB2[square] &amp; Board-&gt;mp[WhitePawn]) &amp;&amp;<br>
+        ((MaskPawnAttacks[1][square] &amp; Board-&gt;mp[BlackPawn])==0))) {<br>
+        if (open_file) opening += 872; else opening += 406;<br>
+        endgame += 297;<br>
+        }<br>
+        }<br>
+        if ((MaskPawnPassedB[square] &amp; Board-&gt;mp[WhitePawn]) == 0) bp_pass_file 
+        |= PawnPassedFile[square &amp; 7];<br>
+        else if (open_file) {<br>
+        mask1 = MaskPawnProtectedB[square] &amp; Board-&gt;mp[BlackPawn];<br>
+        mask2 = MaskPawnPassedB[square] &amp; Board-&gt;mp[WhitePawn];<br>
+        if (popcnt(mask1) &gt;= popcnt(mask2)) {<br>
+        opening -= PawnPassedScoreOpening[7 - (square &gt;&gt; 3)];<br>
+        endgame -= PawnPassedScoreEndgame[7 - (square &gt;&gt; 3)];<br>
+        }<br>
+        }<br>
+        }<br>
+        // Заносим в таблицу<br>
+        entry-&gt;pass_file[0] = wp_pass_file;<br>
+        entry-&gt;opening = opening;<br>
+        entry-&gt;pass_file[1] = bp_pass_file;<br>
+        entry-&gt;endgame = endgame;<br>
+        // Оцениваем пешечное прикрытие короля по флангам и/или в центре<br>
+        mask = Board-&gt;mp[BlackPawn];<br>
+        mask1 = ((mask &gt;&gt; 23) &amp; 0x0E00) | ((mask &gt;&gt; 18) &amp; 0x01C0) | ((mask &gt;&gt; 
+        13) &amp; 0x0038) | ((mask &gt;&gt; 8) &amp; 0x0007);<br>
+        mask = Board-&gt;mp[WhitePawn];<br>
+        mask2 = ((mask &gt;&gt; 23) &amp; 0x0E00) | ((mask &gt;&gt; 18) &amp; 0x01C0) | ((mask &gt;&gt; 
+        13) &amp; 0x0038) | ((mask &gt;&gt; 8) &amp; 0x0007);<br>
+        entry-&gt;sheet_white_king[0] = PawnStruScore1[mask1] + 
+        PawnStruScore0[mask2];<br>
+        mask = Board-&gt;mp[BlackPawn];<br>
+        mask1 = ((mask &gt;&gt; 26) &amp; 0x0E00) | ((mask &gt;&gt; 21) &amp; 0x01C0) | ((mask &gt;&gt; 
+        16) &amp; 0x0038) | ((mask &gt;&gt; 11) &amp; 0x0007);<br>
+        mask = Board-&gt;mp[WhitePawn];<br>
+        mask2 = ((mask &gt;&gt; 26) &amp; 0x0E00) | ((mask &gt;&gt; 21) &amp; 0x01C0) | ((mask &gt;&gt; 
+        16) &amp; 0x0038) | ((mask &gt;&gt; 11) &amp; 0x0007);<br>
+        entry-&gt;sheet_white_king[1] = PawnStruScore1[mask1] + 
+        PawnStruScore0[mask2];<br>
+        mask = Board-&gt;mp[BlackPawn];<br>
+        mask1 = ((mask &gt;&gt; 28) &amp; 0x0E00) | ((mask &gt;&gt; 23) &amp; 0x01C0) | ((mask &gt;&gt; 
+        18) &amp; 0x0038) | ((mask &gt;&gt; 13) &amp; 0x0007);<br>
+        mask = Board-&gt;mp[WhitePawn];<br>
+        mask2 = ((mask &gt;&gt; 28) &amp; 0x0E00) | ((mask &gt;&gt; 23) &amp; 0x01C0) | ((mask &gt;&gt; 
+        18) &amp; 0x0038) | ((mask &gt;&gt; 13) &amp; 0x0007);<br>
+        entry-&gt;sheet_white_king[2] = PawnStruScore1[mask1] + 
+        PawnStruScore0[mask2];<br>
+        mask = Board-&gt;mp[BlackPawn];<br>
+        mask1 = ((mask &gt;&gt; 15) &amp; 0x0E00) | ((mask &gt;&gt; 26) &amp; 0x01C0) | ((mask &gt;&gt; 
+        37) &amp; 0x0038) | ((mask &gt;&gt; 48) &amp; 0x0007);<br>
+        mask = Board-&gt;mp[WhitePawn];<br>
+        mask2 = ((mask &gt;&gt; 15) &amp; 0x0E00) | ((mask &gt;&gt; 26) &amp; 0x01C0) | ((mask &gt;&gt; 
+        37) &amp; 0x0038) | ((mask &gt;&gt; 48) &amp; 0x0007);<br>
+        entry-&gt;sheet_black_king[0] = PawnStruScore0[mask1] + 
+        PawnStruScore1[mask2];<br>
+        mask = Board-&gt;mp[BlackPawn];<br>
+        mask1 = ((mask &gt;&gt; 18) &amp; 0x0E00) | ((mask &gt;&gt; 29) &amp; 0x01C0) | ((mask &gt;&gt; 
+        40) &amp; 0x0038) | ((mask &gt;&gt; 51) &amp; 0x0007);<br>
+        mask = Board-&gt;mp[WhitePawn];<br>
+        mask2 = ((mask &gt;&gt; 18) &amp; 0x0E00) | ((mask &gt;&gt; 29) &amp; 0x01C0) | ((mask &gt;&gt; 
+        40) &amp; 0x0038) | ((mask &gt;&gt; 51) &amp; 0x0007);<br>
+        entry-&gt;sheet_black_king[1] = PawnStruScore0[mask1] + 
+        PawnStruScore1[mask2];<br>
+        mask = Board-&gt;mp[BlackPawn];<br>
+        mask1 = ((mask &gt;&gt; 20) &amp; 0x0E00) | ((mask &gt;&gt; 31) &amp; 0x01C0) | ((mask &gt;&gt; 
+        42) &amp; 0x0038) | ((mask &gt;&gt; 53) &amp; 0x0007);<br>
+        mask = Board-&gt;mp[WhitePawn];<br>
+        mask2 = ((mask &gt;&gt; 20) &amp; 0x0E00) | ((mask &gt;&gt; 31) &amp; 0x01C0) | ((mask &gt;&gt; 
+        42) &amp; 0x0038) | ((mask &gt;&gt; 53) &amp; 0x0007);<br>
+        entry-&gt;sheet_black_king[2] = PawnStruScore0[mask1] + 
+        PawnStruScore1[mask2];<br>
+        entry-&gt;lock = lock;<br>
+        return entry;<br>
+        }<br>
+
+        
+
+        </p>
+
+        
+
+        </td>
+  </tr>
+</table>
+
+</body>
+
+</html>

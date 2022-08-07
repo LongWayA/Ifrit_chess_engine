@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+<title>Bitmap_generation_captures</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">Bitmap generation captures</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="0_1_Bitmap_Move_Generation.htm">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+<br>    
+<b>ВЗЯТИЯ И ПРЕВРАЩЕНИЯ ПЕШЕК</b><br>
+<br>
+Приведем фрагмент структуры доски для того, что бы дальше было понятно, откуда 
+мы берем переменные.<br>
+<br>
+unsigned __int64 all_piece; все фигуры<br>
+unsigned __int64 all_white_piece; все белые фигуры<br>
+unsigned __int64 all_black_piece; все черные фигуры<br>
+<br>
+битовые списки черных и белых фигур<br>
+для каждого класса фигур своя битовая доска.<br>
+unsigned __int64 white_piece[NAME];<br>
+unsigned __int64 black_piece[NAME];<br>
+<br>
+NAME - это имя фигуры и оно принимает следующие значения:<br>
+0 - нет фигуры<br>
+1 - пешка <br>
+2 - конь <br>
+3 - слон<br>
+4 - ладья <br>
+5 - ферзь <br>
+6 - король<br>
+<br>
+имя фигуры от координаты :<br>
+int white_name_from_coord[COORDINATE];<br>
+int black_name_from_coord[COORDINATE];<br>
+по ним можно моментально узнать, какая фигура на данном поле стоит.<br>
+<br>
+<br>
+<font size="4">Взятия короля и коня реализуются проще всего</font><br>
+<br>
+Рассмотрим взятия белого короля.<br>
+<br>
+// маска расположения белого короля<br>
+from_mask = bitboard-&gt;white_piece[6];<br>
+// находим координату фигуры (самый первый (для нашего отображения правый) 
+установленный бит)<br>
+from = first_one(from_mask);<br>
+// находим маску взятий короля<br>
+captures_mask = (bitboard-&gt;all_black_piece &amp; king_moves_masks[from]);<br>
+<br>
+while (captures_mask !=0){<br>
+<span lang="ru">&nbsp;&nbsp; </span>&nbsp;// Заполняем список ходов<br>
+<span lang="ru">&nbsp;&nbsp;</span>
+<span lang="ru">&nbsp;</span>to = first_one(captures_mask);<br>
+<span lang="ru">&nbsp;&nbsp; </span>
+&nbsp;list_capture_white(6,2,from,to,p,bitboard,list_surplus_moves);<br>
+<span lang="ru">&nbsp;&nbsp; </span>&nbsp;captures_mask = captures_mask &amp; 
+(captures_mask-1);<br>
+}//while (captures !=0){<br>
+<br>
+Вначале нам нужно определить координату короля.<br>
+Для этого используем битовые списки белых фигур.<br>
+Прежде всего, выделяем нужную маску (король у нас находится под цифрой 6)<br>
+from_mask = bitboard-&gt;white_piece[6];<br>
+дальше находим координату фигуры (самый первый (для нашего отображения правый) 
+установленный бит)<br>
+from = first_one(from_mask);<br>
+Для понимания нужно знать, что делает функция first_one().<br>
+Эта функция возвращает самый правый установленный бит.<br>
+Например:<br>
+first_one(...00001) = 0<br>
+first_one(...00010) = 1<br>
+first_one(10000...) = 63<br>
+полное описание данной функции приведу в отдельном пункте.<br>
+<br>
+Далее находим маску взятий короля:<br>
+captures_mask = (bitboard-&gt;all_black_piece &amp; king_moves_masks[from]);<br>
+У нас есть доска, в которой все черные фигуры представлены взведенными битами, и 
+есть множество возможных ходов короля, которые тоже представлены взведенными 
+битами. В результате применения операции логического и у нас остаются только 
+совпадающие биты, т.е. это фигуры, которые может побить король.<br>
+<br>
+Следует сказать, что _moves_masks[from] - это массив ходов короля в зависимости 
+от расположения. Этот массив рассчитывается заранее. Такие массивы посчитаны для 
+всех фигур. Я говорил об этом в разделе битовое представление доски.<br>
+<br>
+Для иллюстрации принципа приведу очень упрощенный пример.<br>
+<br>
+Допустим, король у нас в 1 бите, и может ходить в 0 и 2 бит:<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+1 k 1 0 0 0 0 0<br>
+<br>
+а вражеские фигуры находятся в 2 и 3 бите:<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 1 1 0 0 0 0<br>
+<br>
+5 = 0..0101 - ходы белого короля.<br>
+12 = 0..1100 - все черные фигуры.<br>
+&amp; - используем операцию битового и которое оставляет 1, только если 1 
+присутствуют в обоих битах.<br>
+4 = 0..0100 - взятия белого короля<br>
+в итоге получили маску взятий белого короля (в примере это число 4)<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 1 0 0 0 0 0<br>
+<br>
+дальше посредством функции first_one мы определим, что это 2 бит. <br>
+Т.е. король ходит с 1 бита на 2.<br>
+<br>
+Заполняем список ходов.<br>
+while (captures_mask !=0){<br>
+<span lang="ru">&nbsp;&nbsp;</span>
+<span lang="ru">&nbsp;</span>to = first_one(captures_mask);<br>
+<span lang="ru">&nbsp;&nbsp;</span>
+<span lang="ru">&nbsp;</span>list_capture_white(6,2,from,to,p,bitboard,list_surplus_moves);<br>
+<span lang="ru">&nbsp;&nbsp;</span>
+<span lang="ru">&nbsp;</span>captures_mask = captures_mask &amp; 
+(captures_mask-1);<br>
+}//while (captures !=0){<br>
+<br>
+Для коня все аналогично.<br>
+<br>
+<br>
+<font size="4">Взятия слайдеров, т.е слона, ладьи, ферзя</font><br>
+<br>
+Для слайдеров дела обстоят несколько сложнее. Причина в том, что на их пути к 
+врагу могут стоять свои или вражеские фигуры.<br>
+Этот момент надо учитывать.<br>
+<br>
+Рассмотрим генерацию взятий для ладьи.<br>
+<br>
+from_mask = bitboard-&gt;white_piece[4];<br>
+while(from_mask != 0){<br>
+<span lang="ru">&nbsp; </span>&nbsp; from = first_one(from_mask);<br>
+<span lang="ru">&nbsp;</span>&nbsp;
+<span lang="ru">&nbsp;</span>from_mask = from_mask &amp; (from_mask-1);<br>
+<br>
+<span lang="ru">&nbsp; </span>&nbsp; // смотрим в четырех различных направлениях<br>
+<span lang="ru">&nbsp; </span>&nbsp; // Генерируем ходы<br>
+<span lang="ru">&nbsp; </span>&nbsp; // луч вверх<br>
+<span lang="ru">&nbsp; </span>&nbsp; blocking_square_mask = (bitboard-&gt;all_piece) &amp; 
+rook_up_masks[from];<br>
+<span lang="ru">&nbsp;</span>&nbsp;
+<span lang="ru">&nbsp;</span>if(blocking_square_mask !=0){ <br>
+<span lang="ru">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;
+<span lang="ru">&nbsp;</span>blocking_coordinate = first_one(blocking_square_mask);<br>
+<span lang="ru">&nbsp; </span>&nbsp;&nbsp;&nbsp;&nbsp; captures_mask = bitboard-&gt;all_black_piece &amp; 
+move_masks[blocking_coordinate];<br>
+<span lang="ru">&nbsp; </span>&nbsp;&nbsp;&nbsp;&nbsp; // Заполняем список ходов<br>
+<span lang="ru">&nbsp; </span>&nbsp;&nbsp;&nbsp;&nbsp; if(captures_mask!=0)list_record_w(4,2,p,from,captures_mask,bitboard,list_surplus_moves);<br>
+&nbsp;&nbsp;
+}//if(blocking_square_mask !=0){ <br>
+&nbsp;&nbsp; ......<br>
+Проиллюстрируем работу приведенного кода на примере.<br>
+<br>
+Допустим, ладья находится во 2 бите, т.е. на поле C1 тогда всевозможные ходы 
+вверх это массив вида<br>
+0 0 1 0 0 0 0 0<br>
+0 0 1 0 0 0 0 0<br>
+0 0 1 0 0 0 0 0<br>
+0 0 1 0 0 0 0 0<br>
+0 0 1 0 0 0 0 0<br>
+0 0 1 0 0 0 0 0<br>
+0 0 1 0 0 0 0 0<br>
+0 0 r 0 0 0 0 0<br>
+<br>
+или число rook_up_masks[2] = 289360691352306688<br>
+<br>
+допустим так же, что слон находится на поле С4 - это 26 бит, а конь на С6 - это 
+42<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 n 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 b 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 r 0 0 0 0 0<br>
+<br>
+первое что мы делаем - это находим маску, содержащую блокированные биты:<br>
+blocking_square_mask = (bitboard-&gt;all_piece) &amp; rook_up_masks[from];<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 1 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 1 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+<br>
+Проверяем, и если она нулевая то взятий нет.<br>
+<br>
+if(blocking_square_mask !=0){ <br>
+…<br>
+}<br>
+<br>
+Иначе, находим номер первого блокированного бита и генерируем маску ходов вверх:<br>
+blocking_coordinate = first_one(blocking_square_mask);<br>
+captures_mask = bitboard-&gt;all_black_piece &amp; move_masks[blocking_coordinate];<br>
+<br>
+Пишем взятие, только если есть взятия. Ведь блокировка может быть своей 
+фигурой, тогда блок есть, а взятия нет.<br>
+(captures_mask!=0) list_record_w(4,2,p,from,captures_mask,bitboard,list_surplus_moves);<br>
+<br>
+Тут есть важный момент, если это луч вверх, то используем first_one, а если луч 
+вниз, то last_one<br>
+Дело в том, что блокированных битов может быть несколько, а нам нужен первый по 
+лучу от фигуры<br>
+В итоге маска взятий такова.<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 1 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+0 0 0 0 0 0 0 0<br>
+<br>
+лучи вниз (last_one), влево (last_one) и вправо (first_one) аналогично.<br>
+<br>
+Так же считаются взятия для слона:<br>
+лучи вверх – вправо (first_one), вверх – влево (first_one), вниз – вправо (last_one), 
+вниз – влево (last_one).<br>
+<br>
+<font size="4">Взятия и превращения пешки</font><br>
+<br>
+from_mask = bitboard-&gt;white_piece[1];<br>
+while(from_mask != 0){<br>
+&nbsp; from = first_one(from_mask);<br>
+&nbsp; //выделяем одну пешку <br>
+&nbsp; one_pawn_mask = from_mask &amp; move_masks[from];<br>
+&nbsp; from_mask = from_mask &amp; (from_mask-1);<br>
+<br>
+&nbsp; Если у нас пешка на предпоследней горизонтали, то считаем ходы и взятия с 
+превращением иначе простые взятия пешкой.<br>
+&nbsp; if ( from / 8 == 6 ){<br>
+&nbsp;&nbsp; // считаем ходы с превращением и взятия с превращением<br>
+&nbsp;&nbsp; // 1 находим простые ходы белой пешки на одно поле вперед<br>
+&nbsp;&nbsp; move_conversion_mask = (one_pawn_mask &lt;&lt; 8) &amp; (~(bitboard-&gt;all_piece));<br>
+&nbsp;&nbsp; // взятия с превращением<br>
+&nbsp;&nbsp; captures_conversion_mask = pawn_capture_white[from] &amp; bitboard-&gt;all_black_piece;<br>
+<br>
+&nbsp;&nbsp; Пишем ходы с превращением.<br>
+&nbsp;&nbsp; while (move_conversion_mask != 0){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; to = first_one(move_conversion_mask);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; move_conversion_mask = move_conversion_mask 
+&amp; (move_conversion_mask-1);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //  превращение пешки<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // превращение в ферзь 15,превращение в ладью 
+14,превращение в слона 13,превращение в коня 12<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+list_record_os(1,15,p,from,to,0,list_surplus_moves);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+list_record_os(1,14,p,from,to,0,list_surplus_moves);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+list_record_os(1,13,p,from,to,0,list_surplus_moves);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+list_record_os(1,12,p,from,to,0,list_surplus_moves);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp; #if KONTROL_B<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; KONTROL_move(&amp;from,&amp;to,&amp;p);<br>
+&nbsp;&nbsp;&nbsp;&nbsp; #endif//KONTROL_B<br>
+&nbsp; }//while (move_conversion_mask != 0){<br>
+<br>
+&nbsp;&nbsp; //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^<br>
+<br>
+&nbsp;&nbsp; Пишем взятия с превращением.<br>
+&nbsp;&nbsp; while (captures_conversion_mask != 0){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; to = first_one(captures_conversion_mask);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; captures_conversion_mask = 
+captures_conversion_mask &amp; (captures_conversion_mask-1);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //  превращение пешки с взятием<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // превращение в ферзь 25,превращение в 
+ладью 24,превращение в слона 23,превращение в коня 22<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; list_record_os(1,25,p,from,to,bitboard-&gt;black_name_from_coord[to],list_surplus_moves);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; list_record_os(1,24,p,from,to,bitboard-&gt;black_name_from_coord[to],list_surplus_moves);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; list_record_os(1,23,p,from,to,bitboard-&gt;black_name_from_coord[to],list_surplus_moves);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; list_record_os(1,22,p,from,to,bitboard-&gt;black_name_from_coord[to],list_surplus_moves);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #if KONTROL_B<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; KONTROL_captures_W(bitboard,&amp;from,&amp;to,&amp;p,120);<br>
+&nbsp;&nbsp;&nbsp;&nbsp; #endif//KONTROL_B<br>
+&nbsp; }//while (captures_conversion_mask != 0){<br>
+<br>
+}else {<br>
+&nbsp;&nbsp; // считаем взятия пешкой<br>
+&nbsp;&nbsp; captures_mask = pawn_capture_white[from] &amp; bitboard-&gt;all_black_piece;<br>
+&nbsp;&nbsp; Пишем простые взятия.<br>
+&nbsp;&nbsp; while (captures_mask != 0){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; to = first_one(captures_mask);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+list_capture_white(1,2,from,to,p,bitboard,list_surplus_moves);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; captures_mask = captures_mask &amp; 
+(captures_mask-1);<br>
+&nbsp;&nbsp; }//while (captures_mask != 0){<br>
+}//if ( from / 8 == 6 ){<br>
+<br>
+<br>
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^<br>
+// 4 находим взятия на проходе<br>
+&nbsp;if(bitboard-&gt;taking_passage_yes == 1){<br>
+&nbsp; if( from / 8 == 4 ){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; to = 8 * bitboard-&gt;taking_passage_y + bitboard-&gt;taking_passage_x;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp; if( ((from - to) == -9) &amp;&amp; (from % 8 != 7) ){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+list_record_os(1,5,p,from,to,bitboard-&gt;black_name_from_coord[to - 8],list_surplus_moves);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #if KONTROL_B<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; to = to 
+- 8;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+KONTROL_captures_W(bitboard,&amp;from,&amp;to,&amp;p,130);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #endif//KONTROL_B<br>
+&nbsp;&nbsp;&nbsp;&nbsp; }//if ( ((from - to) == -9) &amp;&amp; (from % 8 != 7) ){<br>
+<br>
+&nbsp;&nbsp;&nbsp; if( ((from - to) == -7) &amp;&amp; (from % 8 != 0) ){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+list_record_os(1,5,p,from,to,bitboard-&gt;black_name_from_coord[to - 8],list_surplus_moves);<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #if KONTROL_B<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; to = to - 8;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+KONTROL_captures_W(bitboard,&amp;from,&amp;to,&amp;p,130);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #endif//KONTROL_B<br>
+&nbsp;&nbsp;&nbsp; }//if ( ((from - to) == -7) &amp;&amp; (from % 8 != 0) ){<br>
+&nbsp; }//if ( from / 8 == 4 ){<br>
+&nbsp;}//if(bitboard-&gt;taking_passage_yes == 1){<br>
+<br>
+}//while(from_mask != 0){<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>
+
+</html>

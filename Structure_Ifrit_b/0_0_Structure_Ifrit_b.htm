@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+<title>Ifrit_b-основные алгоритмы</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">Ifrit_b - основные алгоритмы</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="/ifrit/ifrit_chess_engine.html">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+Методы реализованные в программе Ifrit_b<br>
+Здесь я изложу свое понимание эвристик и то как я реализовал это понимание в программе.<br>
+<br>
+01)<a href="0_1_Bitmap_Move_Generation.htm">Bitmap Move Generation(Битбоард генератор ходов).</a><br> 
+02)<!--<a href="0_2_Check.htm">-->Check(Детектор шахов).<!--</a>--><br> 
+
+<br>
+ Полный перебор и его оптимизация Альфа-бета.<br>
+ 1)<a href="1_MiniMax.htm">MiniMax(Полный перебор).</a><br>
+ 2)<a href="2_AlphaBeta.htm">AlphaBeta(Альфа-бета оптимизация полного перебора).</a><br>
+ 3)<a href="3_NegaScout.htm">NegaScout(НегаСкаут).</a><br>
+ <br>
+ Сортировки для ускорения Альфа Бета.<br>
+ Альфа Бета при наилучшем порядке ходов исследует sqrt(N) позиций, где N - количество позиций, исследуемых при полном переборе.<br> 
+ Это эквивалентно перебору на глубину в 2 раза больше, за тоже время.<br>
+ 4)<a href="4_Transposition_table.htm">Transposition table(Сортировка по хешу).</a><br>
+ 5)<a href="5_Sorting_captures.htm">Sorting captures(Сортировка взятий).</a><br>
+ 6)<a href="6_Killer_heuristic.htm">Killer heuristic(Сортировка по киллерам).</a><br>
+ 7)<!--<a href="7_History_heuristic.htm">-->History heuristic(Сортировка по истории).<!--</a>--><br> 
+<br>
+ Расширения поиска.<br>
+ 8)<a href="8_Quiescence_search.htm">Quiescence search(Быстрый поиск).</a><br>
+ 9)<!--<a href="9_Extensions.htm">-->Extensions(Расширения).<!--</a>--><br>
+ <br>
+ Оценка позиции и вывод варианта<br>
+ 10)<!--<a href="10_Estimation.htm">-->Estimation(Оценка).<!--</a>--><br>
+ 11)<a href="11_Save_variant.htm">Save variant(Сохранение варианта).</a><br> 
+ <br>
+ Другие методы<br>
+ 12)<a href="12_Null_move_pruning.htm">Null move pruning(Нулевой ход).</a><br>
+ 13)<!--<a href="13_Futility_pruning.htm">-->Futility pruning.<!--</a>--><br> 
+ 14)<!--<a href="14_Late_Move_Reductions.htm">-->Late Move Reductions.<!--</a>--><br> 
+ 15)<!--<a href="15_Internal_Iterative_Deepening.htm">-->Internal Iterative Deepening.<!--</a>--><br> 
+
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>

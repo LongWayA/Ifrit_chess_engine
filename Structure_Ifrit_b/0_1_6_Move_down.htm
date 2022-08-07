@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+<title>Move_down</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">Move down</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="0_1_Bitmap_Move_Generation.htm">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+<br>   
+<b><font size="4">Реализуем ходы назад<br>
+</font></b><br>
+Используем структуру list_surplus_moves-&gt;move[i]<br>
+и структуру undo<br>
+struct T_undo {<br>
+&nbsp;&nbsp;
+// флаг возврата взятия на проходе 1/0<br>
+&nbsp;&nbsp;
+int return_taking_passage;<br>
+&nbsp;&nbsp;
+// х координата битого поля (конвертируем из буквы) <br>
+&nbsp;&nbsp;
+int taking_passage_x;<br>
+&nbsp;&nbsp;
+// у координата битого поля <br>
+&nbsp;&nbsp;
+int taking_passage_y;<br>
+&nbsp;&nbsp;
+// рокировка белых в длинную сторону 1/0<br>
+&nbsp;&nbsp; int return_castling_Q;<br>
+&nbsp;&nbsp; // рокировка белых в короткую сторону 1/0<br>
+&nbsp;&nbsp; int return_castling_K;<br>
+&nbsp;&nbsp; // флаг рокировки черных в длинную сторону<br>
+&nbsp;&nbsp; int return_castling_q;<br>
+&nbsp;&nbsp; // флаг рокировки черных в короткую сторону<br>
+&nbsp;&nbsp; int return_castling_k;<br>
+<br>
+};<br>
+<br>
+Как и в ходе вперед каждый тип хода обрабатывается в своей ветке (оператор 
+switch)<br>
+Опишу только основные случаи. Все остальные делаются подобным образом.<br>
+<br>
+Перед любым ходом<br>
+// востанавливаем флаг взятия на проходе<br>
+bitboard-&gt;taking_passage_yes=undo-&gt;return_taking_passage;<br>
+<br>
+<br>
+<font size="4">Простой ход</font><br>
+<br>
+// пешка - флаг взятия на проходе <br>
+if(bitboard-&gt;white_name_from_coord[f_p] == 1){<br>
+&nbsp;&nbsp;&nbsp;
+if(f_p - i_p == 16){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+bitboard-&gt;taking_passage_yes =undo-&gt;return_taking_passage;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+bitboard-&gt;taking_passage_x = undo-&gt;taking_passage_x;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+bitboard-&gt;taking_passage_y = undo-&gt;taking_passage_y;<br>
+&nbsp;&nbsp;&nbsp;
+}<br>
+//-------------------------------------------------------<br>
+// король - флаг рокировки<br>
+} else if(bitboard-&gt;white_name_from_coord[f_p] == 6){<br>
+&nbsp;&nbsp;&nbsp;
+// запоминаем флаги рокировок<br>
+&nbsp;&nbsp;&nbsp;
+bitboard-&gt;castling_K = undo-&gt;return_castling_K;<br>
+&nbsp;&nbsp;&nbsp;
+bitboard-&gt;castling_Q = undo-&gt;return_castling_Q; <br>
+//-------------------------------------------------------<br>
+// ладья - флаг рокировки <br>
+} else if(bitboard-&gt;white_name_from_coord[f_p] == 4){<br>
+&nbsp;&nbsp;&nbsp;
+if(i_p == 0){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+bitboard-&gt;castling_Q = undo-&gt;return_castling_Q;<br>
+&nbsp;&nbsp;&nbsp;
+}<br>
+&nbsp;&nbsp;&nbsp;
+if(i_p == 7){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+bitboard-&gt;castling_K = undo-&gt;return_castling_K;<br>
+&nbsp;&nbsp;&nbsp;
+}<br>
+}<br>
+<br>
+//стираем фигуру на старом месте----------------- <br>
+// все белые фигуры<br>
+bitboard-&gt;all_white_piece = bitboard-&gt;all_white_piece ^ move_masks_m[f_p];<br>
+// битовый список фигуры<br>
+bitboard-&gt;white_piece[bitboard-&gt;white_name_from_coord[f_p]] = <br>
+bitboard-&gt;white_piece[bitboard-&gt;white_name_from_coord[f_p]] ^ move_masks_m[f_p];<br>
+// переносим имя фигуры и зануляем по старой координате<br>
+bitboard-&gt;white_name_from_coord[i_p] = bitboard-&gt;white_name_from_coord[f_p];<br>
+bitboard-&gt;white_name_from_coord[f_p] = 0;<br>
+<br>
+//рисуем фигуру на новом месте------------------<br>
+// все белые фигуры<br>
+bitboard-&gt;all_white_piece = bitboard-&gt;all_white_piece ^ move_masks_m[i_p];<br>
+// битовый список фигуры<br>
+bitboard-&gt;white_piece[bitboard-&gt;white_name_from_coord[i_p]] = <br>
+bitboard-&gt;white_piece[bitboard-&gt;white_name_from_coord[i_p]] ^ move_masks_m[i_p];<br>
+<br>
+bitboard-&gt;all_piece = bitboard-&gt;all_white_piece | bitboard-&gt;all_black_piece;<br>
+<br>
+<font size="4">Взятие</font><br>
+<br>
+// король - флаг рокировки<br>
+if(bitboard-&gt;white_name_from_coord[f_p] == 6){<br>
+&nbsp;&nbsp;&nbsp;
+// запоминаем флаги рокировок<br>
+&nbsp;&nbsp;&nbsp;
+bitboard-&gt;castling_K = undo-&gt;return_castling_K;<br>
+&nbsp;&nbsp;&nbsp;
+bitboard-&gt;castling_Q = undo-&gt;return_castling_Q; <br>
+<br>
+// смотрим, а не ходили ли мы ладьей и если да то рокировки с ней отменяем<br>
+} else if(bitboard-&gt;white_name_from_coord[f_p] == 4){ <br>
+&nbsp;&nbsp;
+if(i_p == 0){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+bitboard-&gt;castling_Q = undo-&gt;return_castling_Q;<br>
+&nbsp;&nbsp;
+}<br>
+&nbsp;&nbsp;
+if(i_p == 7){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+bitboard-&gt;castling_K = undo-&gt;return_castling_K;<br>
+&nbsp;&nbsp;
+}<br>
+}<br>
+<br>
+// если сьедена ладья, то запрещаем рокировки с ее участием<br>
+if(t_f == 4){<br>
+&nbsp;&nbsp;
+if(f_p == 56){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+bitboard-&gt;castling_q = undo-&gt;return_castling_q;<br>
+&nbsp;&nbsp;
+}<br>
+&nbsp;&nbsp;
+if(f_p == 63){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+bitboard-&gt;castling_k = undo-&gt;return_castling_k;<br>
+&nbsp;&nbsp;
+}<br>
+}<br>
+<br>
+//стираем фигуру на старом месте----------------- <br>
+// стираем фигуру из списка всех белых фигур<br>
+bitboard-&gt;all_white_piece = bitboard-&gt;all_white_piece ^ move_masks_m[f_p];<br>
+// стираем фигуру из битового списка фигур<br>
+bitboard-&gt;white_piece[bitboard-&gt;white_name_from_coord[f_p]] = <br>
+bitboard-&gt;white_piece[bitboard-&gt;white_name_from_coord[f_p]] ^ move_masks_m[f_p];<br>
+<br>
+// переносим имя фигуры и зануляем по старой координате<br>
+bitboard-&gt;white_name_from_coord[i_p] = bitboard-&gt;white_name_from_coord[f_p];<br>
+bitboard-&gt;white_name_from_coord[f_p] = 0;<br>
+<br>
+// востанавливаем имя взятой фигуры<br>
+bitboard-&gt;black_name_from_coord[f_p] = t_f;<br>
+<br>
+//------------------------------------------------------------------------------<br>
+// взятие белыми<br>
+Так как при ходе вперед<br>
+// к оценке мы прибавляли значение взятой фигуры <br>
+// потому что в начале баланс получен +белые и –черные<br>
+то сейчас все наоборот<br>
+bitboard-&gt;eval = bitboard-&gt;eval - kod[t_f];<br>
+//------------------------------------------------------------------------------<br>
+<br>
+//рисуем фигуру на новом месте------------------<br>
+// в маске все белые фигуры<br>
+bitboard-&gt;all_white_piece = bitboard-&gt;all_white_piece ^ move_masks_m[i_p];<br>
+// в маске все черные фигуры<br>
+bitboard-&gt;all_black_piece = bitboard-&gt;all_black_piece ^ move_masks_m[f_p];<br>
+// битовый список фигуры<br>
+bitboard-&gt;white_piece[bitboard-&gt;white_name_from_coord[i_p]] = <br>
+bitboard-&gt;white_piece[bitboard-&gt;white_name_from_coord[i_p]] ^ move_masks_m[i_p];<br>
+// битовый список взятой фигуры<br>
+bitboard-&gt;black_piece[bitboard-&gt;black_name_from_coord[f_p]] = <br>
+bitboard-&gt;black_piece[bitboard-&gt;black_name_from_coord[f_p]] ^ move_masks_m[f_p];<br>
+<br>
+bitboard-&gt;all_piece = bitboard-&gt;all_white_piece | bitboard-&gt;all_black_piece;<br>
+<br>
+<br>
+<font size="4">Превращение пешки с взятием</font><br>
+<br>
+// если сьедена ладья, то запрещаем рокировки с ее участием<br>
+if(t_f == 4){<br>
+&nbsp;&nbsp;
+if(f_p == 56){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+bitboard-&gt;castling_q = undo-&gt;return_castling_q;<br>
+&nbsp;&nbsp;
+}<br>
+&nbsp;&nbsp;
+if(f_p == 63){<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+bitboard-&gt;castling_k = undo-&gt;return_castling_k;<br>
+&nbsp;&nbsp;
+}<br>
+}<br>
+<br>
+//------------------------------------------------------- <br>
+//стираем фигуру на старом месте----------------- <br>
+// стираем фигуру из списка всех белых фигур<br>
+bitboard-&gt;all_white_piece = bitboard-&gt;all_white_piece ^ move_masks_m[f_p];<br>
+// стираем фигуру из битового списка фигур<br>
+bitboard-&gt;white_piece[bitboard-&gt;white_name_from_coord[f_p]] = <br>
+bitboard-&gt;white_piece[bitboard-&gt;white_name_from_coord[f_p]] ^ move_masks_m[f_p];<br>
+<br>
+//------------------------------------------------------------------------------<br>
+// превращение белыми <br>
+Так как при ходе вперед<br>
+// к оценке мы прибавляли значение фигуры превращения и отнимали пешку<br>
+// потому что в начале баланс получен +белые и –черные<br>
+то сейчас все наоборот<br>
+bitboard-&gt;eval = bitboard-&gt;eval - kod[bitboard-&gt;white_name_from_coord[f_p]] + 
+PAWN - kod[t_f];<br>
+//------------------------------------------------------------------------------<br>
+<br>
+// переносим имя фигуры и зануляем по старой координате<br>
+bitboard-&gt;white_name_from_coord[i_p] = 1;<br>
+bitboard-&gt;white_name_from_coord[f_p] = 0;<br>
+<br>
+// востанавливаем имя взятой фигуры<br>
+bitboard-&gt;black_name_from_coord[f_p] = t_f;<br>
+<br>
+//рисуем фигуру на новом месте------------------<br>
+// в маске все белые фигуры<br>
+bitboard-&gt;all_white_piece = bitboard-&gt;all_white_piece ^ move_masks_m[i_p];<br>
+// в маске все черные фигуры<br>
+bitboard-&gt;all_black_piece = bitboard-&gt;all_black_piece ^ move_masks_m[f_p];<br>
+// битовый список фигуры<br>
+bitboard-&gt;white_piece[bitboard-&gt;white_name_from_coord[i_p]] = <br>
+bitboard-&gt;white_piece[bitboard-&gt;white_name_from_coord[i_p]] ^ move_masks_m[i_p];<br>
+// битовый список взятой фигуры<br>
+bitboard-&gt;black_piece[bitboard-&gt;black_name_from_coord[f_p]] = <br>
+bitboard-&gt;black_piece[bitboard-&gt;black_name_from_coord[f_p]] ^ move_masks_m[f_p];<br>
+<br>
+bitboard-&gt;all_piece = bitboard-&gt;all_white_piece | bitboard-&gt;all_black_piece;<br>
+<br>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>
+
+</html>

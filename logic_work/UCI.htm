@@ -1,0 +1,299 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<title>UCI</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center">UCI</h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="/index.html">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+
+        
+
+        <p align="justify">&nbsp;</p>
+
+        
+
+        <p align="justify">Here is a commented Logfile of the most important 
+        commands.<br>
+        (&gt; GUI to Engine, &lt; Engine to GUI) <br>
+        <br>
+        <br>
+        <b><font size="4">The Enginestart and Engineoptions: </font></b> <br>
+        <br>
+        &gt; uci<br>
+        &lt; id name Engine Name<br>
+        &lt; id author Author Name <br>
+        <br>
+        After the ?uci? by the GUI the engine definies it?s name and 
+        author.After that it tells the available options. <br>
+        <br>
+        &lt; option name Ponder type check default false<br>
+        &lt; option name Hash type spin default 1 min 1 max 1024<br>
+        &lt; option name NalimovCache type spin min 1 max 16 default 2<br>
+        &lt; option name NalimovPath type string default &lt;empty&gt;<br>
+        &lt; option name MultiPV type spin min 1 max 20 default 1<br>
+        &lt; option name OwnBook type check default true <br>
+        <br>
+        This options are implemented in the GUI and must have the same name, In 
+        the UCI 2 protocol there are several other native options. <br>
+        <br>
+        &lt; option name Clear Hash type button <br>
+        <br>
+        Clear Hash is implemented in Fritz, other button options are not shown.<br>
+        Under other GUI?s Clear Hash is available through the engineoptions. <br>
+        <br>
+        Here are 5 examples of the different engine option types: <br>
+        <br>
+        &lt; option name Position Learning type check default true<br>
+        &lt; option name BookFile type string default dbbook.bin<br>
+        &lt; option name Book Size type combo default Big var Small var Medium var 
+        Big<br>
+        &lt; option name Selectivity type spin min 0 max 15 default 5<br>
+        &lt; option name Clear Book Learning type button<br>
+        &lt; uciok <br>
+        <br>
+        With the ?uciok? the engine tells that all options are sent.<br>
+        Then the GUI set the options and finish with ?isready?.<br>
+        After initializing, the engine answers with ?readyok? <br>
+        <br>
+        &gt; setoption name Ponder value true<br>
+        &gt; setoption name Hash value 16<br>
+        &gt; setoption name NalimovCache value 4<br>
+        &gt; setoption name NalimovPath value D:\tbs<br>
+        &gt; setoption name Position Learning value true<br>
+        &gt; setoption name BookFile value dbbook.bin<br>
+        &gt; setoption name Book Size value Big<br>
+        &gt; setoption name Selectivity value 5<br>
+        &gt; isready<br>
+        &lt; readyok <br>
+        <br>
+        Arena sets all available options, Fritz and Shredder only the options 
+        with different values as the default values.<br>
+        If the engine don?t support hashtables, Fritz sends: <br>
+        <br>
+        &gt; setoption name Hash value 1 <br>
+        <br>
+        The button options will be sent, when the user pressed the button: <br>
+        <br>
+        &gt; setoption name Clear Book Learning <br>
+        <br>
+        or <br>
+        <br>
+        &gt; setoption name Clear Book Learning value true <br>
+        <br>
+        <b><font size="4">The Move (GUI to Engine): </font></b> <br>
+        <br>
+        UCI 2 GUI?s will send: <br>
+        <br>
+        &gt; ucinewgame <br>
+        <br>
+        When the following move is from a different game <br>
+        <br>
+        Every move by the GUI is done by the position or by the position with a 
+        movelist followed by the ?go? command with timesettings: <br>
+        <br>
+        &gt; position startpos <br>
+        <br>
+        or <br>
+        <br>
+        &gt; position startpos moves g1f3 d7d5 b2b3 c8g4 c1b2 b8c6 h2h3 <br>
+        <br>
+        (castling is done by the kingmove e.g.: e1g1 or e8c8,<br>
+        promotion by e7e8q for promotion to queen or e7e8n for promotion to 
+        knight) <br>
+        <br>
+        &gt; position fen 8/1K6/1Q6/8/5r2/4rk2/8/8 w - - 0 0 <br>
+        <br>
+        or <br>
+        <br>
+        &gt; position fen 8/1K6/1Q6/8/5r2/4rk2/8/8 w - - 0 0 moves b6b1 e3e2 <br>
+        <br>
+        The fen position is only used after setting up a position. <br>
+        <br>
+        After the go command with the timesettings the engine has to start 
+        calculating the move: <br>
+        <br>
+        &gt; go btime 300000 wtime 300000 <br>
+        <br>
+        for game in 5min. <br>
+        <br>
+        &gt; go btime 302000 wtime 302000 winc 2000 binc 2000 <br>
+        <br>
+        with incremental clock 5 min + 2 sec. <br>
+        <br>
+        &gt; go movestogo 40 wtime 300000 btime 300000 <br>
+        <br>
+        for 40 moves in 5 min. <br>
+        <br>
+        &gt; go depth 5 <br>
+        <br>
+        for fixed depth 5. <br>
+        <br>
+        &gt; go infinite <br>
+        <br>
+        for analysing. <br>
+        <br>
+        &gt; go movetime 300000 <br>
+        <br>
+        Exactly 5min for the next move, not supported by Fritz. <br>
+        <br>
+        &gt; go mate 7 <br>
+        <br>
+        search a mate in 7 moves <br>
+        <br>
+        &gt; go nodes 1000 <br>
+        <br>
+        search 1000 nodes. This is only supported by Arena. <br>
+        <br>
+        <br>
+        <b><font size="4">The Engineoutput: </font></b> <br>
+        <br>
+        Here are examples of the possible info output: <br>
+        <br>
+        &lt; info currmove e8e7 (current calculated move)<br>
+        &lt; info currmovenumber 29<br>
+        &lt; info nps 291506 (nodes per sec, Fritz calculates the nps itself)<br>
+        &lt; info tbhits 830<br>
+        &lt; info depth 9<br>
+        &lt; info score cp12 (in centipawns)<br>
+        &lt; info score mate 5 (or mate -5)<br>
+        &lt; info nodes 288973<br>
+        &lt; info time 11192 (milliseconds)<br>
+        &lt; info pv e2e4 e7e5 g1f3 b8c6 f1d3 f8c5 e1g1 g8e7 b1c3 <br>
+        <br>
+        (Shredder Classic don?t show the PV info, if it stands alone with no 
+        other infos, Fritz shows some infos only after depth 6!) <br>
+        <br>
+        &lt; info hashfull 999 (Hashtableusage in permill, not shown by Fritz)<br>
+        &lt; info cpuload 999 (CPU usage in permill, not shown by Fritz) <br>
+        <br>
+        The infos can be also combinied: <br>
+        <br>
+        &lt; info depth 9 score cp 12 nodes 3266879 time 11192 pv e2e4 e7e5 g1f3 
+        b8c6 f1d3 f8c5 e1g1 g8e7 b1c3 <br>
+        <br>
+        &lt; info string smp processes := 1 <br>
+        <br>
+        The info string is shown by the GUI 1:1. Under Fritz with a PopUp window 
+        before the engine sends the ?readyok?, later info strings are shown in 
+        an own window. <br>
+        <br>
+        <br>
+        <b><font size="4">The Move (Engine to GUI): </font></b> <br>
+        <br>
+        &lt; bestmove e2e4 <br>
+        <br>
+        or for promotion to knight: <br>
+        <br>
+        &lt; bestmove d7d8N <br>
+        <br>
+        Before the bestmove the engine should send a final info <br>
+        <br>
+        <br>
+        <b><font size="4">Pondering: </font></b> <br>
+        <br>
+        If an engine is able to ponder it must tell it the GUI at startup (option 
+        name Ponder). When pondering is swithed on the GUI sends: <br>
+        <br>
+        &gt; setoption name Ponder value true <br>
+        <br>
+        After that the engine tells the pondermove with every move, but don?t 
+        start pondering itself. Some engines send the pondermove also if 
+        pondering is switched off.<br>
+        Most GUI?s accept the pondermove also if the engine don?t send the 
+        ponderoption at startup. <br>
+        <br>
+        &lt; bestmove e2e4 ponder g8f6 <br>
+        <br>
+        The GUI answers imediatelly with the ponder command: <br>
+        <br>
+        &gt; position startpos moves h2h4 e7e5 d2d4 e5d4 d1d4 d7d5 e2e4 g8f6<br>
+        &gt; go ponder wtime 7188043 btime 7166483 <br>
+        <br>
+        Some earlier versions of Fritz send this line also if an engine don?t 
+        support pondering. The pondermove is taken from the PV! <br>
+        <br>
+        Now the engine ponders, the GUI sends now: <br>
+        <br>
+        &gt; ponderhit <br>
+        <br>
+        if the pondermove is played, or: <br>
+        <br>
+        &gt; stop<br>
+        &gt; position startpos moves h2h4 e7e5 d2d4 e5d4 d1d4 d7d5 e2e4 h4h5 <br>
+        <br>
+        if another move is played. <br>
+        <br>
+        In the UCI 2 protocol the engine is allowed to ponder on a different 
+        move than <br>
+        <br>
+        <br>
+        <b><font size="4">MultiPV:</font></b> <br>
+        <br>
+        &gt; setoption name MultiPV value 3 <br>
+        <br>
+        after that the engine should show the mainlines of the 3 best moves: <br>
+        <br>
+        &lt; info multipv 1 depth 2 seldepth 4 time 63 score cp 126 nodes 65 nps 
+        1031 hashfull 0 pv c8g4 f1g2<br>
+        &lt; info multipv 2 depth 2 seldepth 4 time 63 score cp 78 nodes 150 nps 
+        2380 hashfull 0 pv g8f6 f2f3<br>
+        &lt; info multipv 3 depth 2 seldepth 4 time 63 score cp 47 nodes 108 nps 
+        1714 hashfull 0 pv b8c6 e2e3 <br>
+        <br>
+        and return to ?normal? output after: <br>
+        <br>
+        &gt; setoption name MultiPV value 1 <br>
+        <br>
+        <br>
+        <b><font size="4">Stop command: </font></b> <br>
+        <br>
+        &gt; stop <br>
+        <br>
+        after ?stop? during the search the engine should as soon as possible 
+        play the best move. <br>
+        <br>
+        &gt; quit <br>
+        <br>
+        after ?quit? the engine should quit the program as soon as possible. <br>
+        <br>
+        <b><font size="4">Resigning drawoffer and drawclaim: </font></b> <br>
+        <br>
+        Is done by the GUI.<br>
+        Shredder and Fritz have a feature for automatic drawoffer. If several 
+        moves with the score 0.00 are played the GUI may offer or accept a draw. 
+        This can also happen if the Engine use 0.00 score in the opening book!
+        <br>
+        <br>
+        <br><br>
+
+        
+
+        </p>
+
+        
+
+        </td>
+  </tr>
+</table>
+
+</body>
+
+</html>

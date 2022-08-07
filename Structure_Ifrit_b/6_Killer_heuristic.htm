@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+<title>Killer_heuristic</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">Killer heuristic</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="0_0_Structure_Ifrit_b.htm">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+ <br>   
+ Мы запоминаем ход, который улучшает альфу за белых или бету за черных. И в 
+ соседней позиции этот ход пробуем одним из первых в надежде, что раз он был 
+ лучшим для соседней позиции, то пройдет и здесь. Как правило, эта надежда 
+ оправдывается. Использование двух киллеров заметно улучшает эффективность. 
+ Киллер-ход используется только на одной глубине, т.е. для соседей по 
+ горизонтали и не идет ни вверх, ни вниз. И еще одно - киллер не может быть 
+ взятием. Дело в том, что выгоднее все-таки местное лучшее взятие смотреть 
+ раньше киллера. Ирония заключается в том, что киллер не берет фигуру, т.е. 
+ содержит вполне миролюбивые ходы :)<br>
+ <br>
+ Приведу алгоритм за белых. Понятно, что в случае черных все делается так же.<br>
+ <br>
+ int AlphaBetaWhite(int alpha, int beta, int depth)// поиск за белых<br>
+ { <br>
+ &nbsp;
+ int tmp;<br>
+ &nbsp;
+ int max = -INFINITY;// устанавливаем локальный максимум в минус бесконечность<br>
+ &nbsp;
+ if(depth &lt;= 0) return Evaluate();// на предельной глубине считаем оценку 
+ позиции<br>
+ &nbsp;
+ GenerateWhite ();// генерируем список ходов за белых<br>
+ &nbsp;
+ if(в списке нет взятий) // если нет взятий, то киллер пишем на первую позицию 
+ иначе на вторую<br>
+ &nbsp;
+ {<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ Insert_killer(0);<br>
+ &nbsp;
+ }else{<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ Insert_killer(1);<br>
+ &nbsp;
+ }<br>
+ &nbsp;
+ while(moveList) списки ходов локальные, т.е. действуют только в узле<br>
+ &nbsp;
+ { <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ MakeMoveWhite;// делаем ход<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ tmp = AlphaBetaBlack (alpha, beta, depth-1); <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ UnMakeMoveWhite;// откатываем ход<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ if(tmp &gt; max) max = tmp; //<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ if(tmp &gt; alpha) // ищем усиления alpha<br>
+ &nbsp;&nbsp;&nbsp;
+ {<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ alpha = tmp; //<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ if(не взятие) Save_killer;// если ход не взятие, то записываем киллер<br>
+ &nbsp;&nbsp;&nbsp;
+ }<br>
+ &nbsp;&nbsp;&nbsp;
+ if(max &gt;= beta) return max; //<br>
+ &nbsp;
+ }<br>
+ &nbsp;
+ return max;<br>
+ }<br>
+ <br>
+ Два киллера я записываю следующим образом:<br>
+ void Save_killer(int i,T_list_surplus_moves * list_surplus_moves,int depth){<br>
+ &nbsp;
+ killer_moves_2[depth].move = killer_moves_1[depth].move;<br>
+ &nbsp;
+ killer_moves_1[depth].move = list_surplus_moves-&gt;move[i];<br>
+ }//void Save_killer(int i,T_list_surplus_moves * list_surplus_moves,int depth){<br>
+ <br>
+ Таким образом, первый киллер всегда содержит ход, который признан лучшим 
+ последним, а второй тот, что был лучшим до этого.<br>
+ <br>
+ Это очень мощная эвристика. И это первая сортировка, которую следует добавить в 
+ программу. Потому что она очень эффективная т.е. дает заметный эффект но при 
+ этом очень просто реализуется. Приведу пример (Ifrit_b_2_5):<br>
+ <br>
+ Просто alpha-beta без сортировок, правда, генератор ходов сделан, так что 
+ взятия всегда идут первыми<br>
+ 7/10&nbsp;&nbsp; 00:04&nbsp;&nbsp;&nbsp; 2.736.235 899.083&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +0,27&nbsp;&nbsp; e2e4 Nb8c6 Nb1c3 Ng8f6 d2d4 d7d5 Nc3xd5 
+ Nf6xd5 e4xd5 Qd8xd5<br>
+ 8/8&nbsp;&nbsp;&nbsp;&nbsp; 00:44&nbsp;&nbsp;&nbsp; 27.470.423 760.636&nbsp;&nbsp;&nbsp; +0,12&nbsp;&nbsp; e2e4 e7e5 Ng1f3 Nb8c6 Bf1b5 Ng8f6 Bb5xc6 
+ b7xc6<br>
+ <br>
+ Alpha-beta без сортировок, но киллеры включены.<br>
+ 7/10&nbsp;&nbsp; 00:01&nbsp;&nbsp; 585.459 824.436&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +0,27&nbsp;&nbsp; e2e4 Nb8c6 Nb1c3 Ng8f6 d2d4 d7d5 Nc3xd5 Nf6xd5 
+ e4xd5 Qd8xd5<br>
+ 8/8&nbsp;&nbsp;&nbsp;&nbsp; 00:07&nbsp;&nbsp; 3.150.324 632.292&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +0,12&nbsp;&nbsp; e2e4 e7e5 Ng1f3 Ng8f6 d2d4 e5xd4 Qd1xd4 Bf8e7<br>
+ 9/9&nbsp;&nbsp;&nbsp;&nbsp; 00:44&nbsp;&nbsp; 25.307.131 798.009&nbsp;&nbsp;&nbsp; +0,29&nbsp;&nbsp; e2e4 e7e5 Ng1f3 Bf8d6 Bf1c4 Ng8f6 d2d4 e5xd4 
+ Qd1xd4<br>
+ <br>
+ Видим, что эта эвристика дает нам целый полуход! <br>
+ <br>
+ У меня в программе в начале смотрится лучшее в позиции взятие, а уже потом 
+ киллер-ход. При такой сортировке результат еще лучше:<br>
+ 7/10&nbsp;&nbsp; 00:01&nbsp;&nbsp; 520.250 843.556&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +0,27&nbsp;&nbsp; e2e4 Nb8c6 Nb1c3 Ng8f6 d2d4 d7d5 Nc3xd5 Nf6xd5 
+ e4xd5 Qd8xd5<br>
+ 8/8&nbsp;&nbsp;&nbsp;&nbsp; 00:05&nbsp;&nbsp; 2.263.364 640.027&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +0,12&nbsp;&nbsp; e2e4 e7e5 Ng1f3 Ng8f6 d2d4 e5xd4 Qd1xd4 Bf8e7<br>
+ 9/9&nbsp;&nbsp;&nbsp;&nbsp; 00:29&nbsp;&nbsp; 16.707.264 808.338&nbsp;&nbsp;&nbsp; +0,29&nbsp;&nbsp; e2e4 e7e5 Ng1f3 Bf8d6 Bf1c4 Ng8f6 d2d4 e5xd4 
+ Qd1xd4<br>
+ <br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>
+
+</html>

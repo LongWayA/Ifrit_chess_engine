@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+<title>List_representation</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center"><span lang="ru">List representation</span></h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="0_1_Bitmap_Move_Generation.htm">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+<br>    
+<b>СПИСКИ ХОДОВ</b><br>
+<br>
+В каждом узле мы генерируем список возможных ходов.<br>
+Допустим, количество ходов в позиции 255 и мы считаем на глубину 20 полуходов. 
+Получается, что когда мы достигнем дна, у нас в оперативке будет храниться 
+255*20=5100 ходов.<br>
+С другой стороны нам нужно сортировать списки и желательно делать это быстрее.
+<br>
+Таким образом, желательно иметь максимально компактные списки.<br>
+<br>
+Структура, реализующая список, имеет следующий вид<br>
+<br>
+// список возможных ходов <br>
+struct T_list_surplus_moves {<br>
+<br>
+int move[256];<br>
+/*<br>
+в целом числе массива move мы упаковали следующую информацию (используем 27 бит)<br>
+--3 бит-- --6 бит-- --6 бит-- --6 бит-- --6 бит--<br>
+ходящая фигура, куда ходим, откуда ходим, тип хода, взятая фигура<br>
+<br>
+<br>
+идем справа, т.е. с младшего бита<br>
+--6 бит-- <br>
+взятая фигура<br>
+<br>
+0 - нет фигуры<br>
+1 - пешка <br>
+2 - конь <br>
+3 - слон<br>
+4 - ладья <br>
+5 - ферзь <br>
+6 - король<br>
+<br>
+запись move = тип фигуры<br>
+чтение move &amp; 63 ( 63 это ...000111111)<br>
+<br>
+--6 бит--<br>
+тип хода<br>
+0 - нет хода<br>
+1 – простой ход<br>
+2 – взятие<br>
+3 – длинная рокировка<br>
+4 – короткая рокировка<br>
+5 – взятие на проходе<br>
+<br>
+12 - превращение в конь <br>
+13 - превращение в слон<br>
+14 - превращение в ладья <br>
+15 - превращение в ферзь <br>
+<br>
+22 - взятие с превращением в конь <br>
+23 - взятие с превращением в слон<br>
+24 - взятие с превращением в ладья <br>
+25 - взятие с превращением в ферзь <br>
+<br>
+запись move = move | (тип хода &lt;&lt; 6)<br>
+чтение (move&gt;&gt;6) &amp; 63<br>
+<br>
+--6 бит--<br>
+откуда ходим (0 -63)<br>
+запись move = move | (откуда ходим &lt;&lt; 12)<br>
+чтение (move&gt;&gt;12) &amp; 63<br>
+<br>
+--6 бит--<br>
+куда ходим (0 -63)<br>
+запись move = move | (куда ходим &lt;&lt; 18)<br>
+чтение (move&gt;&gt;18) &amp; 63<br>
+<br>
+--3 бит-- <br>
+ходящая фигура<br>
+0 - нет фигуры<br>
+1 - пешка <br>
+2 - конь <br>
+3 - слон<br>
+4 - ладья <br>
+5 - ферзь <br>
+6 - король<br>
+запись move = move | (куда ходим &lt;&lt; 24)<br>
+чтение (move&gt;&gt;24) &amp; 7 (7 это ...000111)<br>
+*/<br>
+<br>
+// оценка используемая для сортировки ходов<br>
+int sorting_score[256];<br>
+<br>
+// конец взятий в списке точнее первое не взятие<br>
+int end_captures;<br>
+<br>
+// конец списка точнее первая пустая позиция<br>
+int end_list;<br>
+<br>
+};//struct T_list_surplus_moves {<br>
+<br>
+<br>
+Заполняем списки в генераторе ходов в функциях вида:<br>
+<br>
+// заполняем список ходов - взятия за белых<br>
+// две функции только из-за разного контроля списков (строки взятия)<br>
+static inline void list_capture_white(int name,int type_move,int &amp; from,int &amp; 
+to,int &amp; count,const struct T_Bitboard * bitboard,struct T_list_surplus_moves * 
+list_surplus_moves){<br>
+int capture;// взятая фигура<br>
+<br>
+#if KONTROL_B<br>
+&nbsp;&nbsp;
+KONTROL_captures_W(bitboard,&amp;from,&amp;to,&amp;count,name);<br>
+#endif//KONTROL_B<br>
+<br>
+// взятая фигура<br>
+capture = bitboard-&gt;black_name_from_coord[to];<br>
+<br>
+// записываем оценку взятия (mvv/lva в моем понимании) для последующей 
+сортировки<br>
+list_surplus_moves-&gt;sorting_score[count] = capture - name; <br>
+<br>
+// 6 бит <br>
+// записали имя взятой фигуры (1 - пешка 2 - конь 3 - слон 4 - ладья 5 - ферзь 6 
+- король)<br>
+list_surplus_moves-&gt;move[count] = capture<br>
+<br>
+// 6 бит <br>
+// записали тип хода (0 - нет хода 1 – простой ход 2 – взятие 3 – длинная 
+рокировка)<br>
+//4 – короткая рокировка 5 – взятие на проходе<br>
+//12 - превращение в конь, 13 - превращение в слон, 14 - превращение в ладья, 15 
+- превращение в ферзь <br>
+//22 - взятие с превращением в конь, 23 - взятие с превращением в слон, 24 - 
+взятие с превращением в ладья <br>
+//25 - взятие с превращением в ферзь)<br>
+| (type_move &lt;&lt; 6)<br>
+<br>
+// 6 бит <br>
+// записали откуда ходим (0 -63)<br>
+| (from &lt;&lt; 12)<br>
+<br>
+// 6 бит <br>
+// записали куда ходим (0 -63)<br>
+| (to &lt;&lt; 18)<br>
+<br>
+// 3 бит <br>
+// ходящая фигура (0 - 6)<br>
+| (name &lt;&lt; 24);<br>
+<br>
+использую для тестирования<br>
+//-------------------------------------------------------------------------------<br>
+//cout &lt;&lt; &quot;list_surplus_moves-&gt;move[count]= &quot;&lt;&lt; list_surplus_moves-&gt;move[count] 
+&lt;&lt; &quot;\n&quot;;<br>
+//<br>
+//cout &lt;&lt; &quot;bitboard-&gt;black_name_from_coord[to]= &quot;&lt;&lt; bitboard-&gt;black_name_from_coord[to] 
+&lt;&lt; &quot;\n&quot;;<br>
+//cout &lt;&lt; &quot;bitboard-&gt;black_name_from_coord[to]= &quot;&lt;&lt; ( list_surplus_moves-&gt;move[p] 
+&amp; 63) &lt;&lt; &quot;\n&quot;;<br>
+//<br>
+//cout &lt;&lt; &quot;type_move= &quot;&lt;&lt; type_move &lt;&lt; &quot;\n&quot;;<br>
+//cout &lt;&lt; &quot;type_move= &quot;&lt;&lt; ((list_surplus_moves-&gt;move[count]&gt;&gt;6)&amp; 63) &lt;&lt; &quot;\n&quot;;<br>
+//<br>
+//cout &lt;&lt; &quot;from= &quot;&lt;&lt; from &lt;&lt; &quot;\n&quot;;<br>
+//cout &lt;&lt; &quot;from= &quot;&lt;&lt; ((list_surplus_moves-&gt;move[count]&gt;&gt;12)&amp; 63) &lt;&lt; &quot;\n&quot;;<br>
+//<br>
+//cout &lt;&lt; &quot;to= &quot;&lt;&lt; to &lt;&lt; &quot;\n&quot;;<br>
+//cout &lt;&lt; &quot;to= &quot;&lt;&lt; ((list_surplus_moves-&gt;move[count]&gt;&gt;18)&amp; 63) &lt;&lt; &quot;\n&quot;;<br>
+//<br>
+//cout &lt;&lt; &quot;name= &quot;&lt;&lt; name &lt;&lt; &quot;\n&quot;;<br>
+//cout &lt;&lt; &quot;name= &quot;&lt;&lt; ((list_surplus_moves-&gt;move[count]&gt;&gt;24)&amp; 7) &lt;&lt; &quot;\n&quot;;<br>
+//-------------------------------------------------------------------------------<br>
+<br>
+count = count + 1;<br>
+<br>
+} <br>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td>
+  </tr>
+</table>
+
+</body>
+
+</html>

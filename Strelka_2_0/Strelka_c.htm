@@ -1,0 +1,239 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<title>Strelka_c</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center">Strelka_c</h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="/index.html">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+
+        
+
+        <p align="justify">
+        /////////////////////////////////////////////////////////////////////////<br>
+        // Стрелка 2.0 B<br>
+        // Версия от 09.01.2008<br>
+        // Почти повторяет версию Стрелки 1.8 UCI от 26.06.2007<br>
+        // Исправлены некоторые баги, переписана начальная инициализация таблиц.<br>
+        // Главные модификации алгоритма, позволившие усилить игру на +60 
+        пунктов<br>
+        // сделаны на основе идей Игоря Коршунова, автора Wildcat.<br>
+        // Варианты Коршунова отмечены в тексте как ссылки на различные версии<br>
+        // движка &quot;Белка&quot;, выпущенные в период с ноября по декабрь 2007 г.<br>
+        //////////////////////////////////////////////////////////////////////////<br>
+        <br>
+        #include &quot;windows.h&quot;<br>
+        #include &quot;stdio.h&quot;<br>
+        #include &lt;csetjmp&gt;<br>
+        <br>
+        #include &quot;strelka.h&quot;<br>
+        <br>
+        const int DateSize = 4;<br>
+        const int ClusterSize = 4;<br>
+        <br>
+        const int White = 0;<br>
+        const int Black = 1;<br>
+        const int WhitePawn = 2;<br>
+        const int BlackPawn = 3;<br>
+        const int WhiteKnight = 4;<br>
+        const int BlackKnight = 5;<br>
+        const int WhiteBishop = 6;<br>
+        const int BlackBishop = 7;<br>
+        const int WhiteRook = 8;<br>
+        const int BlackRook = 9;<br>
+        const int WhiteQueen = 10;<br>
+        const int BlackQueen = 11;<br>
+        const int WhiteKing = 12;<br>
+        const int BlackKing = 13;<br>
+        <br>
+        const int FlagCastle = 0x2000;<br>
+        const int FlagEnpassant = 0x1000;<br>
+        const int FlagPromoQueen = 0x4000;<br>
+        const int FlagPromoRook = 0x5000;<br>
+        const int FlagPromoBishop = 0x6000;<br>
+        const int FlagPromoKnight = 0x7000;<br>
+        <br>
+        struct mat_info_t *Material;<br>
+        <br>
+        char LineIndex[64][64];<br>
+        extern const int ValuePiece[14];<br>
+        unsigned __int64 MaskPawnDoubled[64];<br>
+        unsigned __int64 MaskPawnIsolated[64];<br>
+        unsigned __int64 MaskPawnProtectedW[64];<br>
+        unsigned __int64 MaskPawnProtectedB[64];<br>
+        unsigned __int64 MaskPawnAttacksW1[64];<br>
+        unsigned __int64 MaskPawnAttacksB1[64];<br>
+        unsigned __int64 MaskPawnAttacksW2[64];<br>
+        unsigned __int64 MaskPawnAttacksB2[64];<br>
+        unsigned __int64 MaskPawnPassedW[64];<br>
+        unsigned __int64 MaskPawnPassedB[64];<br>
+        unsigned __int64 MaskPawnOpenFileW[64];<br>
+        unsigned __int64 MaskPawnOpenFileB[64];<br>
+        unsigned __int64 MaskPawnAttacks[2][64];<br>
+        unsigned __int64 MaskClearSquare[64];<br>
+        unsigned __int64 MaskKnightMoves[64];<br>
+        unsigned __int64 MaskKingMoves[64];<br>
+        unsigned __int64 MaskSetMD2[64];<br>
+        unsigned __int64 MaskClearMD2[64];<br>
+        unsigned __int64 MaskSetMD3[64];<br>
+        unsigned __int64 MaskClearMD3[64];<br>
+        unsigned __int64 MaskSetMD4[64];<br>
+        unsigned __int64 MaskClearMD4[64];<br>
+        unsigned __int64 WhitePawnMoves1[64];<br>
+        unsigned __int64 BlackPawnMoves1[64];<br>
+        unsigned __int64 WhitePawnMoves2[64];<br>
+        unsigned __int64 BlackPawnMoves2[64];<br>
+        unsigned __int64 WhitePawnCaptures1[64];<br>
+        unsigned __int64 BlackPawnCaptures1[64];<br>
+        unsigned __int64 WhitePawnCaptures2[64];<br>
+        unsigned __int64 BlackPawnCaptures2[64];<br>
+        unsigned __int64 MaskLines[64];<br>
+        unsigned __int64 MaskDiags[64];<br>
+        unsigned __int64 WhiteKingOpp[64];<br>
+        unsigned __int64 BlackKingOpp[64];<br>
+        unsigned __int64 QuadBlackKing[64][2];<br>
+        unsigned __int64 QuadWhiteKing[64][2];<br>
+        __int16 PawnStruScore0[4096];<br>
+        __int16 PawnStruScore1[4096];<br>
+        __int16 PieceSquareValue[12][64][2];<br>
+        <br>
+        extern const unsigned __int64 RandomTurn;<br>
+        extern const unsigned __int64 RandomCastle[16];<br>
+        extern const unsigned __int64 RandomEP[8];<br>
+        extern const unsigned __int64 Random[12][64];<br>
+        <br>
+        extern const unsigned char PawnPassedFile[8];<br>
+        extern const __int16 PawnPassedScoreOpening[8];<br>
+        extern const __int16 PawnPassedScoreEndgame[8];<br>
+        extern const char LineShift[4][64];<br>
+        unsigned __int64 LineMask[4][64][64];<br>
+        extern const int MatDiffValue[12];<br>
+        extern const int MatSummValue[12];<br>
+        extern const unsigned __int64 MaskEnPassant[2][8];<br>
+        extern const unsigned int CastleFlags[64];<br>
+        extern const unsigned __int64 MaskPieceIsPawn[14];<br>
+        unsigned __int64 MaskEvasionMoves[64][64][2];<br>
+        int PieceFromChar[256];<br>
+        extern const unsigned __int64 MaskFile[8];<br>
+        extern const int FileWing[64];<br>
+        int BsfByte[256];<br>
+        extern const int PassedPawnValue1[8];<br>
+        extern const int PassedPawnValue2[8];<br>
+        extern const int PassedPawnValue3[8];<br>
+        extern const int PassedPawnValue4[8];<br>
+        extern const int PassedPawnValue5[8];<br>
+        extern const int PassedPawnValue6[8];<br>
+        extern const int PassedPawnValue7[8];<br>
+        char Distance[64][64];<br>
+        extern const int KingAttackWeight[16];<br>
+        <br>
+        struct board_t Board[1];<br>
+        struct entry_t * trans_entry;<br>
+        int trans_mask;<br>
+        int trans_date;<br>
+        int trans_size;<br>
+        int trans_score[16];<br>
+        struct pawn_info_t * pawn_entry;<br>
+        unsigned int pawn_mask;<br>
+        <br>
+        int Searching = 0;<br>
+        int Infinite = 0;<br>
+        int Delay = 0;<br>
+        int Post = 1;<br>
+        int MultiPV = 1;<br>
+        struct pv_t {<br>
+        int pv[256];<br>
+        int score;<br>
+        int time;<br>
+        __int64 nodes;<br>
+        __int64 speed;<br>
+        } multipv[100];<br>
+        __int64 true_nodes;<br>
+        int depth_is_limited, time_is_limited;<br>
+        int depth_limit;<br>
+        int time_limit_1, time_limit_2, time_max;<br>
+        int can_stop;<br>
+        int check_nb;<br>
+        int best_score, best_move, best_depth, depth_score;<br>
+        int best_pv[256];<br>
+        int trans_move, best_trans_move;<br>
+        int History[12][64];<br>
+        struct pos_info_t Pos_info[256];<br>
+        struct pos_info_t * pos_info_entry;<br>
+        struct list_t list_root[256];<br>
+        int start_time, search_time;<br>
+        char pv_str[1000];<br>
+        jmp_buf jmp_buffer;<br>
+        int stop_search;<br>
+        int bad_1, bad_2, change, easy, flag;<br>
+        int testing = 0;<br>
+        <br>
+        char start_pos[500] = &quot;rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 
+        KQkq - 0 1 &quot;;<br>
+        <br>
+        #include &quot;trans.c&quot;<br>
+        #include &quot;board.c&quot;<br>
+        #include &quot;search.c&quot;<br>
+        #include &quot;eval.c&quot;<br>
+        #include &quot;genmov.c&quot;<br>
+        #include &quot;utils.c&quot;<br>
+        #include &quot;emater.c&quot;<br>
+        <br>
+        //////////////////////////////////////////////////////////////////////////<br>
+        void main()<br>
+        {<br>
+        init_bitboards();<br>
+        init_evals();<br>
+        <br>
+        Material = malloc(MAX_MATERIAL * sizeof(struct mat_info_t));<br>
+        calc_material();<br>
+        <br>
+        // установка нулевых буферов ввода-вывода для UCI<br>
+        setbuf(stdout, NULL);<br>
+        setbuf(stdin, NULL);<br>
+        setvbuf(stdout, NULL, _IONBF, 0);<br>
+        setvbuf(stdin, NULL, _IONBF, 0);<br>
+        fflush(NULL);<br>
+        // инициализация таблицы транспозиций<br>
+        trans_alloc(32);<br>
+        // инициализация таблицы пешечной структуры<br>
+        pawn_entry = malloc(0xC00000);<br>
+        pawn_mask = (0xC00000 / sizeof(struct pawn_info_t)) - 1;<br>
+        memset(pawn_entry, 0, 0xC00000);<br>
+        // инициализация позиции<br>
+        board_from_fen(start_pos);<br>
+        // цикл команд UCI<br>
+        while (1) get_uci_command();<br>
+        }<br>
+        <br>
+
+        
+
+        </p>
+
+        
+
+        </td>
+  </tr>
+</table>
+
+</body>
+
+</html>

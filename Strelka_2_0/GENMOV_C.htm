@@ -1,0 +1,1006 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<title>GENMOV_C</title>
+</head>
+
+<body>
+
+<table border="0" cellspacing="1" width="100%" id="AutoNumber1"  bgcolor="#CCCCFF">
+  <tr>
+    <td width="100%">
+    <table border="0" cellspacing="1" width="100%" id="AutoNumber2">
+      <tr>
+        <td width="*">
+        <h2 align="center">GENMOV_C</h2>
+        </td>
+        <td width="25%">
+        <p align="center"><a href="/index.html">на главную страницу</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%">
+
+        
+
+        <p align="justify">
+        //////////////////////////////////////////////////////////////////////////<br>
+        // Генерация ходов в случае шаха<br>
+        struct list_t * gen_evasions(struct list_t * list, unsigned __int64 mask)<br>
+        { unsigned __int64 atk_bm, mask_em;<br>
+        int king, square, piece, atk_square;<br>
+        <br>
+        if (Board-&gt;turn == White) { // ход белых<br>
+        king = first_one(Board-&gt;mp[WhiteKing]); // позиция белого короля<br>
+        // формируем битовую строку позиций фигур, атакующих короля<br>
+        atk_bm = ((LINE3(king) | LINE4(king)) &amp; ((Board-&gt;mp[BlackRook]) | (Board-&gt;mp[BlackQueen]))) 
+        | // ладьи и ферзи<br>
+        ((LINE1(king) | LINE2(king)) &amp; ((Board-&gt;mp[BlackBishop]) | (Board-&gt;mp[BlackQueen]))) 
+        | // слоны и ферзи<br>
+        (MaskKnightMoves[king] &amp; (Board-&gt;mp[BlackKnight])) | // кони<br>
+        (MaskPawnAttacks[0][king] &amp; (Board-&gt;mp[BlackPawn])); // пешки<br>
+        atk_square = first_one(atk_bm); // позиция первой атакующей фигуры<br>
+        piece = Board-&gt;square[atk_square]; // тип атакующей фигуры<br>
+        // создаем битовую маску позиций, безопасных для отхода короля;<br>
+        // исходная маска mask - все позиции, допустимые для ходов белых.<br>
+        mask = mask &amp; (MaskPieceIsPawn[piece] | MaskEvasionMoves[king][atk_square][1]) 
+        &amp;<br>
+        MaskKingMoves[king] &amp; (~(Board-&gt;mp[White]));<br>
+        atk_bm &amp;= (atk_bm - 1); // удаляем из битовой строки атак первую 
+        атакующую фигуру<br>
+        if (atk_bm != 0) { // остались атаки - это кратный шах; можно только 
+        уйти королем<br>
+        square = first_one(atk_bm); // это позиция второй атакующей фигуры<br>
+        piece = Board-&gt;square[square];<br>
+        // корректируем маску безопасных позиций с учетом второй фигуры, и 
+        формируем отходы короля<br>
+        for (mask = mask &amp; (MaskPieceIsPawn[piece] | MaskEvasionMoves[king][square][1]); 
+        mask != 0; mask &amp;= (mask-1)) {<br>
+        square = first_one(mask); // сюда король может безопасно уйти<br>
+        (list++)-&gt;move = (king &lt;&lt; 6) | square;<br>
+        }<br>
+        list-&gt;move = list-&gt;score = 0;<br>
+        return (list - 1);<br>
+        }<br>
+        // теперь рассматриваем ситуацию одиночного шаха.<br>
+        // сначала смотрим безопасные отходы короля по маске ходов mask<br>
+        for (; mask != 0; mask &amp;= (mask - 1)) {<br>
+        (list++)-&gt;move = (king &lt;&lt; 6) | first_one(mask);<br>
+        }<br>
+        // смотрим взятия атакующей фигуры своей пешкой<br>
+        if (WhitePawnCaptures1[atk_square] &amp; (Board-&gt;mp[WhitePawn])) {<br>
+        list-&gt;move = ((atk_square-9)&lt;&lt;6) | atk_square;<br>
+        if (atk_square &gt;= 56) {<br>
+        (list++)-&gt;move |= FlagPromoQueen;<br>
+        (list++)-&gt;move = ((atk_square-9)&lt;&lt;6) | atk_square | FlagPromoRook;<br>
+        (list++)-&gt;move = ((atk_square-9)&lt;&lt;6) | atk_square | FlagPromoBishop;<br>
+        list-&gt;move = ((atk_square-9)&lt;&lt;6) | atk_square | FlagPromoKnight;<br>
+        }<br>
+        list++;<br>
+        }<br>
+        if (WhitePawnCaptures2[atk_square] &amp; (Board-&gt;mp[WhitePawn])) {<br>
+        list-&gt;move = ((atk_square - 7) &lt;&lt; 6) | atk_square;<br>
+        if (atk_square &gt;= 56) {<br>
+        (list++)-&gt;move |= FlagPromoQueen;<br>
+        (list++)-&gt;move = ((atk_square-7)&lt;&lt;6) | atk_square | FlagPromoRook;<br>
+        (list++)-&gt;move = ((atk_square-7)&lt;&lt;6) | atk_square | FlagPromoBishop;<br>
+        list-&gt;move = ((atk_square-7)&lt;&lt;6) | atk_square | FlagPromoKnight;<br>
+        }<br>
+        list++;<br>
+        }<br>
+        // проверяем возможность взятия на проходе<br>
+        if (Board-&gt;ep_square != 0 &amp;&amp; Board-&gt;ep_square == (atk_square + 8)) {<br>
+        if (WhitePawnCaptures1[atk_square + 8] &amp; (Board-&gt;mp[WhitePawn])) {<br>
+        (list++)-&gt;move = ((atk_square - 1) &lt;&lt; 6) | (atk_square + 8) | 
+        FlagEnpassant;<br>
+        }<br>
+        if (WhitePawnCaptures2[atk_square + 8] &amp; (Board-&gt;mp[WhitePawn])) {<br>
+        (list++)-&gt;move = ((atk_square + 1) &lt;&lt; 6) | (atk_square + 8) | 
+        FlagEnpassant;<br>
+        }<br>
+        }<br>
+        mask_em = MaskEvasionMoves[king][atk_square][0];<br>
+        // ходы пешки вперед на одно поле - пытаемся закрыть короля пешкой<br>
+        mask = (MaskClearSquare[atk_square] &gt;&gt; 8) &amp; (mask_em &gt;&gt; 8) &amp; (Board-&gt;mp[WhitePawn]);<br>
+        for (; mask != 0; mask &amp;= (mask - 1)) {<br>
+        square = first_one(mask);<br>
+        list-&gt;move = (square&lt;&lt;6) | (square+8);<br>
+        if (square &gt;= 48) {<br>
+        (list++)-&gt;move |= FlagPromoQueen;<br>
+        (list++)-&gt;move = (square&lt;&lt;6) | (square+8) | FlagPromoRook;<br>
+        (list++)-&gt;move = (square&lt;&lt;6) | (square+8) | FlagPromoBishop;<br>
+        list-&gt;move = (square&lt;&lt;6) | (square+8) | FlagPromoKnight;<br>
+        }<br>
+        list++;<br>
+        }<br>
+        // проверяем ходы пешки на два поля вперед со второй горизонтали<br>
+        mask = (~((Board-&gt;md1) &gt;&gt; 8)) &amp;<br>
+        (MaskClearSquare[atk_square] &gt;&gt; 16) &amp;<br>
+        (mask_em &gt;&gt; 16) &amp;<br>
+        (Board-&gt;mp[WhitePawn]);<br>
+        for (mask = mask &amp; 0xFF00; mask != 0; mask &amp;= (mask - 1)) {<br>
+        square = first_one(mask);<br>
+        (list++)-&gt;move = (square &lt;&lt; 6) | (square + 16);<br>
+        }<br>
+        // защищающие ходы коня<br>
+        for (atk_bm = Board-&gt;mp[WhiteKnight]; atk_bm != 0; atk_bm &amp;= (atk_bm - 
+        1)) {<br>
+        square = first_one(atk_bm);<br>
+        for (mask = MaskKnightMoves[square] &amp; mask_em; mask != 0; mask &amp;= (mask 
+        - 1)) {<br>
+        (list++)-&gt;move = (square &lt;&lt; 6) | first_one(mask);<br>
+        }<br>
+        }<br>
+        // защищающие ходы слона или ферзя - по диагоналям<br>
+        for (atk_bm = (Board-&gt;mp[WhiteBishop]) | (Board-&gt;mp[WhiteQueen]); atk_bm 
+        != 0; atk_bm &amp;= (atk_bm - 1)) {<br>
+        square = first_one(atk_bm);<br>
+        for (mask = (LINE1(square) | LINE2(square)) &amp; mask_em; mask != 0; mask 
+        &amp;= (mask - 1)) {<br>
+        (list++)-&gt;move = (square &lt;&lt; 6) | first_one(mask);<br>
+        }<br>
+        }<br>
+        // защищающие ходы ладьи или ферзя - по горизонталям, вертикалям<br>
+        for (atk_bm = (Board-&gt;mp[WhiteRook]) | (Board-&gt;mp[WhiteQueen]); atk_bm 
+        != 0; atk_bm &amp;= (atk_bm - 1)) {<br>
+        square = first_one(atk_bm);<br>
+        for (mask = (LINE3(square) | LINE4(square)) &amp; mask_em; mask != 0; mask 
+        &amp;= (mask - 1)) {<br>
+        (list++)-&gt;move = (square &lt;&lt; 6) | first_one(mask);<br>
+        }<br>
+        }<br>
+        }<br>
+        else { // ход черных - все то же самое<br>
+        king = first_one(Board-&gt;mp[BlackKing]);<br>
+        atk_bm = ((LINE3(king) | LINE4(king)) &amp; ((Board-&gt;mp[WhiteRook]) | (Board-&gt;mp[WhiteQueen]))) 
+        |<br>
+        ((LINE1(king) | LINE2(king)) &amp; ((Board-&gt;mp[WhiteBishop]) | (Board-&gt;mp[WhiteQueen]))) 
+        |<br>
+        (MaskKnightMoves[king] &amp; (Board-&gt;mp[WhiteKnight])) |<br>
+        (MaskPawnAttacks[1][king] &amp; (Board-&gt;mp[WhitePawn]));<br>
+        atk_square = first_one(atk_bm);<br>
+        piece = Board-&gt;square[atk_square];<br>
+        mask = mask &amp; (MaskPieceIsPawn[piece] | MaskEvasionMoves[king][atk_square][1]) 
+        &amp;<br>
+        MaskKingMoves[king] &amp; (~(Board-&gt;mp[Black]));<br>
+        atk_bm &amp;= (atk_bm - 1);<br>
+        if (atk_bm != 0) {<br>
+        square = first_one(atk_bm);<br>
+        piece = Board-&gt;square[square];<br>
+        for (mask = mask &amp; (MaskPieceIsPawn[piece] | MaskEvasionMoves[king][square][1]); 
+        mask != 0; mask &amp;= (mask-1)) {<br>
+        square = first_one(mask);<br>
+        (list++)-&gt;move = (king &lt;&lt; 6) | square;<br>
+        }<br>
+        list-&gt;move = list-&gt;score = 0;<br>
+        return (list - 1);<br>
+        }<br>
+        for (; mask != 0; mask &amp;= (mask - 1)) {<br>
+        (list++)-&gt;move = (king &lt;&lt; 6) | first_one(mask);<br>
+        }<br>
+        if (BlackPawnCaptures1[atk_square] &amp; (Board-&gt;mp[BlackPawn])) {<br>
+        list-&gt;move = ((atk_square+7)&lt;&lt;6) | atk_square;<br>
+        if (atk_square &lt;= 7) {<br>
+        (list++)-&gt;move |= FlagPromoQueen;<br>
+        (list++)-&gt;move = ((atk_square+7)&lt;&lt;6) | atk_square | FlagPromoRook;<br>
+        (list++)-&gt;move = ((atk_square+7)&lt;&lt;6) | atk_square | FlagPromoBishop;<br>
+        list-&gt;move = ((atk_square+7)&lt;&lt;6) | atk_square | FlagPromoKnight;<br>
+        }<br>
+        list++;<br>
+        }<br>
+        if (BlackPawnCaptures2[atk_square] &amp; (Board-&gt;mp[BlackPawn])) {<br>
+        list-&gt;move = ((atk_square+9)&lt;&lt;6) | atk_square;<br>
+        if (atk_square &lt;= 7) {<br>
+        (list++)-&gt;move |= FlagPromoQueen;<br>
+        (list++)-&gt;move = ((atk_square+9)&lt;&lt;6) | atk_square | FlagPromoRook;<br>
+        (list++)-&gt;move = ((atk_square+9)&lt;&lt;6) | atk_square | FlagPromoBishop;<br>
+        list-&gt;move = ((atk_square+9)&lt;&lt;6) | atk_square | FlagPromoKnight;<br>
+        }<br>
+        list++;<br>
+        }<br>
+        if (Board-&gt;ep_square != 0 &amp;&amp; Board-&gt;ep_square == (atk_square - 8)) {<br>
+        if (BlackPawnCaptures1[atk_square - 8] &amp; (Board-&gt;mp[BlackPawn])) {<br>
+        (list++)-&gt;move = ((atk_square - 1) &lt;&lt; 6) | (atk_square - 8) | 
+        FlagEnpassant;<br>
+        }<br>
+        if (BlackPawnCaptures2[atk_square - 8] &amp; (Board-&gt;mp[BlackPawn])) {<br>
+        (list++)-&gt;move = ((atk_square + 1) &lt;&lt; 6) | (atk_square - 8) | 
+        FlagEnpassant;<br>
+        }<br>
+        }<br>
+        mask_em = MaskEvasionMoves[king][atk_square][0];<br>
+        mask = (MaskClearSquare[atk_square] &lt;&lt; 8) &amp; (mask_em &lt;&lt; 8) &amp; (Board-&gt;mp[BlackPawn]);<br>
+        for (; mask != 0; mask &amp;= (mask - 1)) {<br>
+        square = first_one(mask);<br>
+        list-&gt;move = (square&lt;&lt;6) | (square-8);<br>
+        if (square &lt;= 15) {<br>
+        (list++)-&gt;move |= FlagPromoQueen;<br>
+        (list++)-&gt;move = (square&lt;&lt;6) | (square-8) | FlagPromoRook;<br>
+        (list++)-&gt;move = (square&lt;&lt;6) | (square-8) | FlagPromoBishop;<br>
+        list-&gt;move = (square&lt;&lt;6) | (square-8) | FlagPromoKnight;<br>
+        }<br>
+        list++;<br>
+        }<br>
+        mask = (((MaskClearSquare[atk_square] &amp; mask_em) &amp; 0xFF00000000) &lt;&lt; 16) 
+        &amp;<br>
+        (~((Board-&gt;md1) &lt;&lt; 8)) &amp;<br>
+        (Board-&gt;mp[BlackPawn]);<br>
+        for (; mask != 0; mask &amp;= (mask - 1)) {<br>
+        square = first_one(mask);<br>
+        (list++)-&gt;move = (square &lt;&lt; 6) | (square - 16);<br>
+        }<br>
+        for (atk_bm = Board-&gt;mp[BlackKnight]; atk_bm != 0; atk_bm &amp;= (atk_bm - 
+        1)) {<br>
+        square = first_one(atk_bm);<br>
+        for (mask = MaskKnightMoves[square] &amp; mask_em; mask != 0; mask &amp;= (mask 
+        - 1)) {<br>
+        (list++)-&gt;move = (square &lt;&lt; 6) | first_one(mask);<br>
+        }<br>
+        }<br>
+        for (atk_bm = (Board-&gt;mp[BlackBishop]) | (Board-&gt;mp[BlackQueen]); atk_bm 
+        != 0; atk_bm &amp;= (atk_bm - 1)) {<br>
+        square = first_one(atk_bm);<br>
+        for (mask = (LINE1(square) | LINE2(square)) &amp; mask_em; mask != 0; mask 
+        &amp;= (mask - 1)) {<br>
+        (list++)-&gt;move = (square &lt;&lt; 6) | first_one(mask);<br>
+        }<br>
+        }<br>
+        for (atk_bm = (Board-&gt;mp[BlackRook]) | (Board-&gt;mp[BlackQueen]); atk_bm 
+        != 0; atk_bm &amp;= (atk_bm - 1)) {<br>
+        square = first_one(atk_bm);<br>
+        for (mask = (LINE3(square) | LINE4(square)) &amp; mask_em; mask != 0; mask 
+        &amp;= (mask - 1)) {<br>
+        (list++)-&gt;move = (square &lt;&lt; 6) | first_one(mask);<br>
+        }<br>
+        }<br>
+        }<br>
+        list-&gt;move = list-&gt;score = 0;<br>
+        return (list - 1);<br>
+        }<br>
+        //////////////////////////////////////////////////////////////////////////////////////////<br>
+        // Генератор взятий и превращений пешки<br>
+        void gen_captures(struct list_t * list, unsigned __int64 mask_w, 
+        unsigned __int64 mask_b)<br>
+        { unsigned __int64 mask_from, mask_to;<br>
+        int from, to;<br>
+        <br>
+        if (Board-&gt;turn == White) { // в позиции ход белых<br>
+        // Здесь ищем взятия черных фигур белыми. Для этого на маски возможных 
+        ходов<br>
+        // накладываем маску позиций черных фигур mask_b<br>
+        // Ходы белого коня<br>
+        for (mask_from = Board-&gt;mp[WhiteKnight]; mask_from != 0; mask_from &amp;= 
+        (mask_from-1)) {<br>
+        from = first_one(mask_from);<br>
+        for (mask_to = MaskKnightMoves[from] &amp; mask_b; mask_to != 0; mask_to &amp;= 
+        (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 12; // оценка взятия = 
+        capture * 3 + 12;<br>
+        }<br>
+        }<br>
+        // Ходы белого слона<br>
+        for (mask_from = Board-&gt;mp[WhiteBishop]; mask_from != 0; mask_from &amp;= 
+        (mask_from-1)) {<br>
+        from = first_one(mask_from);<br>
+        for (mask_to = (LINE1(from) | LINE2(from)) &amp; mask_b; mask_to != 0; 
+        mask_to &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 11;<br>
+        }<br>
+        }<br>
+        // Ходы белой ладьи<br>
+        for (mask_from = Board-&gt;mp[WhiteRook]; mask_from != 0; mask_from &amp;= 
+        (mask_from-1)) {<br>
+        from = first_one(mask_from);<br>
+        for (mask_to = (LINE3(from) | LINE4(from)) &amp; mask_b; mask_to != 0; 
+        mask_to &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 10;<br>
+        }<br>
+        }<br>
+        // Ходы белого ферзя<br>
+        for (mask_from = Board-&gt;mp[WhiteQueen]; mask_from != 0; mask_from &amp;= 
+        (mask_from-1)) {<br>
+        from = first_one(mask_from);<br>
+        for (mask_to = (LINE1(from) | LINE2(from) | LINE3(from) | LINE4(from)) &amp; 
+        mask_b; mask_to != 0; mask_to &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 9;<br>
+        }<br>
+        }<br>
+        // Ходы белого короля<br>
+        from = first_one(Board-&gt;mp[WhiteKing]);<br>
+        for (mask_to = MaskKingMoves[from] &amp; mask_b; mask_to != 0; mask_to &amp;= 
+        (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 8;<br>
+        }<br>
+        // Превращения пешки - смотрим только предпоследнюю горизонталь<br>
+        for (mask_from = (Board-&gt;mp[WhitePawn]) &amp; 0x00FF000000000000; mask_from 
+        != 0; mask_from &amp;= (mask_from-1)) {<br>
+        from = first_one(mask_from);<br>
+        to = from + 8;<br>
+        if ((Board-&gt;square[to]) == 0) {<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoQueen;<br>
+        (list++)-&gt;score = 15;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoRook;<br>
+        (list++)-&gt;score = 14;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoBishop;<br>
+        (list++)-&gt;score = 13;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoKnight;<br>
+        (list++)-&gt;score = 12;<br>
+        }<br>
+        to = from + 7;<br>
+        if (from != 48 &amp;&amp; (((unsigned __int64)1 &lt;&lt; to) &amp; Board-&gt;mp[Black]) != 0) 
+        {<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoQueen;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 13;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoRook;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 12;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoBishop;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 11;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoKnight;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 10;<br>
+        }<br>
+        to = from + 9;<br>
+        if (from != 55 &amp;&amp; (((unsigned __int64)1 &lt;&lt; to) &amp; Board-&gt;mp[Black]) != 0) 
+        {<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoQueen;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 13;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoRook;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 12;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoBishop;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 11;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoKnight;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 10;<br>
+        }<br>
+        }<br>
+        // Простые взятия пешками - без превращения<br>
+        for (mask_to = (((Board-&gt;mp[WhitePawn]) &amp; 0x0000FEFEFEFEFE00) &lt;&lt; 7) &amp; 
+        mask_b; mask_to != 0; mask_to &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        from = to - 7;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 13;<br>
+        }<br>
+        for (mask_to = (((Board-&gt;mp[WhitePawn]) &amp; 0x00007F7F7F7F7F00) &lt;&lt; 9) &amp; 
+        mask_b; mask_to != 0; mask_to &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        from = to - 9;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 13;<br>
+        }<br>
+        // Взятие на проходе<br>
+        if ((to = Board-&gt;ep_square) != 0) {<br>
+        mask_to = (((Board-&gt;mp[WhitePawn]) &amp; 0x00FEFEFEFEFEFEFE) &lt;&lt; 7) &amp; 
+        ((unsigned __int64)1 &lt;&lt; to);<br>
+        if (mask_to != 0) {<br>
+        from = to - 7;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagEnpassant;<br>
+        (list++)-&gt;score = 22;<br>
+        }<br>
+        mask_to = (((Board-&gt;mp[WhitePawn]) &amp; 0xFFFF7F7F7F7F7F7F) &lt;&lt; 9) &amp; 
+        ((unsigned __int64)1 &lt;&lt; to);<br>
+        if (mask_to != 0) {<br>
+        from = to - 9;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagEnpassant;<br>
+        (list++)-&gt;score = 22;<br>
+        }<br>
+        }<br>
+        }<br>
+        else { // Для позиции с ходом черных - то же самое<br>
+        for (mask_from = Board-&gt;mp[BlackKnight]; mask_from != 0; mask_from &amp;= 
+        (mask_from-1)) {<br>
+        from = first_one(mask_from);<br>
+        for (mask_to = MaskKnightMoves[from] &amp; mask_w; mask_to != 0; mask_to &amp;= 
+        (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 15;<br>
+        }<br>
+        }<br>
+        for (mask_from = Board-&gt;mp[BlackBishop]; mask_from != 0; mask_from &amp;= 
+        (mask_from-1)) {<br>
+        from = first_one(mask_from);<br>
+        for (mask_to = (LINE1(from) | LINE2(from)) &amp; mask_w; mask_to != 0; 
+        mask_to &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 14;<br>
+        }<br>
+        }<br>
+        for (mask_from = Board-&gt;mp[BlackRook]; mask_from != 0; mask_from &amp;= 
+        (mask_from-1)) {<br>
+        from = first_one(mask_from);<br>
+        for (mask_to = (LINE3(from) | LINE4(from)) &amp; mask_w; mask_to != 0; 
+        mask_to &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 13;<br>
+        }<br>
+        }<br>
+        for (mask_from = Board-&gt;mp[BlackQueen]; mask_from != 0; mask_from &amp;= 
+        (mask_from-1)) {<br>
+        from = first_one(mask_from);<br>
+        for (mask_to = (LINE1(from) | LINE2(from) | LINE3(from) | LINE4(from)) &amp; 
+        mask_w; mask_to != 0; mask_to &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 12;<br>
+        }<br>
+        }<br>
+        from = first_one(Board-&gt;mp[BlackKing]);<br>
+        for (mask_to = MaskKingMoves[from] &amp; mask_w; mask_to != 0; mask_to &amp;= 
+        (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 11;<br>
+        }<br>
+        for (mask_from = (Board-&gt;mp[BlackPawn]) &amp; 0x000000000000FF00; mask_from 
+        != 0; mask_from &amp;= (mask_from-1)) {<br>
+        from = first_one(mask_from);<br>
+        to = from - 8;<br>
+        if ((Board-&gt;square[to]) == 0) {<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoQueen;<br>
+        (list++)-&gt;score = 15;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoRook;<br>
+        (list++)-&gt;score = 14;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoBishop;<br>
+        (list++)-&gt;score = 13;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoKnight;<br>
+        (list++)-&gt;score = 12;<br>
+        }<br>
+        to = from - 9;<br>
+        if (from != 8 &amp;&amp; (((unsigned __int64)1 &lt;&lt; to) &amp; Board-&gt;mp[White]) != 0) 
+        {<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoQueen;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 16;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoRook;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 15;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoBishop;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 14;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoKnight;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 13;<br>
+        }<br>
+        to = from - 7;<br>
+        if (from != 15 &amp;&amp; (((unsigned __int64)1 &lt;&lt; to) &amp; Board-&gt;mp[White]) != 0) 
+        {<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoQueen;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 16;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoRook;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 15;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoBishop;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 14;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagPromoKnight;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 13;<br>
+        }<br>
+        }<br>
+        for (mask_to = (((Board-&gt;mp[BlackPawn]) &gt;&gt; 9) &amp; mask_w) &amp; 
+        0x00007F7F7F7F7F00; mask_to != 0; mask_to &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        from = to + 9;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 16;<br>
+        }<br>
+        for (mask_to = (((Board-&gt;mp[BlackPawn]) &gt;&gt; 7) &amp; mask_w) &amp; 
+        0x0000FEFEFEFEFE00; mask_to != 0; mask_to &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        from = to + 7;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = (Board-&gt;square[to]) * 3 + 16;<br>
+        }<br>
+        if ((to = Board-&gt;ep_square) != 0) {<br>
+        mask_to = (((Board-&gt;mp[BlackPawn]) &gt;&gt; 9) &amp; 0x007F7F7F7F7F7F7F) &amp; 
+        ((unsigned __int64)1 &lt;&lt; to);<br>
+        if (mask_to != 0) {<br>
+        from = to + 9;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagEnpassant;<br>
+        (list++)-&gt;score = 22;<br>
+        }<br>
+        mask_to = (((Board-&gt;mp[BlackPawn]) &gt;&gt; 7) &amp; 0x00FEFEFEFEFEFEFE) &amp; 
+        ((unsigned __int64)1 &lt;&lt; to);<br>
+        if (mask_to != 0) {<br>
+        from = to + 7;<br>
+        list-&gt;move = (from &lt;&lt; 6) | to | FlagEnpassant;<br>
+        (list++)-&gt;score = 22;<br>
+        }<br>
+        }<br>
+        }<br>
+        list-&gt;move = 0;<br>
+        }<br>
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////<br>
+        // Генерация тихих ходов для функций типа full_search<br>
+        void gen_quiet_moves(struct list_t * list, unsigned __int64 mask, int 
+        trans_move, int killer1, int killer2)<br>
+        { int move, score, from, to;<br>
+        unsigned __int64 bme, mask_to;<br>
+        struct list_t * list_head, * pi, * pj;<br>
+        <br>
+        list_head = list; // запоминаем начало списка<br>
+        bme = ~(Board-&gt;md1); // маска пустых полей - для генерации ходов без 
+        взятий<br>
+        if (Board-&gt;turn == White) {<br>
+        // рокировки<br>
+        if (((Board-&gt;flags) &amp; 1) &amp;&amp; (((Board-&gt;md1) | mask) &amp; 0x60) == 0) {<br>
+        list-&gt;move = 0x106 | FlagCastle;<br>
+        (list++)-&gt;score = History[WhiteKing-2][6]; // оценку тихих ходов берем 
+        из History<br>
+        }<br>
+        if (((Board-&gt;flags) &amp; 2) &amp;&amp; ((Board-&gt;md1) &amp; 0x0E) == 0 &amp;&amp; (mask &amp; 0x0C) 
+        == 0) {<br>
+        list-&gt;move = 0x102 | FlagCastle;<br>
+        (list++)-&gt;score = History[WhiteKing-2][2];<br>
+        }<br>
+        // ходы пешек вперед<br>
+        for (mask = (((Board-&gt;mp[WhitePawn]) &amp; 0x0000FFFFFFFFFF00) &lt;&lt; 8) &amp; bme; 
+        mask != 0; mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        if (((from &amp; 0xFFFFFFF8) == 16) &amp;&amp; Board-&gt;square[from + 8] == 0) {<br>
+        list-&gt;move = ((from - 8) &lt;&lt; 6) | (from + 8);<br>
+        (list++)-&gt;score = History[WhitePawn-2][from + 8];<br>
+        }<br>
+        list-&gt;move = ((from - 8) &lt;&lt; 6) | from;<br>
+        (list++)-&gt;score = History[WhitePawn-2][from];<br>
+        }<br>
+        // ходы коня<br>
+        for (mask = Board-&gt;mp[WhiteKnight]; mask != 0; mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        for (mask_to = MaskKnightMoves[from] &amp; bme; mask_to != 0; mask_to &amp;= 
+        (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = History[WhiteKnight-2][to];<br>
+        }<br>
+        }<br>
+        // ходы ферзя<br>
+        for (mask = Board-&gt;mp[WhiteQueen]; mask != 0; mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        for (mask_to = (LINE1(from) | LINE2(from) | LINE3(from) | LINE4(from)) &amp; 
+        bme; mask_to != 0; mask_to &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = History[WhiteQueen-2][to];<br>
+        }<br>
+        }<br>
+        // ходы слона<br>
+        for (mask = Board-&gt;mp[WhiteBishop]; mask != 0; mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        for (mask_to = (LINE1(from) | LINE2(from)) &amp; bme; mask_to != 0; mask_to 
+        &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = History[WhiteBishop-2][to];<br>
+        }<br>
+        }<br>
+        // ходы ладьи<br>
+        for (mask = Board-&gt;mp[WhiteRook]; mask != 0; mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        for (mask_to = (LINE3(from) | LINE4(from)) &amp; bme; mask_to != 0; mask_to 
+        &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = History[WhiteRook-2][to];<br>
+        }<br>
+        }<br>
+        // ходы короля<br>
+        from = first_one(Board-&gt;mp[WhiteKing]);<br>
+        for (mask_to = MaskKingMoves[from] &amp; bme; mask_to != 0; mask_to &amp;= 
+        (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = History[WhiteKing-2][to];<br>
+        }<br>
+        }<br>
+        else { // ход черных - аналогично<br>
+        if (((Board-&gt;flags) &amp; 4) &amp;&amp; (((Board-&gt;md1) | mask) &amp; 0x6000000000000000) 
+        == 0) {<br>
+        list-&gt;move = 0xF3E | FlagCastle;<br>
+        (list++)-&gt;score = History[BlackKing-2][62];<br>
+        }<br>
+        if (((Board-&gt;flags) &amp; 8) &amp;&amp; ((Board-&gt;md1) &amp; 0x0E00000000000000) == 0 &amp;&amp; 
+        (mask &amp; 0x0C00000000000000) == 0) {<br>
+        list-&gt;move = 0xF3A | FlagCastle;<br>
+        (list++)-&gt;score = History[BlackKing-2][58];<br>
+        }<br>
+        for (mask = (((Board-&gt;mp[BlackPawn]) &gt;&gt; 8) &amp; 0x0000FFFFFFFFFF00) &amp; bme; 
+        mask != 0; mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        if (((from &amp; 0xFFFFFFF8) == 40) &amp;&amp; Board-&gt;square[from - 8] == 0) {<br>
+        list-&gt;move = ((from + 8) &lt;&lt; 6) | (from - 8);<br>
+        (list++)-&gt;score = History[BlackPawn-2][from-8];<br>
+        }<br>
+        list-&gt;move = ((from + 8) &lt;&lt; 6) | from;<br>
+        (list++)-&gt;score = History[BlackPawn-2][from];<br>
+        }<br>
+        for (mask = Board-&gt;mp[BlackKnight]; mask != 0; mask &amp;= (mask - 1)) {<br>
+        from = first_one(mask);<br>
+        for (mask_to = MaskKnightMoves[from] &amp; bme; mask_to != 0; mask_to &amp;= 
+        (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = History[BlackKnight-2][to];<br>
+        }<br>
+        }<br>
+        for (mask = Board-&gt;mp[BlackQueen]; mask != 0; mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        for (mask_to = (LINE1(from) | LINE2(from) | LINE3(from) | LINE4(from)) &amp; 
+        bme; mask_to != 0; mask_to &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = History[BlackQueen-2][to];<br>
+        }<br>
+        }<br>
+        for (mask = Board-&gt;mp[BlackBishop]; mask != 0; mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        for (mask_to = (LINE1(from) | LINE2(from)) &amp; bme; mask_to != 0; mask_to 
+        &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = History[BlackBishop-2][to];<br>
+        }<br>
+        }<br>
+        for (mask = Board-&gt;mp[BlackRook]; mask != 0; mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        for (mask_to = (LINE3(from) | LINE4(from)) &amp; bme; mask_to != 0; mask_to 
+        &amp;= (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = History[BlackRook-2][to];<br>
+        }<br>
+        }<br>
+        from = first_one(Board-&gt;mp[BlackKing]);<br>
+        for (mask_to = MaskKingMoves[from] &amp; bme; mask_to != 0; mask_to &amp;= 
+        (mask_to-1)) {<br>
+        to = first_one(mask_to);<br>
+        list-&gt;move = (from &lt;&lt; 6) | to;<br>
+        (list++)-&gt;score = History[BlackKing-2][to];<br>
+        }<br>
+        }<br>
+        list-&gt;move = 0;<br>
+        list-&gt;score = 0;<br>
+        if (list == list_head) return; // нет ходов<br>
+        // сортируем список по score и исключаем из него trans_move и killer<br>
+        for (pi = list - 1; pi &gt;= list_head; pi--) {<br>
+        if (pi-&gt;move != trans_move &amp;&amp; pi-&gt;move != killer1 &amp;&amp; pi-&gt;move != 
+        killer2) break;<br>
+        pi-&gt;move = 0;<br>
+        pi-&gt;score = 0;<br>
+        }<br>
+        while (pi &gt; list_head) {<br>
+        pi--;<br>
+        move = pi-&gt;move;<br>
+        if (move != trans_move &amp;&amp; move != killer1 &amp;&amp; move != killer2) {<br>
+        score = pi-&gt;score;<br>
+        for (pj = pi; score &lt; (pj+1)-&gt;score; pj++) {<br>
+        pj-&gt;move = (pj+1)-&gt;move;<br>
+        pj-&gt;score = (pj+1)-&gt;score;<br>
+        }<br>
+        pj-&gt;move = move;<br>
+        pj-&gt;score = score;<br>
+        }<br>
+        else {<br>
+        list--;<br>
+        if (pi &lt; list) memcpy(pi, pi + 1, (list - pi) * sizeof(struct list_t));<br>
+        list-&gt;move = 0;<br>
+        list-&gt;score = 0;<br>
+        }<br>
+        }<br>
+        }<br>
+        ///////////////////////////////////////////////////////////////////////////////<br>
+        // Генерация шахов для qu_search<br>
+        void gen_checks(struct list_t * list, unsigned __int64 mask_w, unsigned 
+        __int64 mask_b)<br>
+        { unsigned __int64 mask, mask_to;<br>
+        int wking, bking, from, to, piece;<br>
+        <br>
+        if (Board-&gt;turn == White) { // ход белых<br>
+        bking = first_one(Board-&gt;mp[BlackKing]); // позиция черного короля<br>
+        // шахи белым конем<br>
+        for (mask = Board-&gt;mp[WhiteKnight]; mask != 0; mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        mask_to = MaskKnightMoves[from] &amp; MaskKnightMoves[bking] &amp; 
+        ((Board-&gt;mp[White]) ^ mask_b);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (from &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        // ходы дальнобойных фигур по диагоналям - слона и ферзя<br>
+        // они могут сами поставить шах, или открыть линию для шаха от другой 
+        фигуры<br>
+        for (mask = (Board-&gt;mp[WhiteBishop]) | (Board-&gt;mp[WhiteQueen]); mask != 
+        0; mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        mask_to = (LINE1(from) &amp; LINE1(bking) &amp; mask_b) |<br>
+        (LINE2(from) &amp; LINE2(bking) &amp; mask_b);<br>
+        if (mask_to != 0) {<br>
+        to = first_one(mask_to);<br>
+        piece = Board-&gt;square[to];<br>
+        if (piece == BlackPawn) (list++)-&gt;move = (from &lt;&lt; 6) | to;<br>
+        else if (piece == WhitePawn) {<br>
+        if (to &lt;= 47 &amp;&amp; Board-&gt;square[to + 8] == 0) {<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to + 8);<br>
+        if ((to &amp; 0xFFFFFFF8) == 8 &amp;&amp; Board-&gt;square[to + 16] == 0)<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to + 16);<br>
+        }<br>
+        if (((mask_to &amp; 0xFFFF7F7F7F7F7F7F) &lt;&lt; 9) &amp; (Board-&gt;mp[Black]) &amp; mask_b)<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to + 9);<br>
+        if (((mask_to &amp; 0x00FEFEFEFEFEFEFE) &lt;&lt; 7) &amp; (Board-&gt;mp[Black]) &amp; mask_b)<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to + 7);<br>
+        }<br>
+        else if (piece == WhiteKnight) {<br>
+        mask_to = MaskKnightMoves[to] &amp; ((Board-&gt;mp[White]) ^ mask_b);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        else if (piece == WhiteRook) {<br>
+        mask_to = (LINE3(to) | LINE4(to)) &amp; ((Board-&gt;mp[White]) ^ mask_b);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        else if (piece == WhiteKing) {<br>
+        mask_to = MaskKingMoves[to] &amp; MaskDiags[bking] &amp; ((Board-&gt;mp[White]) ^ 
+        mask_b);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        }<br>
+        else {<br>
+        mask_to = (LINE1(from) &amp; LINE2(bking) &amp; mask_b) |<br>
+        (LINE2(from) &amp; LINE1(bking) &amp; mask_b);<br>
+        if (Board-&gt;square[from] == WhiteQueen) {<br>
+        mask_to |= ((LINE3(from) | LINE4(from)) &amp;<br>
+        ((LINE2(bking) &amp; mask_b) | (LINE1(bking) &amp; mask_b))) |<br>
+        ((LINE1(from) | LINE2(from)) &amp;<br>
+        ((LINE3(bking) &amp; mask_b) | (LINE4(bking) &amp; mask_b)));<br>
+        }<br>
+        mask_to &amp;= (Board-&gt;mp[White]) ^ mask_b;<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (from &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        }<br>
+        // точно так же для вертикалей, горизонталей - ходы ладьи или ферзя<br>
+        for (mask = (Board-&gt;mp[WhiteRook]) | (Board-&gt;mp[WhiteQueen]); mask != 0; 
+        mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        mask_to = (LINE3(from) &amp; LINE3(bking) &amp; mask_b) |<br>
+        (LINE4(from) &amp; LINE4(bking) &amp; mask_b);<br>
+        if (mask_to != 0) {<br>
+        to = first_one(mask_to);<br>
+        piece = Board-&gt;square[to];<br>
+        if (piece == BlackPawn) (list++)-&gt;move = (from &lt;&lt; 6) | to;<br>
+        else if (piece == WhitePawn) {<br>
+        if ((mask_to &amp; LINE3(from)) &amp;&amp; to &lt;= 47 &amp;&amp; Board-&gt;square[to + 8] == 0) {<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to + 8);<br>
+        if ((to &amp; 0xFFFFFFF8) == 8 &amp;&amp; Board-&gt;square[to + 16] == 0)<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to + 16);<br>
+        }<br>
+        if (((mask_to &amp; 0xFFFF7F7F7F7F7F7F) &lt;&lt; 9) &amp; (Board-&gt;mp[Black]) &amp; mask_b)<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to + 9);<br>
+        if (((mask_to &amp; 0x00FEFEFEFEFEFEFE) &lt;&lt; 7) &amp; (Board-&gt;mp[Black]) &amp; mask_b)<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to + 7);<br>
+        }<br>
+        else if (piece == WhiteKnight) {<br>
+        mask_to = MaskKnightMoves[to] &amp; ((Board-&gt;mp[White]) ^ mask_b);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        else if (piece == WhiteBishop) {<br>
+        mask_to = (LINE1(to) | LINE2(to)) &amp; ((Board-&gt;mp[White]) ^ mask_b);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        else if (piece == WhiteKing) {<br>
+        mask_to = MaskKingMoves[to] &amp; MaskLines[bking] &amp; ((Board-&gt;mp[White]) ^ 
+        mask_b);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        }<br>
+        else {<br>
+        mask_to = ((LINE3(from) &amp; LINE4(bking) &amp; mask_b) |<br>
+        (LINE4(from) &amp; LINE3(bking) &amp; mask_b)) &amp;<br>
+        ((Board-&gt;mp[White]) ^ mask_b);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (from &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        }<br>
+        // ходы белой пешки<br>
+        mask = (((Board-&gt;mp[WhitePawn]) &amp; 0x0000FEFEFEFEFEFE) &lt;&lt; 15) &amp; 
+        (Board-&gt;mp[BlackKing]);<br>
+        if (mask &amp;&amp; Board-&gt;square[bking - 7] == 0) (list++)-&gt;move = ((bking - 
+        15) &lt;&lt; 6) | (bking - 7);<br>
+        mask = (((Board-&gt;mp[WhitePawn]) &amp; 0xFFFFFF7F7F7F7F7F) &lt;&lt; 17) &amp; 
+        (Board-&gt;mp[BlackKing]);<br>
+        if (mask &amp;&amp; Board-&gt;square[bking - 9] == 0) (list++)-&gt;move = ((bking - 
+        17) &lt;&lt; 6) | (bking - 9);<br>
+        mask = ((Board-&gt;mp[BlackKing]) &gt;&gt; 7) &amp;<br>
+        (((Board-&gt;mp[WhitePawn]) &amp; 0x00FCFCFCFCFCFCFC) &lt;&lt; 7) &amp;<br>
+        (Board-&gt;mp[Black]) &amp; mask_b;<br>
+        if (mask) (list++)-&gt;move = ((bking - 14) &lt;&lt; 6) | (bking - 7);<br>
+        mask = ((Board-&gt;mp[BlackKing]) &gt;&gt; 9) &amp;<br>
+        (((Board-&gt;mp[WhitePawn]) &amp; 0x00FEFEFEFEFEFEFE) &lt;&lt; 7) &amp;<br>
+        (Board-&gt;mp[Black]) &amp; mask_b;<br>
+        if (mask) (list++)-&gt;move = ((bking - 16) &lt;&lt; 6) | (bking - 9);<br>
+        mask = ((Board-&gt;mp[BlackKing]) &gt;&gt; 7) &amp;<br>
+        (((Board-&gt;mp[WhitePawn]) &amp; 0xFFFF7F7F7F7F7F7F) &lt;&lt; 9) &amp;<br>
+        (Board-&gt;mp[Black]) &amp; mask_b;<br>
+        if (mask) (list++)-&gt;move = ((bking - 16) &lt;&lt; 6) | (bking - 7);<br>
+        mask = ((Board-&gt;mp[BlackKing]) &gt;&gt; 9) &amp;<br>
+        (((Board-&gt;mp[WhitePawn]) &amp; 0x003F3F3F3F3F3F3F) &lt;&lt; 9) &amp;<br>
+        (Board-&gt;mp[Black]) &amp; mask_b;<br>
+        if (mask) (list++)-&gt;move = ((bking - 18) &lt;&lt; 6) | (bking - 9);<br>
+        mask = (((Board-&gt;mp[WhitePawn]) &amp; 0x000000000000FE00) &lt;&lt; 23) &amp; 
+        (Board-&gt;mp[BlackKing]);<br>
+        if (mask &amp;&amp; Board-&gt;square[bking - 7] == 0 &amp;&amp; Board-&gt;square[bking - 15] 
+        == 0)<br>
+        (list++)-&gt;move = ((bking - 23) &lt;&lt; 6) | (bking - 7);<br>
+        mask = (((Board-&gt;mp[WhitePawn]) &amp; 0x0000000000007F00) &lt;&lt; 25) &amp; 
+        (Board-&gt;mp[BlackKing]);<br>
+        if (mask &amp;&amp; Board-&gt;square[bking - 9] == 0 &amp;&amp; Board-&gt;square[bking - 17] 
+        == 0)<br>
+        (list++)-&gt;move = ((bking - 25) &lt;&lt; 6) | (bking - 9);<br>
+        }<br>
+        else { // ход черных - аналогично<br>
+        wking = first_one(Board-&gt;mp[WhiteKing]);<br>
+        for (mask = Board-&gt;mp[BlackKnight]; mask != 0; mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        mask_to = MaskKnightMoves[from] &amp; MaskKnightMoves[wking] &amp; 
+        ((Board-&gt;mp[Black]) ^ mask_w);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (from &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        for (mask = (Board-&gt;mp[BlackBishop]) | (Board-&gt;mp[BlackQueen]); mask != 
+        0; mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        mask_to = (LINE1(from) &amp; LINE1(wking) &amp; mask_w) |<br>
+        (LINE2(from) &amp; LINE2(wking) &amp; mask_w);<br>
+        if (mask_to != 0) {<br>
+        to = first_one(mask_to);<br>
+        piece = Board-&gt;square[to];<br>
+        if (piece == WhitePawn) (list++)-&gt;move = (from &lt;&lt; 6) | to;<br>
+        else if (piece == BlackPawn) {<br>
+        if (to &gt;= 16 &amp;&amp; Board-&gt;square[to - 8] == 0) {<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to - 8);<br>
+        if ((to &amp; 0xFFFFFFF8) == 48 &amp;&amp; Board-&gt;square[to - 16] == 0)<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to - 16);<br>
+        }<br>
+        if (((mask_to &gt;&gt; 7) &amp; (Board-&gt;mp[White]) &amp; mask_w) &amp; 0x00FEFEFEFEFEFEFE)<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to - 7);<br>
+        if (((mask_to &gt;&gt; 9) &amp; (Board-&gt;mp[White]) &amp; mask_w) &amp; 0x007F7F7F7F7F7F7F)<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to - 9);<br>
+        }<br>
+        else if (piece == BlackKnight) {<br>
+        mask_to = MaskKnightMoves[to] &amp; ((Board-&gt;mp[Black]) ^ mask_w);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        else if (piece == BlackRook) {<br>
+        mask_to = (LINE3(to) | LINE4(to)) &amp; ((Board-&gt;mp[Black]) ^ mask_w);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        else if (piece == BlackKing) {<br>
+        mask_to = MaskKingMoves[to] &amp; MaskDiags[wking] &amp; ((Board-&gt;mp[Black]) ^ 
+        mask_w);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        }<br>
+        else {<br>
+        mask_to = (LINE1(from) &amp; LINE2(wking) &amp; mask_w) |<br>
+        (LINE2(from) &amp; LINE1(wking) &amp; mask_w);<br>
+        if (Board-&gt;square[from] == BlackQueen) {<br>
+        mask_to |= ((LINE3(from) | LINE4(from)) &amp;<br>
+        ((LINE2(wking) &amp; mask_w) | (LINE1(wking) &amp; mask_w))) |<br>
+        ((LINE1(from) | LINE2(from)) &amp;<br>
+        ((LINE3(wking) &amp; mask_w) | (LINE4(wking) &amp; mask_w)));<br>
+        }<br>
+        mask_to &amp;= (Board-&gt;mp[Black]) ^ mask_w;<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (from &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        }<br>
+        for (mask = (Board-&gt;mp[BlackRook]) | (Board-&gt;mp[BlackQueen]); mask != 0; 
+        mask &amp;= (mask-1)) {<br>
+        from = first_one(mask);<br>
+        mask_to = (LINE3(from) &amp; (LINE3(wking) &amp; mask_w)) |<br>
+        (LINE4(from) &amp; (LINE4(wking) &amp; mask_w));<br>
+        if (mask_to != 0) {<br>
+        to = first_one(mask_to);<br>
+        piece = Board-&gt;square[to];<br>
+        if (piece == WhitePawn) (list++)-&gt;move = (from &lt;&lt; 6) | to;<br>
+        else if (piece == BlackPawn) {<br>
+        if ((mask_to &amp; LINE3(from)) &amp;&amp; to &gt;= 16 &amp;&amp; Board-&gt;square[to - 8] == 0) {<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to - 8);<br>
+        if ((to &amp; 0xFFFFFFF8) == 48 &amp;&amp; Board-&gt;square[to - 16] == 0)<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to - 16);<br>
+        }<br>
+        if (((mask_to &gt;&gt; 7) &amp; (Board-&gt;mp[White]) &amp; mask_w) &amp; 0x00FEFEFEFEFEFEFE)<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to - 7);<br>
+        if (((mask_to &gt;&gt; 9) &amp; (Board-&gt;mp[White]) &amp; mask_w) &amp; 0x007F7F7F7F7F7F7F)<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | (to - 9);<br>
+        }<br>
+        else if (piece == BlackKnight) {<br>
+        mask_to = MaskKnightMoves[to] &amp; ((Board-&gt;mp[Black]) ^ mask_w);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        else if (piece == BlackBishop) {<br>
+        mask_to = (LINE1(to) | LINE2(to)) &amp; ((Board-&gt;mp[Black]) ^ mask_w);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        else if (piece == BlackKing) {<br>
+        mask_to = MaskKingMoves[to] &amp; MaskLines[wking] &amp; ((Board-&gt;mp[Black]) ^ 
+        mask_w);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to-1))<br>
+        (list++)-&gt;move = (to &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        }<br>
+        else {<br>
+        mask_to = ((LINE3(from) &amp; LINE4(wking) &amp; mask_w) |<br>
+        (LINE4(from) &amp; LINE3(wking) &amp; mask_w)) &amp;<br>
+        ((Board-&gt;mp[Black]) ^ mask_w);<br>
+        for (; mask_to != 0; mask_to &amp;= (mask_to - 1))<br>
+        (list++)-&gt;move = (from &lt;&lt; 6) | first_one(mask_to);<br>
+        }<br>
+        }<br>
+        mask = ((Board-&gt;mp[BlackPawn]) &gt;&gt; 17) &amp; (Board-&gt;mp[WhiteKing]) &amp; 
+        0x00007F7F7F7F7F7F;<br>
+        if (mask &amp;&amp; Board-&gt;square[wking + 9] == 0) (list++)-&gt;move = ((wking + 
+        17) &lt;&lt; 6) | (wking + 9);<br>
+        mask = ((Board-&gt;mp[BlackPawn]) &gt;&gt; 15) &amp; (Board-&gt;mp[WhiteKing]) &amp; 
+        0x0000FEFEFEFEFEFE;<br>
+        if (mask &amp;&amp; Board-&gt;square[wking + 7] == 0) (list++)-&gt;move = ((wking + 
+        15) &lt;&lt; 6) | (wking + 7);<br>
+        mask = (((Board-&gt;mp[WhiteKing]) &amp; 0x00003F3F3F3F3F3F) &lt;&lt; 9) &amp;<br>
+        ((Board-&gt;mp[BlackPawn]) &gt;&gt; 9) &amp;<br>
+        (Board-&gt;mp[White]) &amp; mask_w;<br>
+        if (mask) (list++)-&gt;move = ((wking + 18) &lt;&lt; 6) | (wking + 9);<br>
+        mask = (((Board-&gt;mp[WhiteKing]) &amp; 0x0000FEFEFEFEFEFE) &lt;&lt; 7) &amp;<br>
+        ((Board-&gt;mp[BlackPawn]) &gt;&gt; 9) &amp;<br>
+        (Board-&gt;mp[White]) &amp; mask_w;<br>
+        if (mask) (list++)-&gt;move = ((wking + 16) &lt;&lt; 6) | (wking + 7);<br>
+        mask = (((Board-&gt;mp[WhiteKing]) &amp; 0x00007F7F7F7F7F7F) &lt;&lt; 9) &amp;<br>
+        ((Board-&gt;mp[BlackPawn]) &gt;&gt; 7) &amp;<br>
+        (Board-&gt;mp[White]) &amp; mask_w;<br>
+        if (mask) (list++)-&gt;move = ((wking + 16) &lt;&lt; 6) | (wking + 9);<br>
+        mask = (((Board-&gt;mp[WhiteKing]) &amp; 0x0000FCFCFCFCFCFC) &lt;&lt; 7) &amp;<br>
+        ((Board-&gt;mp[BlackPawn]) &gt;&gt; 7) &amp;<br>
+        (Board-&gt;mp[White]) &amp; mask_w;<br>
+        if (mask) (list++)-&gt;move = ((wking + 14) &lt;&lt; 6) | (wking + 7);<br>
+        mask = (((Board-&gt;mp[BlackPawn]) &gt;&gt; 25) &amp; 0x000000007F000000) &amp; 
+        (Board-&gt;mp[WhiteKing]);<br>
+        if (mask &amp;&amp; Board-&gt;square[wking + 9] == 0 &amp;&amp; Board-&gt;square[wking + 17] 
+        == 0)<br>
+        (list++)-&gt;move = ((wking + 25) &lt;&lt; 6) | (wking + 9);<br>
+        mask = (((Board-&gt;mp[BlackPawn]) &gt;&gt; 23) &amp; 0x00000000FE000000) &amp; 
+        (Board-&gt;mp[WhiteKing]);<br>
+        if (mask &amp;&amp; Board-&gt;square[wking + 7] == 0 &amp;&amp; Board-&gt;square[wking + 15] 
+        == 0)<br>
+        (list++)-&gt;move = ((wking + 23) &lt;&lt; 6) | (wking + 7);<br>
+        }<br>
+        list-&gt;move = 0;<br>
+        }<br>
+
+        
+
+        </p>
+
+        
+
+        </td>
+  </tr>
+</table>
+
+</body>
+
+</html>
