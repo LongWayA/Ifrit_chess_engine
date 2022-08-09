@@ -1,0 +1,170 @@
+
+/// АВТОР Бренкман Андрей (Brenkman Andrey)
+/// ПОСЛЕДНЕЕ ИЗМЕНЕНИЕ 12.06.2007  11.11.2009 19.12.2010 1.1.2011
+/// УРОВЕНЬ МОЕГО ДОВЕРИЯ 70%
+
+#include "position_struct.h"
+
+/// включаем-выключаем(1-0)  режим вывода в 
+/// файл(_TEST_FEN.txt) тестовой информации
+#define TEST_P 0
+				 
+/// имя и дата выпуска версии
+#define NAME_OF_PROGRAM_AND_DATA_OF_RELEASE "id name Ifrit_m1_6_Beta_9_may_2012"
+
+/*
+
+UCI
+http://chessprogramming.wikispaces.com/UCI
+
+ UCI, the Universal Chess Interface is an open communication 
+ protocol for chess engines to play games automatically, that 
+ is to communicate with other programs including 
+ Graphical User Interfaces. UCI was designed and developed 
+ by Rudolf Huber and Stefan Meyer-Kahlen, released in November 2000 [1] . 
+ It has, by-in-large, replaced the older Chess Engine Communication Protocol 
+ (WinBoard/XBoard).
+
+Design Philosophy
+ The UCI capable GUI is not only View and Controller of a chess MVC, 
+ but also keeps the Model with its internal game states. It is also 
+ an "arbiter" instance to decide about the outcome of the game, for 
+ instance in declaring a game as draw after a threefold repetition has 
+ occurred - the UCI GUI may choose and play moves from an opening book 
+ and endgame tablebase.
+
+
+ Парсер уки команд.
+
+ Обрабатываем следующие команды от шахматной графической оболочки.
+
+ >1:uci
+ Оболочка сообщает нам, что работаем оп уки протоколу.
+ В ответ мы пишем имя движка и автора и подтверждаем 
+ готовность работать по этому протоколу.
+ пишем uciok
+
+ >1:ucinewgame
+ Новая игра
+ Сбрасываем кэш и возраст в ноль.
+
+
+ >1:setoption name Hash value 2 (если размер таблицы задали в 2 мб)
+ считываем установленный размер хеш-таблицы в Mb
+ и на основании этого выделяем память под хеш-таблицу
+
+	> setoption name Ponder value true
+	> setoption name Hash value 16
+	> setoption name NalimovCache value 4
+	> setoption name NalimovPath value D:\tbs
+	> setoption name Position Learning value true
+	> setoption name BookFile value dbbook.bin
+	> setoption name Book Size value Big
+	> setoption name Selectivity value 5
+	пока не обрабатываю
+
+ >1:isready
+ К игре готов?
+ Отвечаем что да! (readyok)
+
+ команды передающие шахматную позицию
+ >1:position startpos (для стартовой позиции)
+ >1:position startpos moves e2e4 e7e5 g1f3 g8f6 f3e5 (для текущей партии)
+ >1:position fen rnb1kb1r/ppppqppp/5n2/8/8/3P1N2/PPP1QPPP/RNB1KB1R w KQkq - 0 1
+ "position startpos" просто начальная позиция
+ "position startpos moves b1c3 b8c6 g1f3 g8f6" начальная позиция 
+ + ходы ведущие к текущей 
+ "position fen 1k1r4/8/8/8/8/8/8/3R2K1 w - - 0 1" задание позиции 
+ через фен представление
+ "position fen 1k1r4/8/8/8/8/8/8/3R2K1 w - - 0 1 moves b1c3 b8c6 g1f3 g8f6" 
+ задание позиции через фен представление + ходы ведущие к текущей 
+ в результате работы класса мы получаем внутреннюю позицию соответствующую позиции
+ закодированной в фен - представлении
+
+ комнады на обсчет позиции
+ >1:go depth 5 (для счета на заданную глубину - в данном случае 5 полуходов )
+ >1:go wtime 300000 btime 300000 (блиц 5 мин - первый ход)
+ >1:go movetime 5000 ( 5 секунд на ход)
+ >1:go infinite (анализ позиции)
+
+ точнее
+ этот класс вызвает объект класса namespace Go 
+ и в нем разбираем команду go и запускаем расчет
+
+ команды для блица типа 5 мин либо 5 мин + добавление за ход в секундах
+ > go btime 300000 wtime 300000 
+ for game in 5min. 
+
+ > go btime 302000 wtime 302000 winc 2000 binc 2000 
+ with incremental clock 5 min + 2 sec. 
+
+ время на определенное количество ходов
+ > go movestogo 40 wtime 300000 btime 300000 
+ for 40 moves in 5 min. 
+ причем арена выдает в виде
+ > go wtime 300000 btime 300000  movestogo 40
+
+ это понятно что для анализа
+ > go infinite 
+ for analysing. 
+
+ время на ход говорят что фриц не поддерживает а 
+ по моему все он держит надо проверять
+ > go movetime 300000 
+ Exactly 5min for the next move, not supported by Fritz. 
+
+ поиск на заданную глубину
+ > go depth 5 
+
+ >1:quit
+ команда на выход
+ особождаем память и закрываем программу
+
+ >1:stop
+ команда на остановку. обрабатываю в глубине поиска 
+
+*/
+
+namespace Uci_parser
+{
+
+//////////////////////////////////////////////////////////////////////////////////////
+//public:
+
+	/// разбирает входящие UCI команды от графической шахматной оболочки
+	void parse_protocol_UCI
+	(
+		struct Position & position,// представление доски
+		const std::string string_in//входящая строка
+	);
+
+
+//////////////////////////////////////////////////////////////////////////////////////
+//private:
+
+	///--------------------------------------------------------------------------
+	/// считывает в строке и выдает размер хеша в мегабайтах
+	unsigned __int16 read_hash_size_Mb
+	(
+		const std::string string_in //входящая строка
+	);
+
+	///---------------------------------------------------------------------------
+	/// разбирает входящую фен - позицию
+	void parse_position_FEN
+	(
+		struct Position & position,// представление доски
+		const std::string string_in//входящая строка
+	);
+
+	///---------------------------------------------------------------------------
+	/// загоняем в движок ходы приводящие к текущей позиции из начальной
+	void move_to_board
+	(
+		struct Position & position,// представление доски
+		const __int8 move_string[]// строка содержащая ходы
+	);
+
+};
+
+

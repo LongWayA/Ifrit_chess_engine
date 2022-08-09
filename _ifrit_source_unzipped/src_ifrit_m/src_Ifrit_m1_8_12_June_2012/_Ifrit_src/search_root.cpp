@@ -1,0 +1,995 @@
+
+// АВТОР Бренкман Андрей (Brenkman Andrey)
+// ПОСЛЕДНЕЕ ИЗМЕНЕНИЕ 2.11.2009 20.12.2009 27.09.2011
+
+#include <fstream>
+#include <iostream>
+
+#include "_search_switch.h"
+#include "b_search_const.h"
+#include "search_root.h"
+#include "search.h"
+#include "move_generation.h"
+#include "make_move.h"
+#include "test_chess_bitboard.h"
+#include "move_ordering.h"
+#include "killer_heuristic.h"
+#include "history_heuristic.h"
+#include "zobrist_hashing.h"
+#include "transposition_table.h"
+#include "b_constants.h"
+#include "pv_save.h"
+#include "uci_engine_to_gui.h"
+
+
+//
+#define TEST_LIST 0
+
+	static __int64 nodes_root;/// количество узлов
+
+	///TEST
+	/// использую только для проверки совпадения хода с тем что прописан в линии игры
+	static unsigned __int8 from;/// откуда ходит фигура
+	static unsigned __int8 to;/// куда ходит фигура
+
+//TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+#if TEST_LIST
+	std::ofstream Test_Loop;
+#endif//#if TEST_LIST 
+//TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+
+
+/*
+ поиск за белых. белые стремятся найти максимум
+ перебор на нулевом уровне
+ выделил из за печати информации в оболочку. 
+ поскольку делаем это только на нулевом уровне
+*/
+__int32 Search_root::white_root_searching_max_value
+(
+	struct Position & position,// представление доски
+	__int32 alpha,//
+	const __int32 beta,// 
+	const unsigned __int8 depth_max// максимальная глубина
+)
+{
+
+	__int32 value;// текущая оценка позиции
+	__int32 value_max = -INFINITE_SCORE;//лучшая в узле  оценка позиции  
+	bool flag_save_best = false;// пишем ли лучший вариант
+	bool flag_is_legal_moves = false;// флаг существования легальных ходов 
+										//(если 0 то легальных ходов не было)
+	bool flag_check = false;//флаг шаха
+	const unsigned __int8 depth = 0;// глубина
+	const unsigned __int8 new_depth = 1; // следующая глубина
+	unsigned __int8 new_depth_max;//новая глубина перебора
+
+	bool flag_do_pv_search;
+	bool flag_do_null_window_search;
+	bool flag_do_lmr_search;
+
+	// переменные параметры в поиске LMR и PVS
+	__int32 beta_null_window;//
+	unsigned __int8 new_lmr_depth_max;// максимальная глубина
+	bool flag_pv_move;// основной ли это вариант (pv)
+
+	struct List list_surplus_moves; // список возможных ходов 
+									//(всевозможные ходы из данного узла)
+
+
+#if SAVE_LINE 
+	struct Position position_save;// представление доски
+	unsigned __int8 nodes_0 = 1;            // количество ходов на нулевом уровне
+	struct PV_line pv_best_point;// лучший для данного узла вариант
+	unsigned __int8 flag_insert_hash_move = 0;// поместили ли ход из хеш-таблицы на первую позицию
+	const unsigned __int64 key_undo = position.hash_key;// запоминаем хеш-ключ даннного узла
+	unsigned __int8 i_hash_move = 0; // номер кешируемого хода
+#endif//#if SAVE_LINE 
+
+
+	//
+	Search::set_depth_max_rem(depth_max);
+
+#if SAVE_LINE
+	// это отсечка при экстренном выходе
+	if (Search::get_stop_search() == true)
+	{
+		return 0;
+	}
+
+#endif//#if SAVE_LINE 
+
+	// насчитываем список избыточных ходов
+	// множество этих списков и создают дерево перебора
+	Move_generation::generator_captures_white(list_surplus_moves,position);
+	Move_generation::generator_move_white(list_surplus_moves,position);
+	Move_ordering::sorting_moves_captures(list_surplus_moves);
+
+#if SW_HISTORY
+	Move_ordering::sorting_moves_history(list_surplus_moves);
+#endif//#if SW_HISTORY
+
+	//Sorting_white_moves_root(&root_list_surplus_moves);// сортируем ходы
+
+//TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+// тестовая печать списка и доски на нулевом уровне
+#if (TEST_LIST && SAVE_LINE)
+	list_print(depth_max,list_surplus_moves);
+	History_heuristic::test_print(depth_max);
+	//if(depth_max == 4) List_Print(depth,list_surplus_moves);
+	//Bitboard_print(bitboard);
+#endif//#if TEST_LIST
+//TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+
+//-----------------------------------------------
+#if (HASH && SAVE_LINE)
+	// работаем с хеш-таблицей
+	// смотрим не встречалась ли нам такая позиция если встречалась то ее ход смотрим первым
+	// т.е. мы в списке ход из хеш-таблицы ставим первым а остальные ходы сдвигаем
+	Transposition_table::look_hash_move(list_surplus_moves,position.hash_key
+						,depth,flag_insert_hash_move);
+
+// для полного теста нужно отключать отсечку по оценке
+#if HASH_TEST
+	// флаг 0 значит что позицию по хеш ключу не нашли
+	// флаг 1 значит что позицию нашли но в текущем списке нет хода записанного в ней
+	// флаг 2 значит что по ключу позицию нашли и нашли ход записанный в списке ходов
+
+	//std::cout << "хеша корень белые flag_insert_hash_move " << flag_insert_hash_move << std::endl;
+
+	if (flag_insert_hash_move == 0)
+	{
+		std::cout << "хеша не нашли корень белые++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;   
+	}
+	
+	if (flag_insert_hash_move == 1)
+	{
+		std::cout << "коллизия хеша корень белые++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+		exit(1); 
+	}
+#endif//#if HASH_TEST
+
+#endif//#if HASH
+//-----------------------------------------------
+
+//TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+// тестовая печать списка и доски на нулевом уровне
+//#if (TEST_LIST && SAVE_LINE)
+	//List_Print(depth,&root_list_surplus_moves);
+	////if(depth_max == 4) List_Print(depth,&root_list_surplus_moves);
+	////Bitboard_print(bitboard);
+//#endif//#if TEST_LIST
+//TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+
+
+#if SAVE_LINE
+
+	// TEST
+	// запоминаем доску для дальнейшей проверки ее идентичности
+	// после возврата с глубины 
+	Test_chess_bitboard::save_test_bitboard(position_save,position);
+
+#endif//#if SAVE_LINE 
+
+
+	//бежим по списку избыточных ходов
+	// старт и конец цикла; должен быть согласован с генератором списка
+	for (unsigned __int8 i = 0; i < list_surplus_moves.end_list; i++)
+	{
+		// реализуем ход из списка или другими словами генерируем позицию
+		Make_move::do_moves_white(position,i,depth,list_surplus_moves);
+		//Bitboard_print(bitboard);
+
+		// если король под шахом то (детектор шахов возвращает имя шахующей фигуры)
+		if (Move_generation::king_white_check(position) != CHECK_NO)
+		{
+			// мы отменяем этот ход как некорректный
+			Make_move::undo_moves_white(position,i,depth,list_surplus_moves);
+
+			// записываем оценку в корневой список ходов
+			//list_surplus_moves.sorting_score[i] = -1000000;
+
+			continue;
+		}
+
+		// ставим флаг что есть легальные ходы и засчитываем позицию
+		flag_is_legal_moves = true;
+		nodes_root = nodes_root + 1;
+
+		new_depth_max = depth_max;
+//-----------------------------------------------
+#if (EXTENSION_CHEK && SAVE_LINE)
+		// если есть шах то увеличиваем максимальную глубину перебора для этой ветки
+		if (Move_generation::king_black_check(position) != CHECK_NO)
+		{
+			flag_check = CHECK_YES; 
+			new_depth_max = depth_max + 1;
+		}
+		else
+		{
+			flag_check = CHECK_NO;
+		}
+#endif//#if EXTENSION_CHEK
+//-----------------------------------------------
+
+		// тип хода: 0 - нет хода 1 – простой ход 2 – взятие 3 – длинная рокировка
+		// 4 – короткая рокировка 5 – взятие на проходе и т.д.
+		const __int32 description_move = ( list_surplus_moves.move[i] >> 6 ) & 63;
+
+#if SAVE_LINE
+
+		if(depth_max > 9)
+		{
+			// печатаем информацию о рассматриваемом ходе и глубине перебора
+			Uci_engine_to_gui::print_currmove
+				(list_surplus_moves,nodes_0,i,depth_max);
+		}
+
+		// из списка возможных ходов копируем текущий ход в текущий вариант 
+		// на текущей глубине
+		PV_save::update_PV_current(i,depth,list_surplus_moves);
+
+		// обновляем хеш ключ
+		Zobrist_hashing::modification_random_key(position,1,i,list_surplus_moves
+										,Make_move::get_d_undo(depth));
+
+		// TEST-----------
+		// тут ключ считается полностью по новой
+		// тестировал хеш-таблицу
+		// инициализируем ключ начальной позиции(мы пишем его в структуру доски)
+		//HASHM::public_start_position_random_key(bitboard);
+		//----------------
+
+		// записываем ключ для последующего анализа на повтор позиций
+		Zobrist_hashing::save_hash_three(position.hash_key,new_depth);
+
+#endif//#if SAVE_LINE 
+
+//-------------------------------------------------------------
+
+		if (PV_YES && (i == 0))
+		{
+			flag_do_pv_search = true;
+			flag_do_lmr_search = false;
+			flag_do_null_window_search = false;
+		}
+		else
+		{
+			flag_do_pv_search = false;
+			flag_do_null_window_search = true;
+		}
+
+// если полный поиск не заказан тогда смотрим можем ли мы использовать lmr-технику
+		if (!flag_do_pv_search)
+		{
+			// смотрим можем ли использовать lmr
+			flag_do_lmr_search =
+				(i != 0)
+				&&(description_move == MOVE_IS_SIMPLE)// простой ход
+				&& (flag_check == CHECK_NO)
+				&& ((new_depth_max - new_depth) > LMR_REDUCTION_D )
+				;
+		}
+
+#if (LMR && SAVE_LINE)
+		// первым реализуем  lmr-технику
+		if (flag_do_lmr_search)
+		{
+			// ищем с редукцией глубины и с нулевым окном
+			beta_null_window = alpha + 1;
+			flag_pv_move = PV_NO;
+			new_lmr_depth_max = new_depth_max - LMR_REDUCTION_D;
+
+			//
+			value = Search::black_searching_min_value(position,alpha,beta_null_window,
+								new_depth,new_lmr_depth_max,flag_pv_move,
+								description_move,flag_check,NULL_NO);
+				
+			// если оценка неожиданно хорошая то даем добро на персчет с нулевым окном
+			// иначе не даем добро
+			flag_do_null_window_search = (value > alpha);
+		}
+#else
+		do_null_window_search = true;
+#endif//#if  LMR
+
+#if (ALPHA_BETA_ON && SAVE_LINE)
+		// вторым реализуем технику поиска с нулевым окном
+		if (flag_do_null_window_search)
+		{
+			beta_null_window = alpha + 1;
+			flag_pv_move = PV_NO;
+
+			//
+			value = Search::black_searching_min_value(position,alpha,beta_null_window,
+								new_depth,new_depth_max,flag_pv_move,
+								description_move,flag_check,NULL_NO);
+
+			// для главного варианта пересчитываем с полным окном и глубиной
+			// суть поиска с нулевым окном в том что мы не ждем что вариант улучшит 
+			// альфу поэтому считаем его с максимально узким т.е. нулевым окном
+			// если нас ждет сюрприз то пересчитываем c полным окном
+			// здесь мы ветке возвращем статус главного варианта
+			flag_do_pv_search = PV_YES && (value > alpha); 
+		}
+#else
+		do_pv_search = true;
+#endif//#if ALPHA_BETA_ON
+
+		// третьим реализуем технику поиска с полным окном и глубиной
+		if (flag_do_pv_search)
+		{
+			// если мы в главном варианте то
+			// первый ход смотрим на полной глубине и с полным окном
+			// мы предполагаем что если он первый то лучший и достоин полного 
+			// просмотра
+			// кроме того первый ход это ход из хеш-таблицы
+			flag_pv_move = PV_YES;
+
+			value = Search::black_searching_min_value(position,alpha,beta,
+								new_depth,new_depth_max,flag_pv_move,
+								description_move,flag_check,NULL_NO);
+		}
+//-------------------------------------------------------------
+
+		// восстанавливаем позицию
+		Make_move::undo_moves_white(position,i,depth,list_surplus_moves);
+
+		// записываем оценку в корневой список ходов
+		//list_surplus_moves.sorting_score[i] = value;
+
+
+#if SAVE_LINE
+
+		// восстанавливаем хеш-ключ доски
+		position.hash_key = key_undo;
+
+		// ищем лучшую позицию. за белых ищем максимум
+		if (value > value_max)
+		{
+			value_max = value;
+			i_hash_move = i;
+
+			// TEST
+			from = ((list_surplus_moves.move[i]>>12)& 63);
+			to = ((list_surplus_moves.move[i]>>18)& 63);
+
+			// TEST		 
+			//-----------------------------------------------
+			//std::cout << "улучшили максимум. ход записанный в хеш " << std::endl;
+			//std::cout << "depth= " << depth << std::endl;
+			//std::cout << "depth_max_rem= " << depth_max_rem << std::endl;
+			//std::cout << "((root_list_surplus_moves.move[i]>>6)& 63)= " 
+			//	<< ((root_list_surplus_moves.move[i]>>6)& 63) << std::endl;
+			//std::cout << "Ходящая фигура " << util_o.public_int_to_char_board(((root_list_surplus_moves.move[i]>>24)& 7),1)<< std::endl;
+           
+			//std::cout <<util_o.public_x_to_notation(((root_list_surplus_moves.move[i]>>12)& 63)%8);
+			//std::cout <<(1 + ((root_list_surplus_moves.move[i]>>12)& 63)/8);
+			//std::cout <<util_o.public_x_to_notation(((root_list_surplus_moves.move[i]>>18)& 63)%8);
+			//std::cout <<(1 + ((root_list_surplus_moves.move[i]>>18)& 63)/8) << std::endl;
+			//std::cout << "  " << std::endl; 
+			//-----------------------------------------------
+
+
+
+//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+// белые работают с альфой и пытаются ее улучшить
+#if (ALPHA_BETA_ON && !TEST_PRINT_ALL_LINE)
+			if (value > alpha)
+			{ 
+				alpha = value;       
+				flag_save_best = true;
+
+				// здесь мы перезаписываем лучший вариант соответствующий лучшей оценке
+				PV_save::update_PV_best_point(pv_best_point);
+
+				// TEST
+				// проверяем совпадение варианта и оценки
+				if (value != PV_save::get_pv_best().score_move)
+				{
+					std::cout << "ERROR white value (search_root.cpp)" ;
+					std::cout << std::endl;
+				}
+
+				// TEST
+				//-----------------------------------------------
+				//std::cout << "улучшили альфу. ход записанный в хеш " << std::endl;
+				//std::cout << "depth= " << depth << std::endl;
+				//std::cout << "depth_max_rem= " << depth_max_rem << std::endl;
+				//std::cout << "((root_list_surplus_moves.move[i]>>6)& 63)= " 
+				//	<< ((root_list_surplus_moves.move[i]>>6)& 63) << std::endl;
+				//std::cout << "Ходящая фигура " << util_o.public_int_to_char_board(((root_list_surplus_moves.move[i]>>24)& 7),1)<< std::endl;
+               
+				//std::cout <<util_o.public_x_to_notation(((root_list_surplus_moves.move[i]>>12)& 63)%8);
+				//std::cout <<(1 + ((root_list_surplus_moves.move[i]>>12)& 63)/8);
+				//std::cout <<util_o.public_x_to_notation(((root_list_surplus_moves.move[i]>>18)& 63)%8);
+				//std::cout <<(1 + ((root_list_surplus_moves.move[i]>>18)& 63)/8) << std::endl;
+				//std::cout << "  " << std::endl;     
+				//-----------------------------------------------
+
+			}
+#else///#if ALPHA_BETA_ON
+
+			flag_save_best = true;
+
+			// здесь мы перезаписываем лучший вариант соответствующий лучшей оценке
+			PV_save::update_PV_best_point(pv_best_point);
+
+			// TEST
+			// проверяем совпадение варианта и оценки
+			if (value != PV_save::get_pv_best().score_move)
+			{
+				std::cout << "ERROR white value (search_root.cpp)" ;
+				std::cout << std::endl;
+			}
+
+#endif//#if ALPHA_BETA_ON
+//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+		}
+
+		//--------------------------------------------------------------------
+		// выводим ход который обдумываем делаем это только на нулевой глубине 
+		// т.е. у самой поверхности
+		if (Search::get_stop_search() != true)
+		{
+			nodes_0 = nodes_0 + 1;
+#if TEST_PRINT_ALL_LINE
+			// для теста вариантов
+			Uci_engine_to_gui::print_pv_line_s(1,list_surplus_moves,PV_save::get_pv_best()
+								  ,nodes_root,i,depth_max,value,1);
+#else
+			// для рабочего режима
+			//Uci_engine_to_gui::print_pv_line_s(1,list_surplus_moves,
+				//pv_best_point,nodes_root,i,depth_max,value_max,0);
+#endif//#if TEST_PRINT_ALL_LINE
+		}
+#endif//#if SAVE_LINE 
+
+	}
+
+
+#if SAVE_LINE
+	// TEST
+	// проверяем восстановилась ли доска после прохождения глубины
+	Test_chess_bitboard::compare_test_bitboard(position_save,position);
+#endif//#if SAVE_LINE 
+
+	// если не одного хода сделано не было то производим статическую оценку позиции
+	// это случай пата или мата
+	if (flag_is_legal_moves == false)
+	{
+		value = 0;
+		if (Move_generation::king_white_check(position) != CHECK_NO)
+		{
+			value = -(VALUE_MATE - DELTA_MATE * depth);//
+		}
+
+		// у нас получился вариант приводящий к данной позиции и плюс оценка этой позиции
+		PV_save::update_PV_best_max_depth(value,depth);
+
+		return value;
+	}
+
+#if SAVE_LINE
+	if (flag_save_best == true)
+	{
+		// теперь мы ее скопируем в структуру PV_best что бы передать на более 
+		// высокий уровень
+		PV_save::update_PV_best(pv_best_point);
+	}
+
+#endif//#if SAVE_LINE 
+
+
+#if (HASH && SAVE_LINE)
+	// (value > alpha)
+	Transposition_table::save_best_hash_score_or_move(i_hash_move, position.hash_key
+									  ,list_surplus_moves, 
+									  value_max, ALPHA_UPDATED, depth, depth_max);
+
+#endif//#if HASH
+
+
+	return value_max;
+
+}
+
+/*
+ перебор на нулевом уровне за черных ищем минимум
+ выделил из за печати информации в оболочку. поскольку 
+ делаем это только на нулевом уровне
+*/
+__int32 Search_root::black_root_searching_min_value
+(
+	struct Position & position,// представление доски
+	const __int32 alpha,//
+	__int32 beta,// 
+	const unsigned __int8 depth_max// максимальная глубина
+)
+{
+	__int32 value;              // текущая оценка позиции
+
+	__int32 value_min = INFINITE_SCORE;// лучшая в узле  оценка позиции  
+	bool flag_save_best = false;// пишем ли лучший вариант
+	bool flag_is_legal_moves = false;// флаг существования легальных ходов (если 0 то легальных ходов не было)
+	bool flag_check = false;//флаг шаха
+
+	const unsigned __int8 depth = 0;// глубина
+	const unsigned __int8 new_depth = 1; // следующая глубина
+	unsigned __int8 new_depth_max;//новая глубина перебора
+
+	bool flag_do_pv_search;
+	bool flag_do_null_window_search;
+	bool flag_do_lmr_search;
+
+	// переменные параметры в поиске LMR и PVS
+	__int32 alpha_null_window;//
+	unsigned __int8 new_lmr_depth_max;// максимальная глубина
+	bool flag_pv_move;// основной ли это вариант (pv)
+
+	struct List list_surplus_moves; // список возможных ходов (всевозможные ходы из данного узла)
+
+
+#if SAVE_LINE
+	struct Position position_save;// представление доски
+	unsigned __int8 nodes_0 = 1;            // количество ходов на нулевом уровне
+	struct PV_line pv_best_point;// лучший для данного узла вариант
+	unsigned __int8  flag_insert_hash_move = 0;        // поместили ли ход из хеш-таблицы на первую позицию
+	const unsigned __int64 key_undo = position.hash_key;   // запоминаем хеш-ключ даннного узла
+	unsigned __int8 i_hash_move = 0; // номер кешируемого хода
+#endif//#if SAVE_LINE 
+
+
+	Search::set_depth_max_rem(depth_max);
+
+#if SAVE_LINE
+
+	// это отсечка при экстренном выходе
+	if (Search::get_stop_search() == true)
+	{
+		return 0;
+	}
+
+#endif//#if SAVE_LINE 
+
+	//Move_generation::mobility_evaluation(position);
+
+	// насчитываем список избыточных ходов
+	// множество этих списков и создают дерево перебора
+	Move_generation::generator_captures_black(list_surplus_moves,position);
+	Move_generation::generator_move_black(list_surplus_moves,position);
+	Move_ordering::sorting_moves_captures(list_surplus_moves);
+
+#if SW_HISTORY
+	Move_ordering::sorting_moves_history(list_surplus_moves);
+#endif//#if SW_HISTORY
+
+	//Sorting_black_moves_root(&root_list_surplus_moves);
+
+//TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+// тестовая печать списка и доски на нулевом уровне
+#if (TEST_LIST && SAVE_LINE)
+	list_print(depth_max,list_surplus_moves);
+	History_heuristic::test_print(depth_max);
+	//if (depth_max == 3) 
+		//List_Print(depth,list_surplus_moves);
+
+	//	Bitboard_print(bitboard);
+#endif//#if TEST_LIST
+//TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+
+#if (HASH && SAVE_LINE)
+	// работаем с хеш-таблицей
+	// смотрим не встречалась ли нам такая позиция если встречалась то ее ход смотрим первым
+	// т.е. мы в списке ход из хеш-таблицы ставим первым а остальные ходы сдвигаем
+	Transposition_table::look_hash_move(list_surplus_moves,position.hash_key
+						,depth,flag_insert_hash_move);
+
+#if HASH_TEST
+	// флаг 0 значит что позицию по хеш ключу не нашли
+	// флаг 1 значит что позицию нашли но в текущем списке нет хода записанного в ней
+	// флаг 2 значит что по ключу позицию нашли и нашли ход записанный в списке ходов
+
+	if (flag_insert_hash_move == 0)
+	{
+		std::cout << "хеша не нашли корень черные+++++++++++++++++++++++++++++++++" << std::endl;   
+	}
+
+	if (flag_insert_hash_move == 1) 
+	{
+		std::cout << "коллизия хеша корень черные+++++++++++++++++++++++++++++++++" << std::endl;
+		exit(1); 
+	}
+
+#endif//#if HASH_TEST
+#endif//#if HASH
+
+
+//TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+//тестовая печать списка и доски на нулевом уровне
+//#if (TEST_LIST && SAVE_LINE)
+	//if (depth_max == 3)
+	//{
+		//List_Print(depth,&root_list_surplus_moves);
+	//}
+
+	////Bitboard_print(bitboard);
+//#endif//#if TEST_LIST 
+//TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+
+
+
+#if SAVE_LINE
+
+	// TEST
+	//запоминаем доску для дальнейшей проверки ее идентичности
+	Test_chess_bitboard::save_test_bitboard(position_save,position);
+
+#endif//#if SAVE_LINE 
+
+
+	// бежим по списку избыточных ходов
+	// старт и конец цикла; должен быть согласован с генератором списка
+	for (unsigned __int8 i = 0; i < list_surplus_moves.end_list; i++)
+	{
+		// реализуем ход из списка или другими словами генерируем позицию
+		Make_move::do_moves_black(position,i,depth,list_surplus_moves);
+		//Bitboard_print(bitboard);
+
+		// если король под шахом то
+		if (Move_generation::king_black_check(position) != CHECK_NO)
+		{
+			// мы отменяем этот ход как некорректный
+			Make_move::undo_moves_black(position,i,depth,list_surplus_moves);
+
+			// записываем оценку в корневой список ходов
+			//list_surplus_moves.sorting_score[i] = 1000000;
+
+			continue;
+		}
+
+		// ставим флаг что есть легальные ходы и засчитываем позицию
+		flag_is_legal_moves = true;
+		nodes_root = nodes_root + 1;
+
+		new_depth_max = depth_max;
+//-----------------------------------------------
+#if (EXTENSION_CHEK && SAVE_LINE)
+		// если есть шах то увеличиваем максимальную глубину перебора для этой ветки
+		if(Move_generation::king_white_check(position) != CHECK_NO)
+		{
+			flag_check = CHECK_YES;
+			new_depth_max = depth_max + 1;
+		}
+		else
+		{
+			flag_check = CHECK_NO;
+		}
+#endif//#if EXTENSION_CHEK
+//-----------------------------------------------
+
+		const __int32 description_move = ( list_surplus_moves.move[i] >> 6 ) & 63;
+
+#if SAVE_LINE
+
+		if(depth_max > 9)
+		{
+			// печатаем информацию о рассматриваемом ходе и глубине перебора
+			Uci_engine_to_gui::print_currmove
+				(list_surplus_moves,nodes_0,i,depth_max);
+		}
+
+		// из списка возможных ходов копируем текущий ход в текущий вариант на текущей глубине.
+		PV_save::update_PV_current(i,depth,list_surplus_moves);
+
+		// обновляем хеш ключ
+		Zobrist_hashing::modification_random_key(position,0,i,list_surplus_moves
+										,Make_move::get_d_undo(depth));
+
+		// TEST-----------
+		// тут ключ считается полностью по новой
+		// тестировал хеш-таблицу
+		// инициализируем ключ начальной позиции(мы пишем его в структуру доски)
+		//HASHM::public_start_position_random_key(bitboard);
+		//----------------
+
+		// записываем ключ для последующего анализа на повтор позиций
+		Zobrist_hashing::save_hash_three(position.hash_key,new_depth);
+
+#endif//#if SAVE_LINE 
+
+//-------------------------------------------------------------
+
+// если мы в главном узле(pv) то первый ход ищем полным поиском
+		if (PV_YES && (i == 0))
+		{
+			flag_do_pv_search = true;
+			flag_do_lmr_search = false;
+			flag_do_null_window_search = false;
+		}
+		else
+		{
+			flag_do_pv_search = false;
+			flag_do_null_window_search = true;
+		}
+
+// если полный поиск не заказан тогда смотрим можем ли мы использовать lmr-технику
+		if (!flag_do_pv_search)
+		{
+			// смотрим можем ли использовать lmr
+			flag_do_lmr_search =
+				(i != 0)
+				&&(description_move == MOVE_IS_SIMPLE)// простой ход
+				&& (flag_check == CHECK_NO)
+				&& ((new_depth_max - new_depth) > LMR_REDUCTION_D )
+				;
+		}
+
+#if (LMR && SAVE_LINE)
+		// первым реализуем  lmr-технику
+		if (flag_do_lmr_search)
+		{
+			alpha_null_window = beta - 1;//
+			flag_pv_move = PV_NO;//
+			new_lmr_depth_max = new_depth_max - LMR_REDUCTION_D;// максимальная глубина
+
+			value = Search::white_searching_max_value(position,alpha_null_window,beta,
+								new_depth,new_lmr_depth_max,flag_pv_move,
+								description_move,flag_check,NULL_NO);
+
+			// если оценка неожиданно хорошая то даем добро на персчет с нулевым окном
+			// иначе не даем добро
+			flag_do_null_window_search = (value < beta);
+		}
+#else
+		do_null_window_search = true;
+#endif//#if  LMR
+
+#if (ALPHA_BETA_ON && SAVE_LINE)
+		// вторым реализуем технику поиска с нулевым окном
+		if (flag_do_null_window_search)
+		{
+			alpha_null_window = beta - 1;//
+			flag_pv_move = PV_NO;//
+
+			value = Search::white_searching_max_value(position,alpha_null_window,beta,
+								new_depth,new_depth_max,flag_pv_move,
+								description_move,flag_check,NULL_NO);
+
+			// если оценка неожиданно хорошая и мы в главном узле
+			// то даем добро на персчет c полным окном и глубиной
+			// иначе не даем добро
+			flag_do_pv_search = PV_YES && (value < beta);
+		}
+#else
+		do_pv_search = true;
+#endif//#if ALPHA_BETA_ON
+
+		// третьим реализуем технику поиска с полным окном и глубиной
+		if (flag_do_pv_search)
+		{
+			flag_pv_move = PV_YES;// основной ли это вариант (pv)
+
+			value = Search::white_searching_max_value(position,alpha,beta,
+								new_depth,new_depth_max,flag_pv_move,
+								description_move,flag_check,NULL_NO);
+		}
+//-------------------------------------------------------------
+
+		//восстанавливаем позицию
+		Make_move::undo_moves_black(position,i,depth,list_surplus_moves);
+
+
+		// записываем оценку в корневой список ходов
+		//list_surplus_moves.sorting_score[i] = value;
+
+
+#if SAVE_LINE
+
+		// восстанавливаем хеш-ключ доски
+		position.hash_key = key_undo;
+
+		//ищем лучшую позицию. за черных ищем минимум
+		if (value < value_min)
+		{
+			value_min = value;
+			i_hash_move = i; // номер кешируемого хода
+
+			// TEST
+			from = ((list_surplus_moves.move[i] >> 12) & 63);
+			to = ((list_surplus_moves.move[i] >> 18) & 63);
+  
+//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+#if (ALPHA_BETA_ON && !TEST_PRINT_ALL_LINE)
+			// черные пытаются улучшить бету
+			if (value < beta)
+			{
+				beta = value;
+				flag_save_best = true;
+
+				// здесь мы перезаписываем лучший вариант соответствующий лучшей оценке
+				PV_save::update_PV_best_point(pv_best_point);
+
+				// TEST
+				// проверяем совпадение варианта и оценки
+				if (value != PV_save::get_pv_best().score_move)
+				{
+					std::cout << "ERROR black value (search_root.cpp)" ;
+					std::cout << std::endl;
+				}
+			}
+#else//#if ALPHA_BETA_ON
+
+			flag_save_best = 1;
+
+			// здесь мы перезаписываем лучший вариант соответствующий лучшей оценке
+			PV_save::update_PV_best_point(pv_best_point);
+
+			// TEST
+			// проверяем совпадение варианта и оценки
+			if (value != PV_save::get_pv_best().score_move)
+			{
+				std::cout << "ERROR black value (search_root.cpp)" ;
+				std::cout << std::endl;
+			}
+
+#endif//#if ALPHA_BETA_ON
+//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+		}
+
+		//--------------------------------------------------------------------
+		// выводим ход который обдумываем делаем это только на нулевой глубине 
+		// т.е. у самой поверхности
+		if (Search::get_stop_search() != 1)
+		{
+			nodes_0 = nodes_0 + 1;
+#if TEST_PRINT_ALL_LINE
+			// для теста вариантов
+			Uci_engine_to_gui::print_pv_line_s(0,list_surplus_moves,
+				PV_save::get_pv_best(),nodes_root,i,depth_max,value,1);
+#else
+			// для рабочего режима
+			//Uci_engine_to_gui::print_pv_line_s(0,list_surplus_moves,
+				//pv_best_point,nodes_root,i,depth_max,value_min,0);
+#endif//#if TEST_PRINT_ALL_LINE
+		}
+#endif//#if SAVE_LINE 
+
+	}
+
+#if SAVE_LINE
+	// TEST
+	// проверяем восстановилась ли доска после прохождения глубины
+	Test_chess_bitboard::compare_test_bitboard(position_save,position);
+#endif//#if SAVE_LINE 
+
+	// если не одного хода сделано не было то производим статическую оценку позиции
+	// это случай пата или мата
+	if (flag_is_legal_moves == false)
+	{
+		value = 0;
+		if (Move_generation::king_black_check(position) != CHECK_NO)
+		{
+			value = (VALUE_MATE - DELTA_MATE * depth);// может это слишком большое число?
+		}
+
+		// у нас получился вариант приводящий к данной позиции и плюс оценка этой позиции
+		PV_save::update_PV_best_max_depth(value,depth);
+
+		return value;
+	}
+
+
+#if SAVE_LINE
+	if (flag_save_best == true)
+	{
+		// теперь мы ее скопируем в структуру PV_best что бы передать на 
+		// более высокий уровень
+		PV_save::update_PV_best(pv_best_point);
+	}
+#endif//#if SAVE_LINE 
+
+
+#if (HASH && SAVE_LINE)
+	//(value < beta)
+	Transposition_table::save_best_hash_score_or_move(i_hash_move,position.hash_key
+									  ,list_surplus_moves, 
+									   value_min, BETA_UPDATED, depth, depth_max);
+#endif//#if HASH
+
+	return value_min;
+}
+
+
+/*
+ возвращаем количество рассмотренных узлов
+*/
+__int64 Search_root::get_nodes()
+{
+	return (nodes_root + Search::get_nodes());// количество узлов;
+}
+
+/*
+ обнуляем количество рассмотренных узлов
+*/
+void Search_root::set_nodes_in_0()
+{
+	nodes_root = 0;// количество узлов;
+	Search::set_nodes_in_0();
+}
+
+/*
+ откуда делается ход
+*/
+unsigned __int8 Search_root::get_from()
+{
+	return from;
+}
+
+/*
+ куда делается ход
+*/
+unsigned __int8 Search_root::get_to()
+{
+	return to;
+}
+
+/*
+ TEST
+ печатаем список
+ максимальная глубина, глубина перебора, доска
+*/
+void Search_root::list_print
+(
+	int depth,// текущая глубина
+	struct List & list_surplus_moves// список возможных ходов
+)
+{
+#if TEST_LIST
+	Test_Loop.open ("_TEST_LOOP.txt",std::ios::app);	
+	//Test_Loop.open ("_TEST_LOOP.txt");	
+	//GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+	Test_Loop << std::endl;
+	Test_Loop << std::endl;
+	Test_Loop << std::endl;
+	Test_Loop << "------------------------------------------------- "<<std::endl;
+	Test_Loop <<"depth= "<< depth << std::endl;
+	Test_Loop << std::endl;
+	Test_Loop << "Список возможных ходов фигуры "<<std::endl;
+
+	for (int i = 0 ; i < list_surplus_moves.end_list ; i++)
+	{	
+		Test_Loop << "Номер хода по списку i= " << i << std::endl;  
+		Test_Loop << "Ходящая фигура " << PV_save::int_to_char_board(((list_surplus_moves.move[i]>>24)& 7),1)<< std::endl;
+		Test_Loop << "Оценка хода " << list_surplus_moves.sorting_score[i] << std::endl;
+
+		// вывод хода вида e2-e4
+		//------------------------------
+		Test_Loop << " " << (PV_save::x_to_notation(((list_surplus_moves.move[i]>>12)& 63)%8));
+		Test_Loop << "" << (1 + ((list_surplus_moves.move[i]>>12)& 63)/8);//<< std::endl;
+		//Test_Loop<< std::endl;
+		Test_Loop << " " << (PV_save::x_to_notation(((list_surplus_moves.move[i]>>18)& 63)%8));
+		Test_Loop << "" << (1 + ((list_surplus_moves.move[i]>>18)& 63)/8)<< std::endl;   
+		//------------------------------
+		//тип хода 
+		//0 - нет хода 1 – простой ход 2 – взятие 3 – длинная рокировка 4 – короткая рокировка 5 – взятие на проходе
+		//12 - превращение в конь 13 - превращение в слон 14 - превращение в ладья 15 - превращение в ферзь 
+		//22 - взятие с превращением в конь 23 - взятие с превращением в слон 24 - взятие с превращением в ладья 
+		//25 - взятие с превращением в ферзь 
+		Test_Loop << "вид хода " << ((list_surplus_moves.move[i]>>6)& 63)  << std::endl;
+		Test_Loop << "Взятая фигура " << PV_save::int_to_char_board(( list_surplus_moves.move[i] & 63),1)<< std::endl;
+		Test_Loop << "начальная положение " << ((list_surplus_moves.move[i]>>12)& 63)  << std::endl;
+		Test_Loop << "конечное положение " << ((list_surplus_moves.move[i]>>18)& 63)  << std::endl;
+     
+		Test_Loop << std::endl;
+	}
+
+	Test_Loop << "list_surplus_moves.end_captures= " <<int(list_surplus_moves.end_captures) << std::endl;
+	Test_Loop << "list_surplus_moves.end_list= " <<int(list_surplus_moves.end_list) << std::endl;
+	Test_Loop << "------------------------------------------------- " << std::endl;
+	//GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+	Test_Loop.close();
+#endif//#if TEST_LIST 
+}
