@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 
-<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <!-- Copyright (c) 2006-2019, Brenkman Andrey and/or its affiliates. All rights reserved. -->
 <title>Quiescence_search</title>
 </head>
@@ -17,7 +17,7 @@
         <h2 align="center">Quiescence search</h2>
         </td>
         <td width="25%">
-        <p align="center"><a href="0_0_Structure_Ifrit_b.htm">на главную страницу</a></td>
+        <p align="center"><a href="0_0_Structure_Ifrit_b.htm">РЅР° РіР»Р°РІРЅСѓСЋ СЃС‚СЂР°РЅРёС†Сѓ</a></td>
       </tr>
     </table>
     </td>
@@ -25,42 +25,42 @@
   <tr>
     <td width="100%">
  <br>   
- Для сглаживания эффекта горизонта взятия считаем до конца. Для этого по 
- достижении предельной глубины полного поиска вызываем <br>
- форсировку, в которой обсчитываем только взятия. Здесь я не использую детектор 
- шахов, поэтому возникают ситуации, когда бьют <br>
- короля и мы должны их обрабатывать. <br>
- Тут две ключевые темы - завышение альфы статической оценкой и сортировка 
- методом mvv/lva.<br>
- Опишу алгоритм за белых.<br>
+ Р”Р»СЏ СЃРіР»Р°Р¶РёРІР°РЅРёСЏ СЌС„С„РµРєС‚Р° РіРѕСЂРёР·РѕРЅС‚Р° РІР·СЏС‚РёСЏ СЃС‡РёС‚Р°РµРј РґРѕ РєРѕРЅС†Р°. Р”Р»СЏ СЌС‚РѕРіРѕ РїРѕ 
+ РґРѕСЃС‚РёР¶РµРЅРёРё РїСЂРµРґРµР»СЊРЅРѕР№ РіР»СѓР±РёРЅС‹ РїРѕР»РЅРѕРіРѕ РїРѕРёСЃРєР° РІС‹Р·С‹РІР°РµРј <br>
+ С„РѕСЂСЃРёСЂРѕРІРєСѓ, РІ РєРѕС‚РѕСЂРѕР№ РѕР±СЃС‡РёС‚С‹РІР°РµРј С‚РѕР»СЊРєРѕ РІР·СЏС‚РёСЏ. Р—РґРµСЃСЊ СЏ РЅРµ РёСЃРїРѕР»СЊР·СѓСЋ РґРµС‚РµРєС‚РѕСЂ 
+ С€Р°С…РѕРІ, РїРѕСЌС‚РѕРјСѓ РІРѕР·РЅРёРєР°СЋС‚ СЃРёС‚СѓР°С†РёРё, РєРѕРіРґР° Р±СЊСЋС‚ <br>
+ РєРѕСЂРѕР»СЏ Рё РјС‹ РґРѕР»Р¶РЅС‹ РёС… РѕР±СЂР°Р±Р°С‚С‹РІР°С‚СЊ. <br>
+ РўСѓС‚ РґРІРµ РєР»СЋС‡РµРІС‹Рµ С‚РµРјС‹ - Р·Р°РІС‹С€РµРЅРёРµ Р°Р»СЊС„С‹ СЃС‚Р°С‚РёС‡РµСЃРєРѕР№ РѕС†РµРЅРєРѕР№ Рё СЃРѕСЂС‚РёСЂРѕРІРєР° 
+ РјРµС‚РѕРґРѕРј mvv/lva.<br>
+ РћРїРёС€Сѓ Р°Р»РіРѕСЂРёС‚Рј Р·Р° Р±РµР»С‹С….<br>
  <br>
- Так это сделано в Ифрите (Ifrit_b2_6):<br>
+ РўР°Рє СЌС‚Рѕ СЃРґРµР»Р°РЅРѕ РІ РС„СЂРёС‚Рµ (Ifrit_b2_6):<br>
  Forced_variant_white<br>
  {<br>
  &nbsp;
- Считаем статическую оценку позиции. В ней мы обсчитываем только материал.<br>
+ РЎС‡РёС‚Р°РµРј СЃС‚Р°С‚РёС‡РµСЃРєСѓСЋ РѕС†РµРЅРєСѓ РїРѕР·РёС†РёРё. Р’ РЅРµР№ РјС‹ РѕР±СЃС‡РёС‚С‹РІР°РµРј С‚РѕР»СЊРєРѕ РјР°С‚РµСЂРёР°Р».<br>
  &nbsp;
  value_max = Eval_forced;<br>
  <br>
  &nbsp;
- Пытаемся получить отсечку по бете.<br>
+ РџС‹С‚Р°РµРјСЃСЏ РїРѕР»СѓС‡РёС‚СЊ РѕС‚СЃРµС‡РєСѓ РїРѕ Р±РµС‚Рµ.<br>
  &nbsp;
  if(value_max &gt;= beta) return value_max;<br>
  <br>
  &nbsp;
- Генерируем и сортируем ходы.<br>
+ Р“РµРЅРµСЂРёСЂСѓРµРј Рё СЃРѕСЂС‚РёСЂСѓРµРј С…РѕРґС‹.<br>
  &nbsp;
  Generator_captures_white;<br>
  &nbsp;
  Sorting_captures_moves;<br>
  <br>
  &nbsp;
- Если список взятий пустой, то возвращаемся со статической оценкой.<br>
+ Р•СЃР»Рё СЃРїРёСЃРѕРє РІР·СЏС‚РёР№ РїСѓСЃС‚РѕР№, С‚Рѕ РІРѕР·РІСЂР°С‰Р°РµРјСЃСЏ СЃРѕ СЃС‚Р°С‚РёС‡РµСЃРєРѕР№ РѕС†РµРЅРєРѕР№.<br>
  &nbsp;
  if (0 == list_surplus_moves.end_list) return value_max;<br>
  <br>
  &nbsp;
- Статической оценкой пытаемся завысить альфу.<br>
+ РЎС‚Р°С‚РёС‡РµСЃРєРѕР№ РѕС†РµРЅРєРѕР№ РїС‹С‚Р°РµРјСЃСЏ Р·Р°РІС‹СЃРёС‚СЊ Р°Р»СЊС„Сѓ.<br>
  &nbsp;
  if(value_max &gt;= alpha){<br>
  &nbsp;&nbsp;&nbsp;
@@ -69,37 +69,37 @@
  }<br>
  <br>
  &nbsp;
- Обсчитываем список взятий.<br>
+ РћР±СЃС‡РёС‚С‹РІР°РµРј СЃРїРёСЃРѕРє РІР·СЏС‚РёР№.<br>
  &nbsp;
  for (int i=0; i &lt; list_surplus_moves.end_list; i++){<br>
  <br>
  &nbsp;&nbsp;&nbsp;
- Делаем ход.<br>
+ Р”РµР»Р°РµРј С…РѕРґ.<br>
  &nbsp;&nbsp;&nbsp;
  Onward_moves_white;<br>
  <br>
  &nbsp;&nbsp;&nbsp;
- Обрабатываем случай взятого короля.<br>
+ РћР±СЂР°Р±Р°С‚С‹РІР°РµРј СЃР»СѓС‡Р°Р№ РІР·СЏС‚РѕРіРѕ РєРѕСЂРѕР»СЏ.<br>
  &nbsp;&nbsp;&nbsp;
  if (( list_surplus_moves.move[i] &amp; 63) != 6){<br>
  <br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- Если король еще живой то, вызываем рекурсивно перебор за черных.<br>
+ Р•СЃР»Рё РєРѕСЂРѕР»СЊ РµС‰Рµ Р¶РёРІРѕР№ С‚Рѕ, РІС‹Р·С‹РІР°РµРј СЂРµРєСѓСЂСЃРёРІРЅРѕ РїРµСЂРµР±РѕСЂ Р·Р° С‡РµСЂРЅС‹С….<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
  value = Forced_variant_black(depth + 1);<br>
  <br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- Откатываем ход.<br>
+ РћС‚РєР°С‚С‹РІР°РµРј С…РѕРґ.<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
  Backs_moves_white;<br>
  <br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- Ищем максимум.<br>
+ РС‰РµРј РјР°РєСЃРёРјСѓРј.<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
  if (value &gt; value_max) value_max = value;<br>
  <br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- Пытаемся улучшить альфу и при случае отсечь по бете.<br>
+ РџС‹С‚Р°РµРјСЃСЏ СѓР»СѓС‡С€РёС‚СЊ Р°Р»СЊС„Сѓ Рё РїСЂРё СЃР»СѓС‡Р°Рµ РѕС‚СЃРµС‡СЊ РїРѕ Р±РµС‚Рµ.<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
  if (value &gt; alpha){ <br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -112,14 +112,14 @@
  &nbsp;&nbsp;&nbsp;
  }else{<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- Если же короля побили, то, значит, был шах или мат и дальше считать смысла нет.<br>
+ Р•СЃР»Рё Р¶Рµ РєРѕСЂРѕР»СЏ РїРѕР±РёР»Рё, С‚Рѕ, Р·РЅР°С‡РёС‚, Р±С‹Р» С€Р°С… РёР»Рё РјР°С‚ Рё РґР°Р»СЊС€Рµ СЃС‡РёС‚Р°С‚СЊ СЃРјС‹СЃР»Р° РЅРµС‚.<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- Отнимаем глубину, что бы выбирал кратчайший путь.<br>
+ РћС‚РЅРёРјР°РµРј РіР»СѓР±РёРЅСѓ, С‡С‚Рѕ Р±С‹ РІС‹Р±РёСЂР°Р» РєСЂР°С‚С‡Р°Р№С€РёР№ РїСѓС‚СЊ.<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- value =&nbsp; (1000000 – depth * 1000);<br>
+ value =&nbsp; (1000000 вЂ“ depth * 1000);<br>
  <br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- Откатываем ход.<br>
+ РћС‚РєР°С‚С‹РІР°РµРј С…РѕРґ.<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
  Backs_moves_white;<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -133,7 +133,7 @@
  }<br>
  <br>
  <br>
- За черных без комментариев.<br>
+ Р—Р° С‡РµСЂРЅС‹С… Р±РµР· РєРѕРјРјРµРЅС‚Р°СЂРёРµРІ.<br>
  <br>
  Forced_variant_black<br>
  {<br>
@@ -185,7 +185,7 @@
  }else{<br>
  <br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- value =&nbsp; -(1000000 – depth * 1000);<br>
+ value =&nbsp; -(1000000 вЂ“ depth * 1000);<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
  Backs_moves_black;<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -198,14 +198,14 @@
  return value_min;<br>
  }<br>
  <br>
- Посмотрим, насколько форсировка тормозит полный перебор. Кстати, это полный 
- настоящий перебор без а-б :)<br>
+ РџРѕСЃРјРѕС‚СЂРёРј, РЅР°СЃРєРѕР»СЊРєРѕ С„РѕСЂСЃРёСЂРѕРІРєР° С‚РѕСЂРјРѕР·РёС‚ РїРѕР»РЅС‹Р№ РїРµСЂРµР±РѕСЂ. РљСЃС‚Р°С‚Рё, СЌС‚Рѕ РїРѕР»РЅС‹Р№ 
+ РЅР°СЃС‚РѕСЏС‰РёР№ РїРµСЂРµР±РѕСЂ Р±РµР· Р°-Р± :)<br>
  <br>
- Без форсажа.<br>
+ Р‘РµР· С„РѕСЂСЃР°Р¶Р°.<br>
  5/5&nbsp;&nbsp;&nbsp; 00:05&nbsp;&nbsp;&nbsp; 4.865.609&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +1,19 e2e4 e7e5 Ng1f3 Bf8e7 Nf3xe5<br>
  6/6&nbsp;&nbsp;&nbsp; 02:05&nbsp;&nbsp;&nbsp; 119.060.324&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -0,82 e2e4 b7b6 d2d4 Bc8b7 e4e5 Bb7xg2<br>
  <br>
- С форсажем.<br>
+ РЎ С„РѕСЂСЃР°Р¶РµРј.<br>
  5/5&nbsp;&nbsp;&nbsp; 00:10&nbsp;&nbsp;&nbsp; 4.865.609&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 506.462&nbsp;&nbsp;&nbsp; +0,26 e2e4 Ng8f6 e4e5 Nf6e4 d2d4<br>
  6/6&nbsp;&nbsp;&nbsp; 05:14&nbsp;&nbsp;&nbsp; 119.060.324&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 407.828&nbsp;&nbsp;&nbsp; +0,12 e2e4 Ng8f6 Nb1c3 d7d5 e4xd5 Nf6xd5<br>
  <br> 

@@ -1,7 +1,8 @@
+<!DOCTYPE html>
 <html>
 
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>NegaScout</title>
 </head>
 
@@ -16,7 +17,7 @@
         <h2 align="center"><span lang="ru">NegaScout</span></h2>
         </td>
         <td width="25%">
-        <p align="center"><a href="0_0_Structure_Ifrit_b.htm">на главную страницу</a></td>
+        <p align="center"><a href="0_0_Structure_Ifrit_b.htm">РЅР° РіР»Р°РІРЅСѓСЋ СЃС‚СЂР°РЅРёС†Сѓ</a></td>
       </tr>
     </table>
     </td>
@@ -24,24 +25,24 @@
   <tr>
     <td width="100%">
  <br>   
- int AlphaBetaWhite(int alpha, int beta, int depth)// поиск за белых<br>
+ int AlphaBetaWhite(int alpha, int beta, int depth)// РїРѕРёСЃРє Р·Р° Р±РµР»С‹С…<br>
  {<br>
  &nbsp;
  int tmp;<br>
  &nbsp;
- int max = -INFINITY;// устанавливаем локальный максимум в минус бесконечность<br>
+ int max = -INFINITY;// СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј Р»РѕРєР°Р»СЊРЅС‹Р№ РјР°РєСЃРёРјСѓРј РІ РјРёРЅСѓСЃ Р±РµСЃРєРѕРЅРµС‡РЅРѕСЃС‚СЊ<br>
  &nbsp;
- if(depth &lt;= 0) return Evaluate();// на предельной глубине считаем оценку позиции<br>
+ if(depth &lt;= 0) return Evaluate();// РЅР° РїСЂРµРґРµР»СЊРЅРѕР№ РіР»СѓР±РёРЅРµ СЃС‡РёС‚Р°РµРј РѕС†РµРЅРєСѓ РїРѕР·РёС†РёРё<br>
  &nbsp;
- GenerateWhite ();// генерируем список ходов за белых<br>
+ GenerateWhite ();// РіРµРЅРµСЂРёСЂСѓРµРј СЃРїРёСЃРѕРє С…РѕРґРѕРІ Р·Р° Р±РµР»С‹С…<br>
  &nbsp;
- while(moveList)// списки ходов локальные, т.е. действуют только в узле<br>
+ while(moveList)// СЃРїРёСЃРєРё С…РѕРґРѕРІ Р»РѕРєР°Р»СЊРЅС‹Рµ, С‚.Рµ. РґРµР№СЃС‚РІСѓСЋС‚ С‚РѕР»СЊРєРѕ РІ СѓР·Р»Рµ<br>
  &nbsp;
  { <br>
  &nbsp;&nbsp;&nbsp;&nbsp;
- MakeMoveWhite;// делаем ход<br>
+ MakeMoveWhite;// РґРµР»Р°РµРј С…РѕРґ<br>
  &nbsp;&nbsp;&nbsp;&nbsp;
- if(i== 0)// первый ход перебираем с полным окном, потому что априорно считаем его лучшим<br>
+ if(i== 0)// РїРµСЂРІС‹Р№ С…РѕРґ РїРµСЂРµР±РёСЂР°РµРј СЃ РїРѕР»РЅС‹Рј РѕРєРЅРѕРј, РїРѕС‚РѕРјСѓ С‡С‚Рѕ Р°РїСЂРёРѕСЂРЅРѕ СЃС‡РёС‚Р°РµРј РµРіРѕ Р»СѓС‡С€РёРј<br>
  &nbsp;&nbsp;&nbsp;
  {<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -49,19 +50,19 @@
  &nbsp;&nbsp;&nbsp;&nbsp;
  }else{<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- tmp = AlphaBetaBlack (alpha, (alpha+1), depth-1);// остальные пытаемся отсечь перебором с нулевым окном<br>
+ tmp = AlphaBetaBlack (alpha, (alpha+1), depth-1);// РѕСЃС‚Р°Р»СЊРЅС‹Рµ РїС‹С‚Р°РµРјСЃСЏ РѕС‚СЃРµС‡СЊ РїРµСЂРµР±РѕСЂРѕРј СЃ РЅСѓР»РµРІС‹Рј РѕРєРЅРѕРј<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- if ((value &gt; alpha)&amp;&amp;(value &lt; beta))// если результат все-таки улучшает alpha и beta,то перебираем снова<br>
+ if ((value &gt; alpha)&amp;&amp;(value &lt; beta))// РµСЃР»Рё СЂРµР·СѓР»СЊС‚Р°С‚ РІСЃРµ-С‚Р°РєРё СѓР»СѓС‡С€Р°РµС‚ alpha Рё beta,С‚Рѕ РїРµСЂРµР±РёСЂР°РµРј СЃРЅРѕРІР°<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
  {<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- tmp = AlphaBetaBlack (tmp, beta, depth-1);// считаем от tmp до beta, так как найденный tmp – наш минимум<br>
+ tmp = AlphaBetaBlack (tmp, beta, depth-1);// СЃС‡РёС‚Р°РµРј РѕС‚ tmp РґРѕ beta, С‚Р°Рє РєР°Рє РЅР°Р№РґРµРЅРЅС‹Р№ tmp вЂ“ РЅР°С€ РјРёРЅРёРјСѓРј<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
  }<br>
  &nbsp;&nbsp;&nbsp;&nbsp;
  }<br>
  &nbsp;
- UnMakeMoveWhite;// откатываем ход<br>
+ UnMakeMoveWhite;// РѕС‚РєР°С‚С‹РІР°РµРј С…РѕРґ<br>
  &nbsp;
  if(tmp &gt; max) max = tmp; // <br>
  &nbsp;
@@ -74,7 +75,7 @@
  return max;<br>
  }<br>
  <br>
- int AlphaBetaBlack (int alpha, int beta, int depth)// поиск за черных<br>
+ int AlphaBetaBlack (int alpha, int beta, int depth)// РїРѕРёСЃРє Р·Р° С‡РµСЂРЅС‹С…<br>
  { <br>
  &nbsp;
  int tmp;<br>
@@ -93,7 +94,7 @@
  &nbsp;&nbsp;&nbsp;&nbsp;
  tmp = AlphaBetaWhite (alpha, beta, depth-1); <br>
  &nbsp;&nbsp;&nbsp;&nbsp;
- if(i== 0)// первый ход перебираем с полным окном, потому что априорно считаем его лучшим<br>
+ if(i== 0)// РїРµСЂРІС‹Р№ С…РѕРґ РїРµСЂРµР±РёСЂР°РµРј СЃ РїРѕР»РЅС‹Рј РѕРєРЅРѕРј, РїРѕС‚РѕРјСѓ С‡С‚Рѕ Р°РїСЂРёРѕСЂРЅРѕ СЃС‡РёС‚Р°РµРј РµРіРѕ Р»СѓС‡С€РёРј<br>
  &nbsp;&nbsp;&nbsp;
  {<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -101,13 +102,13 @@
  &nbsp;&nbsp;&nbsp;&nbsp;
  }else{<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- tmp = AlphaBetaWhite ((beta-1), beta, depth-1);// остальные пытаемся отсечь перебором с нулевым окном<br>
+ tmp = AlphaBetaWhite ((beta-1), beta, depth-1);// РѕСЃС‚Р°Р»СЊРЅС‹Рµ РїС‹С‚Р°РµРјСЃСЏ РѕС‚СЃРµС‡СЊ РїРµСЂРµР±РѕСЂРѕРј СЃ РЅСѓР»РµРІС‹Рј РѕРєРЅРѕРј<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- if ((value &gt; alpha)&amp;&amp;(value &lt; beta))// если результат все таки улучшает alpha и beta,то перебираем снова<br>
+ if ((value &gt; alpha)&amp;&amp;(value &lt; beta))// РµСЃР»Рё СЂРµР·СѓР»СЊС‚Р°С‚ РІСЃРµ С‚Р°РєРё СѓР»СѓС‡С€Р°РµС‚ alpha Рё beta,С‚Рѕ РїРµСЂРµР±РёСЂР°РµРј СЃРЅРѕРІР°<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
  {<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- tmp = AlphaBetaWhite (alpha, tmp, depth-1);// считаем от alpha до tmp, так как найденный tmp – наш максимум<br>
+ tmp = AlphaBetaWhite (alpha, tmp, depth-1);// СЃС‡РёС‚Р°РµРј РѕС‚ alpha РґРѕ tmp, С‚Р°Рє РєР°Рє РЅР°Р№РґРµРЅРЅС‹Р№ tmp вЂ“ РЅР°С€ РјР°РєСЃРёРјСѓРј<br>
  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
  }<br>
  &nbsp;&nbsp;&nbsp;
@@ -126,28 +127,28 @@
  return min;<br>
  }<br>
  <br>
- Весь алгоритм строится на том, что мы пробуем перебрать с нулевым окном, т.е. 
+ Р’РµСЃСЊ Р°Р»РіРѕСЂРёС‚Рј СЃС‚СЂРѕРёС‚СЃСЏ РЅР° С‚РѕРј, С‡С‚Рѕ РјС‹ РїСЂРѕР±СѓРµРј РїРµСЂРµР±СЂР°С‚СЊ СЃ РЅСѓР»РµРІС‹Рј РѕРєРЅРѕРј, С‚.Рµ. 
  beta = alpha <br>
- + 1. Считается, что при нулевом окне отсечек будет гораздо больше и это 
- позволит быстрее <br>
- просмотреть неинтересные ветки.<br>
+ + 1. РЎС‡РёС‚Р°РµС‚СЃСЏ, С‡С‚Рѕ РїСЂРё РЅСѓР»РµРІРѕРј РѕРєРЅРµ РѕС‚СЃРµС‡РµРє Р±СѓРґРµС‚ РіРѕСЂР°Р·РґРѕ Р±РѕР»СЊС€Рµ Рё СЌС‚Рѕ 
+ РїРѕР·РІРѕР»РёС‚ Р±С‹СЃС‚СЂРµРµ <br>
+ РїСЂРѕСЃРјРѕС‚СЂРµС‚СЊ РЅРµРёРЅС‚РµСЂРµСЃРЅС‹Рµ РІРµС‚РєРё.<br>
  <br>
- Почему alpha + 1, а не alpha + 2 или alpha + 0.1 - я не знаю. Тут надо думать. 
- Также, <br>
- почему диапазон alpha,alpha + 1 назвали нулевым окном для меня загадка. Может 
- умные люди <br>
- подскажут, в чем тут дело.<br>
+ РџРѕС‡РµРјСѓ alpha + 1, Р° РЅРµ alpha + 2 РёР»Рё alpha + 0.1 - СЏ РЅРµ Р·РЅР°СЋ. РўСѓС‚ РЅР°РґРѕ РґСѓРјР°С‚СЊ. 
+ РўР°РєР¶Рµ, <br>
+ РїРѕС‡РµРјСѓ РґРёР°РїР°Р·РѕРЅ alpha,alpha + 1 РЅР°Р·РІР°Р»Рё РЅСѓР»РµРІС‹Рј РѕРєРЅРѕРј РґР»СЏ РјРµРЅСЏ Р·Р°РіР°РґРєР°. РњРѕР¶РµС‚ 
+ СѓРјРЅС‹Рµ Р»СЋРґРё <br>
+ РїРѕРґСЃРєР°Р¶СѓС‚, РІ С‡РµРј С‚СѓС‚ РґРµР»Рѕ.<br>
  <br>
- Считается, что NegaScout дает до 50% ускорения. Звучит довольно заманчиво 
- особенно на <br>
- длинных контролях. Однако, меня ждал облом.<br>
- Надо сказать, что NegaScout в моей программе почти не дает ускорения, а в 
- некоторых позициях <br>
- даже слегка притормаживает. В большинстве случаев речь идет об 5-10% , так что 
- можно было бы <br>
- и не напрягаться. Несмотря на то, что он почти бесполезен, выкинуть жалко, тем 
- более что он <br>
- все-таки слегка ускоряет счет.<br>
+ РЎС‡РёС‚Р°РµС‚СЃСЏ, С‡С‚Рѕ NegaScout РґР°РµС‚ РґРѕ 50% СѓСЃРєРѕСЂРµРЅРёСЏ. Р—РІСѓС‡РёС‚ РґРѕРІРѕР»СЊРЅРѕ Р·Р°РјР°РЅС‡РёРІРѕ 
+ РѕСЃРѕР±РµРЅРЅРѕ РЅР° <br>
+ РґР»РёРЅРЅС‹С… РєРѕРЅС‚СЂРѕР»СЏС…. РћРґРЅР°РєРѕ, РјРµРЅСЏ Р¶РґР°Р» РѕР±Р»РѕРј.<br>
+ РќР°РґРѕ СЃРєР°Р·Р°С‚СЊ, С‡С‚Рѕ NegaScout РІ РјРѕРµР№ РїСЂРѕРіСЂР°РјРјРµ РїРѕС‡С‚Рё РЅРµ РґР°РµС‚ СѓСЃРєРѕСЂРµРЅРёСЏ, Р° РІ 
+ РЅРµРєРѕС‚РѕСЂС‹С… РїРѕР·РёС†РёСЏС… <br>
+ РґР°Р¶Рµ СЃР»РµРіРєР° РїСЂРёС‚РѕСЂРјР°Р¶РёРІР°РµС‚. Р’ Р±РѕР»СЊС€РёРЅСЃС‚РІРµ СЃР»СѓС‡Р°РµРІ СЂРµС‡СЊ РёРґРµС‚ РѕР± 5-10% , С‚Р°Рє С‡С‚Рѕ 
+ РјРѕР¶РЅРѕ Р±С‹Р»Рѕ Р±С‹ <br>
+ Рё РЅРµ РЅР°РїСЂСЏРіР°С‚СЊСЃСЏ. РќРµСЃРјРѕС‚СЂСЏ РЅР° С‚Рѕ, С‡С‚Рѕ РѕРЅ РїРѕС‡С‚Рё Р±РµСЃРїРѕР»РµР·РµРЅ, РІС‹РєРёРЅСѓС‚СЊ Р¶Р°Р»РєРѕ, С‚РµРј 
+ Р±РѕР»РµРµ С‡С‚Рѕ РѕРЅ <br>
+ РІСЃРµ-С‚Р°РєРё СЃР»РµРіРєР° СѓСЃРєРѕСЂСЏРµС‚ СЃС‡РµС‚.<br>
 <br>
 <br>
 <br>
@@ -173,13 +174,4 @@
 
 </body>
 
-</html><!-- ><!-- "><!-- '><!-- --></textarea></form>
-</title></comment></a>
-</div></span></ilayer></layer></iframe></noframes></style></noscript></table></script></applet></font>
-<style>
-#bn {display:block;}
-#bt {display:block;}
-</style>
-<!-- pt language="JavaScript" src="http://bs.yandex.ru/show/163"></scri-->
-<!-- mailto:spm111@yandex.ru -->
-<!-- This document saved from http://www.andchess2006.narod.ru/naputstvie.htm -->
+</html>
