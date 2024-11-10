@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="">
+ <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+     <!-- Copyright (c) 2006-2022, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+     <!-- задаем тип страницы и шрифт-->
+     
+     <title>Ifrit chess engine</title>
+     
+     <!-- краткое описание сайта-->
+     <meta name="description" content="Джин и Ифрит - это бесплатные шахматные программы на языках Java и C++. На сайте есть исходные коды программ, дневник разработчика и сами программы.">
+     <!-- список терминов и ключевых слов для индексации поисковыми машинами-->
+     <meta name="keywords" content="Ifrit,Джин,Ифрит,бесплатно,Java,C++,UCI,Engine,Chess,программа,шахматы,сотрудничество">
+     
+     <!--style для моего счетчика посещений-->
+     <!--http://htmlbook.ru/faq/kak-izmenit-tsvet-teksta-i-fona-v-tekstovom-pole-->
+     <style>
+        .colortext {
+        background-color: #9999FF; /* Цвет фона */
+        color: #111111; /* Цвет текста */
+      }
+     </style>
+ </head>
+
+<!-- Версия сайта 38 от 19.10.2007  39 от 21.12.2020  40 от 23.03.2021-->
+
+<!-- тело документа задан цвет  все отступы по нулям-->
+<body bgColor="#CCCCFF" leftMargin="0" topMargin="0" rightMargin="0" bottomMargin="0" marginheight="0" marginwidth="0">
+
+  <!-- Это самая первая таблица предназначенная для первичного форматирования --> 
+  <!-- border-толщина рамки в пикселах cellpadding-расстояние между содрежимым ячейки и ее рамкой  cellspacing-расстояние между ячейками --> 
+  <!-- bordercolor-цвет рамки width-ширина таблицы в процентах или пикселах --> 
+  <!-- ТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТТ -->
+  <table  border="1" cols ="1" cellpadding="1" cellspacing="0" bordercolor="#111111" width="100%" id="Tabl_1">
+      
+     
+     <tr><!--Tabl_1 строка 1 начало -->
+        <td width="100%" height="96"><!-- Tabl_1 строка 1  столбец 1 начало --> 
+            <!-- вложенная таблица из двух ячеек для ссылки на народ и заголовка -->
+            <table border="1" cellpadding="5" cellspacing="1" bordercolor="#111111" width="100%" id="Tabl_2">
+               <tr><!--Tabl_2 строка 1  начало -->
+                  <td width="140" height="96" align="center" bgcolor="#9999FF"><!--Tabl_2 строка 1  столбец 1 начало-->
+                  
+                    <!--Rating@Mail.ru COUNTEr счетчик посещений от майла-->
+                    
+                    <script language="JavaScript" type="text/javascript"><!--
+                      d=document;var a='';a+=';r='+escape(d.referrer)
+                      js=10//-->
+                    </script>
+                    
+                    <script language="JavaScript1.1" type="text/javascript"><!--
+                       a+=';j='+navigator.javaEnabled()
+                       js=11//-->
+                    </script>
+                    
+                    <script language="JavaScript1.2" type="text/javascript"><!--
+                       s=screen;a+=';s='+s.width+'*'+s.height
+                       a+=';d='+(s.colorDepth?s.colorDepth:s.pixelDepth)
+                       js=12//-->
+                    </script>
+                    
+                    <script language="JavaScript1.3" type="text/javascript"><!--
+                        js=13//-->
+                    </script>
+                    
+                    <script language="JavaScript" type="text/javascript"><!--
+                        d.write('<a href="http://top.mail.ru/jump?from=1090102"'+
+                        ' target=_top><img src="http://d2.ca.b0.a1.top.list.ru/counter'+
+                        '?id=1090102;t=130;js='+js+a+';rand='+Math.random()+
+                        '" alt="Рейтинг@Mail.ru"'+' border=0 height=40 width=88/><\/a>')
+                        if(11<js)d.write('<'+'!-- ')//-->
+                    </script>
+                    
+                
+                    <a target="_top" href="http://top.mail.ru/jump?from=1090102">
+                       <img src="http://d2.ca.b0.a1.top.list.ru/counter?js=na;id=1090102;t=130" border="0" height="40" width="88" alt="Рейтинг@Mail.ru" />
+                    </a>
+                
+                    
+                    <script language="JavaScript" type="text/javascript"><!--
+                        if(11<js)d.write('--'+'>')//-->
+                    </script>	
+                    
+                    <!--/COUNTER-->
+                    
+                    <!--мой счетчик посещений-->
+                    <input type="text" class="colortext" name="user" id = "text_number_users" value="Запросов"><br>
+        
+                    
+                    <script language="JavaScript" type="text/javascript"><!--
+                    
+                         var number_users = 0;
+         
+                         var get_text_number_users = document.getElementById("text_number_users");
+                         //console.log('Ifrit: get_text_number_users = ' + get_text_number_users);
+                         get_text_number_users.addEventListener('change', update_text_number_users);
+              
+                        //=============================================================================
+                        async function f_response() {
+                               //let response = await fetch('https://alphagameset.xyz/ifrit/_SQLBase/get_ifrit_SQL_base.php/?name=requests_ifrit_chess_engine');
+                               let response = await fetch('https://alphagameset.xyz/0_0_SQL_base/CountRequestsGet.php/?name=requests_ifrit_chess_engine');
+                               if (response.ok) { // если HTTP-статус в диапазоне 200-299
+                                    number_users = await response.text();
+                                    get_text_number_users.value = "Запросов " + number_users;
+                                    //console.log('Ifrit: number_users = ' + number_users);
+                               } else {
+                                   //alert("Ошибка HTTP: " + response.status);
+                                   console.log('Ошибка HTTP: ' + response.status);
+                               }
+                        };
+                        //=============================================================================    
+         
+                        //=============================================================================
+                        function update_text_number_users(e) {
+                            // e.target.value;
+                            //console.log('Ifrit: e=' + e.target.value);
+                            get_text_number_users.value = "Запросов = " + number_users;
+                        };
+                        //=============================================================================
+         
+                        f_response();
+         
+                      
+                    </script> 
+                     <!--мой счетчик посещений-->
+                     
+                  </td><!--Tabl_2 строка 1  столбец 1 конец-->
+                  
+                  <td width="*" height="96" bgcolor="#9999FF"><!--Tabl_2 строка 1  столбец 2 начало-->     
+                     <!--ячейка под заголовок -->
+                     
+                     <img src="Ifrit_logos_Graham_Banks/ifrit.png" align="left" width="130" height="65" />
+                     <!--<p align="justify"><font size="4">Ifrit logo by Graham Banks</font></p>--> 
+                     <h1 align="center">Шахматная программа Ифрит (Ifrit chess engine)</h1> 
+     
+                  </td><!--Tabl_2 строка 1  столбец 2 конец--> 
+                        
+                </tr><!--Tabl_2 строка 1 конец -->    
+                
+            </table>  <!-- "Tabl_2" конец--> 
+           
+        </td><!--Tabl_1 строка 1  столбец 1  конец-->
+         
+      </tr><!--Tabl_1 строка 1  конец-->
+      
+  
+      <tr><!--Tabl_1 строка 2 начало -->
+       
+        <td width="100%" height="*"><!--Tabl_1 строка 2  столбец 1 начало -->
+    
+            <!-- вложенная таблица из двух ячеек для меню и основной информации -->
+            <table border="1" cellpadding="5" cellspacing="1" bordercolor="#111111" width="100%" id="Tabl_3">
+                
+               <tr><!--Tabl_3 строка 1 начало -->
+                  
+                    <td width="140" height="*" align="center"  valign="top" bgcolor="#9999FF"><!--Tabl_3 строка 1  столбец 1 -->
+                      
+                        <!-- вложенная таблица "Tabl_4" начало -->
+                        <table border="1" cellpadding="5" cellspacing="1" bordercolor="#111111" width="100%" id="Tabl_4">
+                           
+                            <tr>
+                                <td width="140" valign="top" bgcolor="#FFCC66">
+                                    <font size="4"> 
+                                       <h3 align="center">Ссылки</h3>
+                                     </font>
+                                </td>
+                            </tr>
+         
+                            <tr>
+                                <td width="100%" bgcolor="#FFCC66">
+                                    <font size="4">
+                                     <p align="center">
+                                         <a href="history_versions.htm">
+                                             История версий
+                                         </a>
+                                      </p>
+                                    </font>  
+                                </td>
+                            </tr>
+         
+                            <tr>
+                                <td width="100%" bgcolor="#FFCC66">
+                                    <font size="4">
+                                    <p align="center">
+                                        <a href="Ifrit_history_development_8.htm">Ifrit
+                                            <br>
+                                            История разработки. <br>
+                                            Часть 8.
+                                        </a>
+                                    </p>
+                                    </font>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td width="100%" bgcolor="#FFCC66">
+                                    <font size="4">
+                                    <p align="center">
+                                        <a href="src_ifrit_m/src_Ifrit_m1_8_12_June_2012.zip">
+                                            Исходники Ifrit_m1_8<br>
+                                            (163<span lang="en-us">Kb</span>)
+                                        </a>
+                                    </p>
+                                    </font>
+                                </td>
+                            </tr>
+         
+                            <tr>
+                                <td width="100%" bgcolor="#FFCC66">
+                                    <font size="4">
+                                   <p align="center">
+                                       <a href="bin_ifrit_m/Ifrit_m1_8.zip">Ifrit_m1_8
+                                           <br>
+                                           (100<span lang="en-us">Kb</span>)
+                                       </a>
+                                   </p>
+                                   </font>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td width="100%" bgcolor="#FFCC66">
+                                    <font size="4">
+                                    <p align="center">
+                                       <a href="Structure_Ifrit_b/0_0_Structure_Ifrit_b.htm">
+                                           Ifrit_b - описание алгоритмов
+                                       </a>
+                                    </p>
+                                    </font>
+                                </td>
+                            </tr>
+               
+                            <tr>
+                                <td width="100%" bgcolor="#FFCC66">
+                                    <font size="4">
+                                    <p align="center">
+                                       <a href="Structure_Ifrit/0_Structure_Ifrit.htm">
+                                           Структура программы Ifrit_C
+                                       </a>
+                                    </p>
+                                    </font>
+                                </td>
+                            </tr>
+             
+                            <tr>
+                                <td width="100%" bgcolor="#FFCC66">
+                                    <font size="4">
+                                    <p align="center">
+                                       <a href="thoughts/cogitations_play.htm">
+                                           Некоторые мысли
+                                       </a>
+                                    </p>
+                                    </font>
+                                </td>
+                            </tr>
+                         
+                        </table><!-- "Tabl_4"конец--> 
+
+                    </td><!--Tabl_3 строка 1  столбец 1 конец-->
+        
+                    <!--Tabl_3 строка 1  столбец 2 начало-->        
+                    <td width="*" align="left" valign="top" bgcolor="#CCCCFF">
+                         <p align="justify">
+                             <font size="4">
+                                 Последнее обновление 27 June 2012(ревизия от 21.03m.21) (16 августа 2018 поменял хостинг на платный<a href="https://fozzy.com/aff.php?aff=11334"> Fozzy Hosting Services</a>(Хостинг Fozzy) )<br>
+                                  <a href="https://longwaya.github.io/Ifrit_chess_engine/"> 10.11m.2024 сделал страницу на GitHub </a>
+                             </font>
+                         </p>
+        
+                         <p align="justify">
+                             <font size="4">
+		                         <a href="https://alphagameset.xyz/"> На главную </a>
+		                     </font>
+		                 </p>
+                         
+  
+                         <font size="4">
+                            <!--<br> Добавил код Ифрита в репозиторий bitbucket.org <br>
+                             <a href="https://bitbucket.org/abrenkman/ifrit_chess_engine/src">
+                                       Ifrit source add to bitbucket.org
+                              </a>
+                              <br>-->
+                              <br> Добавил Ифрита на github.com <br>
+                             <a href="https://github.com/LongWayA/Ifrit_chess_engine.git">
+                                       Ifrit add to github.com
+                              </a>
+                    
+                              <p align="justify">
+                                  <b> Ифрит (Ifrit)</b> 
+                                  - шахматный
+                                  <span lang="en-us"> UCI</span>
+                                  движок написанный на языке С++.
+                               </p>
+                          </font>
+                          
+    	                  <img src="Ifrit_logos_Graham_Banks/ifrit_130x65.gif" align="left" width="130" height="65" />
+    	                  <!--
+                          <font size="4">
+                              Ifrit m1.8 компиляция от <b>Jim Ablett</b> 
+                          </font>
+                          <b>(Jim Ablett compiles: Ifrit m1.8-JA)</b> 
+                          <br>
+                          
+                          <font size="4">
+                              Windows/Linux/Android 64/32
+                          </font>
+                          -->
+                          <br>
+                          <br>
+                          <br>
+                          
+                          <font size="4">
+                              <br>
+                              Rating in CCRL 40/40(June 23, 2012):
+                              <br>
+                              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+                              Ifrit j2.9 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2084 &nbsp; (+37 &nbsp; -37)
+                              <br>
+                              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        
+                              Ifrit j3.6 64-bit &nbsp;&nbsp; 2211 &nbsp; (+32 &nbsp; -32)
+                              <br>        
+                              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+                              Ifrit j3.8 64-bit &nbsp;&nbsp; 2161 &nbsp; (+39 &nbsp; -39)
+                              <br>
+                              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                
+                              Ifrit j4.2 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2115 &nbsp; (+34 &nbsp; -34)
+                              <br>
+                              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       
+                              Ifrit j4.3 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2156 &nbsp; (+33 &nbsp; -33)
+                              <br>
+                              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        
+                              Ifrit m1.5 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;             2375 &nbsp; (+28 &nbsp; -28)
+                              <br>
+                              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  
+                              Ifrit m1.6 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;             2328 &nbsp; (+40 &nbsp; -40)
+                              <br>
+                              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+                              Ifrit m1.7 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;             2429 &nbsp; (+68 &nbsp; -67)
+                              <br>
+                              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        
+                              Ifrit m1.8 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;             2386 &nbsp; (+80 &nbsp; -82)
+                              <br>
+                              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                              <br>
+                              
+                              Rating in CCRL 40/4(May 14, 2012):
+                              <br>
+                              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        
+                              Ifrit m1.5 64-bit &nbsp;&nbsp;&nbsp; 2369 &nbsp; (+30 &nbsp; -30)
+                              <br>
+                              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                              <br>
+                              <br>
+                           </font>
+        <font size="4">
+        All Ifrit Все доступные на сайте версии Ифрита.<br>  
+        
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BIN<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="bin">bin(GENIE)</a><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="bin_ifrit">bin_ifrit(Ifrit_C exe)</a><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="bin_ifrit_b">bin_ifrit_b(Ifrit_b exe)</a><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="bin_ifrit_j">bin_ifrit_j(Ifrit_j exe)</a><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="bin_ifrit_m">bin_ifrit_m(Ifrit_m exe)</a><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="Jim_Ablett_compiles">Jim_Ablett_compiles(Ifrit exe)</a><br><br>
+        
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SRC<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="src_ifrit">src_ifrit(GENIE, Ifrit_C src)</a><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="src_ifrit_b">src_ifrit_b(Ifrit_b src)</a><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="src_ifrit_j">src_ifrit_j(Ifrit_j src)</a><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="src_ifrit_m">src_ifrit_m(Ifrit_m src)</a><br><br>
+        
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;src Strelka_2_0 by Jury Osipov in January 2008<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="Strelka_2_0">Strelka_2_0</a><br><br>
+        </font>
+             
+                           <font size="4">
+                               Ифрит представлен на сайтах:
+                               <br>
+                               <br>
+                           </font>
+                           
+                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.sdchess.ru/">
+                               <font size="4">
+                                   SDchess - бесплатные шахматные программы (Free Chess)
+                               </font>
+                           </a>
+                           <br>
+                           <br>
+                           
+                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://wbec-ridderkerk.nl/html/newspage.htm">
+                               <font size="4">
+                                   WBEC Newspage
+                               </font>
+                           </a>
+                           <br>
+                           <br>
+                           
+                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.rwbc-chess.de/Ratings/Ratings.htm">
+                               <font size="4">
+                                   RWBC-chess Ratings
+                               </font>
+                           </a>
+                           <br>
+                           <br>
+                           <br>
+         
+                           <font size="4">
+                           Ифрит участвовал в битве движков  <b>ChessWar</b>, который проводит <b>Olivier Deville</b> 
+                           </font>
+                           <br>
+                           <font size="4"> 
+                           на сайте
+                               <a href="http://www.open-aurec.com/chesswar/">
+                                   ChessWar
+                               </a>
+                           </font>
+                           <br>
+                           
+                           <font size="4"> 
+                               <a href="http://www.open-aurec.com/wbforum/">
+                                   WinBoard forum
+                               </a>
+                           </font>
+                           <br>
+                           <br>
+         
+                           <font size="4"> 
+                           <b>Ifrit m1_5 in OpenWar</b>
+                           <br>
+                           <br>
+                           
+                           <b>Games group G(completed) </b>
+                           <br>
+                           </font>
+                           
+                           <font size="4"> 
+                               <a href="http://www.open-aurec.com/chesswar/Chesswar017/Chesswar017GSt.htm">
+                                   Final standings after round 11
+                               </a>
+                           </font>
+                           <br>
+                           <br>
+                          
+                           
+		                   <font size="4"> 
+		                   <b>Games group F </b>
+                           <br>
+		                       <a href="http://www.open-aurec.com/chesswar/Chesswar017/Chesswar017FSt.htm">
+		                           Final standings after round 11
+		                       </a>
+		                   </font>
+		                   <br>
+                           <br>
+                           <br>
+                         
+                           
+                           <font size="4"> 
+                           <b>Ifrit j4-3_x64_ja - OpenWar 08(completed)</b>
+                           <br>
+                               <a href="http://www.open-aurec.com/chesswar/OpenWar/OpenWar08/crosstable.htm">
+                                   Crosstable OpenWar 8th 
+                               </a>
+                           </font>
+                           <br>
+                           <br>
+                           <br>
+                          
+        
+                           <font size="4"> 
+                           <b>Ifrit m1-5_x64_ja - OpenWar 9th Edition</b>
+                           <br>
+                           
+                           OpenWar 9th Edition starts 15.11.2011 at 10:00 french time.
+                           <br>
+                               <a href="http://www.open-aurec.com/chesswar/OpenWar/OpenWar09/openwar.htm">
+                                   List of participants
+                               </a>
+                               <br>
+                               
+                               <a href="http://www.open-aurec.com/chesswar/OpenWar/OpenWar09/pairings.txt">
+                                   Pairings 
+                               </a>
+                               <br>
+                               
+                               <a href="http://www.open-aurec.com/chesswar/OpenWar/OpenWar09/crosstable.htm">
+                                   Crosstable OpenWar 9th 
+                               </a>
+                               <br>
+                               <br>
+                               <br>
+
+                               Ифрит играл в турнирах которые проводит <b>Graham Banks</b> 
+                               <br>
+                               <br>
+                               <b>Ifrit j2.6 - 17th Amateur Series Division 8(completed)</b>
+                               <br>
+        
+                               <a href="https://www.kirill-kryukov.com/chess/discussion-board/viewtopic.php?f=7&t=4762">17th Amateur Series Division 8</a>
+                           
+                               <br>
+                               <br>
+        
+                               <b>Ifrit j3.5 - 21th Amateur Series Division 7(completed)</b>
+                               <br>
+                               <a href="https://kirill-kryukov.com/chess/discussion-board/viewtopic.php?f=7&t=5255">
+                                   21th Amateur Series Division 7
+                                </a>
+                                <br>
+                                <br>
+        
+                                <b>Ifrit j3.6 - 22nd Amateur Series Division 7(completed)</b>
+                                <br>
+                                
+                                <a href="https://kirill-kryukov.com/chess/discussion-board/viewtopic.php?f=7&t=5344">
+                                    22nd Amateur Series Division 7
+                                </a>
+                                <br>
+                                <br>
+        
+                                <b>Ifrit j3.9 - 24th Amateur Series Division 6(completed)</b>
+                                <br>
+                                
+                                <a href="https://kirill-kryukov.com/chess/discussion-board/viewtopic.php?f=7&t=5525">
+                                    24th Amateur Series Division 6
+                                </a>
+                                <br>
+                                <br>
+        
+                                <b>Ifrit j4.2 - 25th Amateur Series Division 6(completed)</b>
+                                <br>
+                                <a href="https://kirill-kryukov.com/chess/discussion-board/viewtopic.php?f=7&t=5624">
+                                    25th Amateur Series Division 6
+                                </a>
+                                <br>
+                                <br>
+        
+                                <b>Ifrit j4.3 - 26th Amateur Series Division 6(completed)</b>
+                                <br>
+                                
+                                <a href="https://kirill-kryukov.com/chess/discussion-board/viewtopic.php?f=7&t=5730">
+                                    26th Amateur Series Division 6
+                                </a>
+                                <br>
+                                <br>
+        
+                                <b>Ifrit j4.3 - 27th Amateur Series Division 6(completed)</b>
+                                <br>
+                                
+                                <a href="https://kirill-kryukov.com/chess/discussion-board/viewtopic.php?f=7&t=5819">
+                                    27th Amateur Series Division 6
+                                </a>
+                                <br>
+                                <br>
+
+                                <b>Ifrit m1.5 - 31st Amateur Series Division 5(completed)</b>
+                                <br>
+                                
+                                <a href="https://kirill-kryukov.com/chess/discussion-board/viewtopic.php?f=7&t=6203">
+                                    31st Amateur Series Division 5
+                                </a>
+                                <br>
+                                <br>
+
+                                <b>Ifrit m1.5 - REDSHIFT MYSTERY(completed)</b>
+                                <br>
+                                
+                                <a href="https://kirill-kryukov.com/chess/discussion-board/viewtopic.php?f=7&t=6247">
+                                    REDSHIFT MYSTERY
+                                </a>
+                                <br>
+                                <br>
+
+                                <b>Ifrit m1.8 - INFESTATION OF THE NANOBYTES(completed)</b>
+                                <br>
+                                
+                                <a href="https://kirill-kryukov.com/chess/discussion-board/viewtopic.php?f=7&t=6628">
+                                    INFESTATION OF THE NANOBYTES
+                                </a>
+                                <br>
+                                <br>
+
+                                <b> Ifrit m1.8 64-bit - 39th Amateur Series Division 6(completed)</b>
+                                <br>
+                                
+                                 <a href="https://kirill-kryukov.com/chess/discussion-board/viewtopic.php?f=7&t=6899">
+                                     39th Amateur Series Division 6
+                                 </a>
+                          
+                                <br>
+                                <br>
+                                <br>
+
+        
+                                <b>UCI движок Ifrit</b>
+                                <br>
+                                <br>
+                                <b>
+                                   В серии "с" используется 0х88 генератор ходов.
+                                   <br>
+                                   В серии "b" используется bitboard генератор ходов.
+                                   <br>
+                                   В серии "j" используется bitboard генератор ходов + объектно-ориентированное программирование (object-oriented programming).
+                                   <br>
+                                   (объектно-ориентированное программирование до версии j3 и начиная с версии j3.8)
+                                   <br>
+                                   В серии "m" используется magic-bitboards генератор ходов.
+                                   <br>
+                                </b>
+                                <br>
+                                <br>
+                           </font>
+                           
+                           <font size="4"> 
+                                <b>Типы игры:</b>
+                                <br>
+                                При игре обычно использую 256 Мб хеш-таблицу.
+                                <br>     
+                                1. Фиксированная глубина. (Fixed depth)
+                                <br>
+                                Возможность задавать фиксированную глубину поиска в полуходах.
+                                <br>
+                                2. Блиц партии.(Blitz game)
+                                <br>
+                                Тестируем с контролем 1 мин + 1 сек и 5 мин + 1  сек на партию.
+                                <br>
+                                3. Бесконечный анализ.(Infinite analysis)
+                                <br>
+                                Работа в режиме анализа позиции. Вы делаете ходы, а движок оценивает позицию.
+                                <br>
+                                <br>
+
+                                <b>Алгоритм:</b>
+                                <br>
+        
+                                1. MiniMax. Основной перебор оптимизирован альфа-бета отсечением. При правильной реализации он не вносит дополнительной погрешности.
+                                <br>
+                                2. Late move reductions. 
+                                <br>
+                                3. Hash-table(хеш-таблица).
+                                <br>
+                                4. Mvv/lva(most valuable victim / least valuable aggressor). Сортировка взятий наиболее ценная жертва/наименее ценный агрессор.
+                                <br>
+                                5. Killer heuristic(эвристика убийцы). Это просто использование лучшего хода для данной глубины.
+                                <br> 
+                                6. Quiescence search (форсированный перебор).
+                                <br> 
+                                &nbsp;&nbsp;&nbsp;
+                                На максимальной глубине основного перебора мы продолжаем цепочку взятий, либо начинаем, если фигура под боем.
+                                <br>
+                                &nbsp;&nbsp;&nbsp;
+                                Взятия считаются до конца.
+                                <br>
+                                7. Extensions(продления). 
+                                <br>
+                                &nbsp;&nbsp;&nbsp;
+                                В случае шахов глубина этой ветки увеличивается на полуход.
+                                <br>
+                                8. Null move(нулевой ход). Редукция 4. 
+                                <br>
+                                9. Delta pruning используем в quiescence search.
+                                <br>
+                                10. Futility pruning.
+                                <br>  
+                                11. Razoring.
+                                <br>
+                                12. History heuristic.
+                                <br>
+                                <br> 
+                            
+  
+                                <p align="justify">
+                                     В графической оболочке Арена (автор
+                                     <span lang="en-us"> Martin Blume</span>)
+                                     &nbsp; 
+                                     <a href="https://www.playwitharena.de">
+                                     www.playwitharena.de
+                                     </a> 
+                                     можно поиграть с Ифритом.
+                                </p>
+                                <br>
+                            </font> 
+                            
+                            <font size="4"> 
+                            
+                                 <i><b>На данный момент разработка программы приостановлена. </b></i> 
+                                 <br>
+                                 Программу когда-то тестировали: Dragon777, Сергей Зеркалов, Anechka008.exe, GreKo.exe, Murka_2_w32.exe, fruit_21.exe.
+                                 <p align="justify">
+                                     Обратите внимание на исходники. Они хорошо прокомментированы. И те, кто хотят написать 
+                                     шахматную программу, найдут в них пример реализации.
+                                     <br>
+                                     Я стремлюсь не только к эффективности, 
+                                     &nbsp;
+                                     но и к прозрачности кода. Пытаюсь сделать максимально понятные 
+                                     и доступные исходники.
+                                 </p>
+                                 <p align="justify">
+                                     Дневник писал для себя, но так как он получился забавным, 
+                                     то решил его выложить. 
+                                 </p>
+                                 <p align="justify">
+                                     Оставляйте сообщения в гостевой и пишите по нижеуказанному 
+                                     адресу.
+                                     <br>
+                                 </p>
+                                 <p align="justify">
+                                     E-mail: 
+                                     <a href="mailto:Andchess2006@yandex.ru">
+                                         Andchess2006@yandex.ru
+                                     </a>
+                                 </p>
+                            </font> 
+        
+               
+                     </td><!--Tabl_3 строка 1  столбец 2 конец-->  
+                 
+               </tr> <!--Tabl_3 строка 1 конец -->   
+     
+            </table><!-- "Tabl_3" конец--> 
+        
+        </td>  <!--Tabl_1 строка 2  столбец 1 конец -->
+   
+      </tr><!--Tabl_1 строка 2  конец-->
+
+    </table><!-- "Tabl_1" конец-->
+
+ </body>
+
+</html>
