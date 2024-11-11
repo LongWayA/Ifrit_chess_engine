@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="">
  <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-     <!-- Copyright (c) 2006-2022, Brenkman Andrey and/or its affiliates. All rights reserved. -->
+     <!-- Copyright (c) 2006-2024, Brenkman Andrey and/or its affiliates. All rights reserved. -->
      <!-- задаем тип страницы и шрифт-->
      
      <title>Шахматная программа Ифрит</title>
@@ -21,7 +21,7 @@
      </style>
  </head>
 
-<!-- Версия сайта 38 от 19.10.2007  39 от 21.12.2020  40 от 23.03.2021 41 от 10.11m.2024-->
+<!-- Версия сайта 38 от 19.10.2007  39 от 21.12.2020  40 от 23.03.2021 41 от 11.11m.2024-->
 
 <!-- тело документа задан цвет  все отступы по нулям-->
 <body bgColor="#CCCCFF" leftMargin="0" topMargin="0" rightMargin="0" bottomMargin="0" marginheight="0" marginwidth="0">
@@ -40,51 +40,13 @@
                <tr><!--Tabl_2 строка 1  начало -->
                   <td width="140" height="96" align="center" bgcolor="#9999FF"><!--Tabl_2 строка 1  столбец 1 начало-->
      
-                    <!--мой счетчик посещений-->
-                    <input type="text" class="colortext" name="user" id = "text_number_users" value="Запросов"><br>
-        
-                    
-                    <script language="JavaScript" type="text/javascript">
-                         var number_users = 0;
-         
-                         var get_text_number_users = document.getElementById("text_number_users");
-                         //console.log('Ifrit: get_text_number_users = ' + get_text_number_users);
-                         get_text_number_users.addEventListener('change', update_text_number_users);
-              
-                        //=============================================================================
-                        async function f_response() {
-                               //let response = await fetch('http://alphagameset.xyz/ifrit/_SQLBase/get_ifrit_SQL_base.php/?name=requests_ifrit_chess_engine');
-                               let response = await fetch('http://alphagameset.xyz/0_0_SQL_base/CountRequestsGet.php/?name=requests_ifrit_chess_engine');
-                               if (response.ok) { // если HTTP-статус в диапазоне 200-299
-                                    number_users = await response.text();
-                                    get_text_number_users.value = "Запросов " + number_users;
-                                    //console.log('Ifrit: number_users = ' + number_users);
-                               } else {
-                                   alert("Ошибка HTTP: " + response.status);
-                               }
-                        };
-                        //=============================================================================    
-         
-                        //=============================================================================
-                        function update_text_number_users(e) {
-                            // e.target.value;
-                            //console.log('Ifrit: e=' + e.target.value);
-                            get_text_number_users.value = "Запросов = " + number_users;
-                        };
-                        //=============================================================================
-         
-                        f_response();
-         
-                       
-                    </script> 
-                     <!--мой счетчик посещений-->
+                    <img src="Ifrit_logos_Graham_Banks/ifrit_130x65.gif" align="left" width="130" height="65" />
                      
                   </td><!--Tabl_2 строка 1  столбец 1 конец-->
                   
                   <td width="*" height="96" bgcolor="#9999FF"><!--Tabl_2 строка 1  столбец 2 начало-->     
                      <!--ячейка под заголовок -->
                      
-                     <img src="Ifrit_logos_Graham_Banks/ifrit.png" align="left" width="130" height="65" />
                      <!--<p align="justify"><font size="4">Ifrit logo by Graham Banks</font></p>--> 
                      <h1 align="center">Шахматная программа Ифрит (Ifrit chess engine)</h1> 
      
@@ -217,18 +179,11 @@
                     <td width="*" align="left" valign="top" bgcolor="#CCCCFF">
                          <p align="justify">
                              <font size="4">
-                                 Последнее обновление 27 June 2012(ревизия от 21.03m.21)<br>
+                                 Последнее обновление 27 June 2012(ревизия от 21.03m.21, 11.11m.24)<br>
                                  10.11m.2024 сделал страницу на GitHub 
                              </font>
                          </p>
-        
-                         <p align="justify">
-                             <font size="4">
-		                         <a href="http://alphagameset.xyz/"> На главную </a>
-		                     </font>
-		                 </p>
                          
-  
                          <font size="4">
                             <!--<br> Добавил код Ифрита в репозиторий bitbucket.org <br>
                              <a href="https://bitbucket.org/abrenkman/ifrit_chess_engine/src">
@@ -244,7 +199,7 @@
                                </p>
                           </font>
                           
-    	                  <img src="Ifrit_logos_Graham_Banks/ifrit_130x65.gif" align="left" width="130" height="65" />
+    	                  <img src="Ifrit_logos_Graham_Banks/ifrit.png" align="left" width="130" height="65" />
     	                  <!--
                           <font size="4">
                               Ifrit m1.8 компиляция от <b>Jim Ablett</b> 
