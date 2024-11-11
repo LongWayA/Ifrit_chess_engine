@@ -1,7 +1,8 @@
+<!DOCTYPE html>
 <html>
 
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>Board_c</title>
 </head>
 
@@ -16,7 +17,7 @@
         <h2 align="center">Board_c</h2>
         </td>
         <td width="25%">
-        <p align="center"><a href="/index.html">на главную страницу</a></td>
+        <p align="center"><a href="/Strelka.htm">РЅР° РіР»Р°РІРЅСѓСЋ СЃС‚СЂР°РЅРёС†Сѓ</a></td>
       </tr>
     </table>
     </td>
@@ -28,7 +29,7 @@
 
         <p align="justify">
         //////////////////////////////////////////////////////////////////////////<br>
-        // Инициализация позиции из строки FEN<br>
+        // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїРѕР·РёС†РёРё РёР· СЃС‚СЂРѕРєРё FEN<br>
         void board_from_fen(const char fen[])<br>
         { int pos, i, j;<br>
         char c;<br>
@@ -64,12 +65,12 @@
         board_init(Board);<br>
         }<br>
         ///////////////////////////////////////////////////////////////////////////<br>
-        // Инициализация структуры Board<br>
+        // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ СЃС‚СЂСѓРєС‚СѓСЂС‹ Board<br>
         void board_init(struct board_t * board)<br>
         { int i, square, piece;<br>
         unsigned __int64 key;<br>
         <br>
-        // Оценки положений фигур по типам и координатам<br>
+        // РћС†РµРЅРєРё РїРѕР»РѕР¶РµРЅРёР№ С„РёРіСѓСЂ РїРѕ С‚РёРїР°Рј Рё РєРѕРѕСЂРґРёРЅР°С‚Р°Рј<br>
         board-&gt;opening = 0;<br>
         board-&gt;endgame = 0;<br>
         for (square = 0; square &lt; 64; square++) {<br>
@@ -79,7 +80,7 @@
         board-&gt;endgame += PieceSquareValue[piece - 2][square][1];<br>
         }<br>
         }<br>
-        // Битовые строки<br>
+        // Р‘РёС‚РѕРІС‹Рµ СЃС‚СЂРѕРєРё<br>
         for (i = 0; i &lt; 14; i++) board-&gt;mp[i] = 0;<br>
         board-&gt;md1 = 0; board-&gt;md2 = 0; board-&gt;md3 = 0; board-&gt;md4 = 0;<br>
         for (square = 0; square &lt; 64; square++) {<br>
@@ -94,7 +95,7 @@
         board-&gt;md4 |= MaskSetMD4[square];<br>
         }<br>
         }<br>
-        // Хэш-коды позиции<br>
+        // РҐСЌС€-РєРѕРґС‹ РїРѕР·РёС†РёРё<br>
         board-&gt;key = 0;<br>
         for (square = 0; square &lt; 64; square++) {<br>
         piece = board-&gt;square[square];<br>
@@ -104,13 +105,13 @@
         if (board-&gt;ep_square != 0) board-&gt;key ^= RandomEP[board-&gt;ep_square &amp; 7];<br>
         if (board-&gt;turn) board-&gt;key ^= 0;<br>
         else board-&gt;key ^= RandomTurn;<br>
-        // Хэш-код пешечной структуры<br>
+        // РҐСЌС€-РєРѕРґ РїРµС€РµС‡РЅРѕР№ СЃС‚СЂСѓРєС‚СѓСЂС‹<br>
         board-&gt;pawn_key = Random[0][0];<br>
         for (square = 0; square &lt; 64; square++) {<br>
         piece = board-&gt;square[square];<br>
         if (PIECE_IS_PAWN(piece)) board-&gt;pawn_key ^= Random[piece-2][square];<br>
         }<br>
-        // Сумма материала<br>
+        // РЎСѓРјРјР° РјР°С‚РµСЂРёР°Р»Р°<br>
         board-&gt;mat_summ =<br>
         popcnt(board-&gt;mp[WhiteQueen]) +<br>
         popcnt(board-&gt;mp[BlackQueen]) * 2 +<br>
@@ -122,7 +123,7 @@
         popcnt(board-&gt;mp[BlackKnight]) * 2*2*3*3*3*3*3 +<br>
         popcnt(board-&gt;mp[WhitePawn]) * 2*2*3*3*3*3*3*3 +<br>
         popcnt(board-&gt;mp[BlackPawn]) * 2*2*3*3*3*3*3*3*9;<br>
-        // Разность материала<br>
+        // Р Р°Р·РЅРѕСЃС‚СЊ РјР°С‚РµСЂРёР°Р»Р°<br>
         board-&gt;mat_diff =<br>
         (popcnt(board-&gt;mp[WhiteQueen]) - popcnt(board-&gt;mp[BlackQueen])) * 10 +<br>
         (popcnt(board-&gt;mp[WhiteRook]) - popcnt(board-&gt;mp[BlackRook])) * 5 +<br>
@@ -145,7 +146,7 @@
         return ((v1 * 0x01010101) &gt;&gt; 24) + ((v2 * 0x01010101) &gt;&gt; 24);<br>
         }<br>
         /////////////////////////////////////////////////////////////////////////////<br>
-        // Инициализация битовых масок<br>
+        // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ Р±РёС‚РѕРІС‹С… РјР°СЃРѕРє<br>
         #define Rank(x) ((x)&gt;&gt;3)<br>
         #define File(x) ((x)&amp;7)<br>
         <br>
@@ -219,21 +220,21 @@
         else if (File(i) - File(j) == Rank(j) - Rank(i)) LineIndex[i][j] = 0;<br>
         else LineIndex[i][j] = 9;<br>
         }<br>
-        for (i = 0; i &lt; 64; i++) { // по полям<br>
-        for (j = 0; j &lt; 64; j++) { // по вариантам заполнения линии фигурами<br>
+        for (i = 0; i &lt; 64; i++) { // РїРѕ РїРѕР»СЏРј<br>
+        for (j = 0; j &lt; 64; j++) { // РїРѕ РІР°СЂРёР°РЅС‚Р°Рј Р·Р°РїРѕР»РЅРµРЅРёСЏ Р»РёРЅРёРё С„РёРіСѓСЂР°РјРё<br>
         LineMask[0][i][j] = 0;<br>
         LineMask[1][i][j] = 0;<br>
         LineMask[2][i][j] = 0;<br>
         LineMask[3][i][j] = 0;<br>
-        // заполняем из att горизонталь, проходящую через i, слева направо<br>
-        att = line_attack(File(i), j &lt;&lt; 1); // получили строку атак (8 бит)<br>
+        // Р·Р°РїРѕР»РЅСЏРµРј РёР· att РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊ, РїСЂРѕС…РѕРґСЏС‰СѓСЋ С‡РµСЂРµР· i, СЃР»РµРІР° РЅР°РїСЂР°РІРѕ<br>
+        att = line_attack(File(i), j &lt;&lt; 1); // РїРѕР»СѓС‡РёР»Рё СЃС‚СЂРѕРєСѓ Р°С‚Р°Рє (8 Р±РёС‚)<br>
         for (k = 0, sq = Rank(i) * 8; k &lt; 8; k++, sq++)<br>
         if (att &amp; (1 &lt;&lt; k)) LineMask[2][i][j] |= (unsigned __int64)1 &lt;&lt; sq;<br>
-        // а теперь вертикаль - сверху вниз<br>
+        // Р° С‚РµРїРµСЂСЊ РІРµСЂС‚РёРєР°Р»СЊ - СЃРІРµСЂС…Сѓ РІРЅРёР·<br>
         att = line_attack(7 - Rank(i), j &lt;&lt; 1);<br>
         for (k = 0, sq = File(i) + 56; k &lt; 8; k++, sq -= 8)<br>
         if (att &amp; (1 &lt;&lt; k)) LineMask[3][i][j] |= (unsigned __int64)1 &lt;&lt; sq;<br>
-        // диагональ сверху справа влево вниз<br>
+        // РґРёР°РіРѕРЅР°Р»СЊ СЃРІРµСЂС…Сѓ СЃРїСЂР°РІР° РІР»РµРІРѕ РІРЅРёР·<br>
         if (Rank(i) + File(i) &lt;= 7) sq = File(i); else sq = 7 - Rank(i);<br>
         att = line_attack(sq, j &lt;&lt; 1);<br>
         if (Rank(i) + File(i) &lt;= 7) sq = i + 7 * File(i);<br>
@@ -242,7 +243,7 @@
         if (att &amp; (1 &lt;&lt; k)) LineMask[0][i][j] |= (unsigned __int64)1 &lt;&lt; sq;<br>
         if (File(sq) == 7 || Rank(sq) == 0) break;<br>
         }<br>
-        // диагональ снизу справа вверх влево<br>
+        // РґРёР°РіРѕРЅР°Р»СЊ СЃРЅРёР·Сѓ СЃРїСЂР°РІР° РІРІРµСЂС… РІР»РµРІРѕ<br>
         if (File(i) &gt; Rank(i)) sq = Rank(i); else sq = File(i);<br>
         att = line_attack(sq, j &lt;&lt; 1);<br>
         if (File(i) &gt; Rank(i)) sq = i - 9 * Rank(i);<br>

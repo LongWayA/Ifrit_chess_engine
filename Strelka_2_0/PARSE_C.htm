@@ -1,7 +1,8 @@
+<!DOCTYPE html>
 <html>
 
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>PARSE_C</title>
 </head>
 
@@ -16,7 +17,7 @@
         <h2 align="center">PARSE_C</h2>
         </td>
         <td width="25%">
-        <p align="center"><a href="/index.html">на главную страницу</a></td>
+        <p align="center"><a href="/Strelka.htm">РЅР° РіР»Р°РІРЅСѓСЋ СЃС‚СЂР°РЅРёС†Сѓ</a></td>
       </tr>
     </table>
     </td>
@@ -28,7 +29,7 @@
 
         <p align="justify">
         /******************************************************************<br>
-        Parse.c - Функции обработки команд UCI<br>
+        Parse.c - Р¤СѓРЅРєС†РёРё РѕР±СЂР°Р±РѕС‚РєРё РєРѕРјР°РЅРґ UCI<br>
         *******************************************************************/<br>
         #include &lt;stdio.h&gt;<br>
         #include &lt;windows.h&gt;<br>
@@ -277,20 +278,20 @@
         }<br>
         return 0;<br>
         }<br>
-        // удаляем символы 'x' '=' '+' '#' и переводим в верхний регистр<br>
+        // СѓРґР°Р»СЏРµРј СЃРёРјРІРѕР»С‹ 'x' '=' '+' '#' Рё РїРµСЂРµРІРѕРґРёРј РІ РІРµСЂС…РЅРёР№ СЂРµРіРёСЃС‚СЂ<br>
         memset(stroka, 0, 20); pos = 0;<br>
         for (i = 0; (c = cmove[i]) != 0; i++) if (!strchr(&quot;x=+#&quot;, c)) <br>
         stroka[pos++] = strchr(&quot;qrn&quot;, c) ? toupper(c) : c;<br>
         left = 0; right = strlen(stroka) - 1;<br>
         if (strstr(stroka, &quot;/ep&quot;)) right -= 3;<br>
-        // смотрим превращение пешки<br>
+        // СЃРјРѕС‚СЂРёРј РїСЂРµРІСЂР°С‰РµРЅРёРµ РїРµС€РєРё<br>
         if (strchr(&quot;QRBN&quot;, stroka[right])) promotion = stroka[right--];<br>
-        // тип ходящей фигуры - символ 'K' 'Q' 'R' 'B' 'N' 'P'<br>
+        // С‚РёРї С…РѕРґСЏС‰РµР№ С„РёРіСѓСЂС‹ - СЃРёРјРІРѕР» 'K' 'Q' 'R' 'B' 'N' 'P'<br>
         if (left &lt; right) {<br>
         if (strchr(&quot;KQRBN&quot;, stroka[left])) pt = stroka[left++];<br>
-        else pt = 'P'; // если не указана фигура, то это пешка<br>
+        else pt = 'P'; // РµСЃР»Рё РЅРµ СѓРєР°Р·Р°РЅР° С„РёРіСѓСЂР°, С‚Рѕ СЌС‚Рѕ РїРµС€РєР°<br>
         }<br>
-        // определяем позицию to<br>
+        // РѕРїСЂРµРґРµР»СЏРµРј РїРѕР·РёС†РёСЋ to<br>
         if (left &lt; right) {<br>
         if (stroka[right] &lt; '1' || stroka[right] &gt; '8' ||<br>
         stroka[right - 1] &lt; 'a' || stroka[right - 1] &gt; 'h') return 0;<br>
@@ -298,7 +299,7 @@
         right -= 2;<br>
         }<br>
         else return 0;<br>
-        // определяем file, rank<br>
+        // РѕРїСЂРµРґРµР»СЏРµРј file, rank<br>
         if (left &lt;= right) {<br>
         if (strchr(&quot;abcdefgh&quot;, stroka[left])) file = stroka[left++];<br>
         if (strchr(&quot;12345678&quot;, stroka[left])) rank = stroka[left];<br>
@@ -322,10 +323,10 @@
         }<br>
         <br>
         struct pgn_t {<br>
-        char WhitePlayer[100]; // имя игрока, играющего белыми<br>
-        char BlackPlayer[100]; // имя игрока, играющего черными<br>
-        char Winner; // кто выиграл: 0 - ничья, 1 - выигрыш белых, 2 - черных<br>
-        int PlyCount; // количество ходов<br>
+        char WhitePlayer[100]; // РёРјСЏ РёРіСЂРѕРєР°, РёРіСЂР°СЋС‰РµРіРѕ Р±РµР»С‹РјРё<br>
+        char BlackPlayer[100]; // РёРјСЏ РёРіСЂРѕРєР°, РёРіСЂР°СЋС‰РµРіРѕ С‡РµСЂРЅС‹РјРё<br>
+        char Winner; // РєС‚Рѕ РІС‹РёРіСЂР°Р»: 0 - РЅРёС‡СЊСЏ, 1 - РІС‹РёРіСЂС‹С€ Р±РµР»С‹С…, 2 - С‡РµСЂРЅС‹С…<br>
+        int PlyCount; // РєРѕР»РёС‡РµСЃС‚РІРѕ С…РѕРґРѕРІ<br>
         int Moves[1000];<br>
         struct {<br>
         int pv[100];<br>
@@ -577,7 +578,7 @@
         if (Pgn-&gt;comment[i].pv[0] == 0 &amp;&amp; Pgn-&gt;comment[i].depth == 0) opening = 
         1;<br>
         if (!opening &amp;&amp; (i &amp; 1) == side &amp;&amp; Pgn-&gt;comment[i].value &gt; -200) {<br>
-        // не дебют, ход Стрелки и еще не проиграно - сохраняем позицию в EPD<br>
+        // РЅРµ РґРµР±СЋС‚, С…РѕРґ РЎС‚СЂРµР»РєРё Рё РµС‰Рµ РЅРµ РїСЂРѕРёРіСЂР°РЅРѕ - СЃРѕС…СЂР°РЅСЏРµРј РїРѕР·РёС†РёСЋ РІ EPD<br>
         strcpy(position,&quot;position startpos moves&quot;);<br>
         for (j = 0; j &lt; i; j++) {<br>
         move_to_string(Pgn-&gt;Moves[j], cmove);<br>
@@ -585,9 +586,9 @@
         strcat(position, cmove);<br>
         }<br>
         parse_position(position);<br>
-        // преобразуем позицию в FEN<br>
+        // РїСЂРµРѕР±СЂР°Р·СѓРµРј РїРѕР·РёС†РёСЋ РІ FEN<br>
         board_to_fen(position);<br>
-        // добавляем лучший ход, предложенный ранее соперником или наш текущий<br>
+        // РґРѕР±Р°РІР»СЏРµРј Р»СѓС‡С€РёР№ С…РѕРґ, РїСЂРµРґР»РѕР¶РµРЅРЅС‹Р№ СЂР°РЅРµРµ СЃРѕРїРµСЂРЅРёРєРѕРј РёР»Рё РЅР°С€ С‚РµРєСѓС‰РёР№<br>
         if (i &gt; 0 &amp;&amp; Pgn-&gt;comment[i-1].pv[1] != 0) move = 
         Pgn-&gt;comment[i-1].pv[1];<br>
         else move = Pgn-&gt;Moves[i];<br>

@@ -1,7 +1,8 @@
+<!DOCTYPE html>
 <html>
 
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>Search_c</title>
 </head>
 
@@ -16,7 +17,7 @@
         <h2 align="center">Search_c</h2>
         </td>
         <td width="25%">
-        <p align="center"><a href="/index.html">на главную страницу</a></td>
+        <p align="center"><a href="/Strelka.htm">РЅР° РіР»Р°РІРЅСѓСЋ СЃС‚СЂР°РЅРёС†Сѓ</a></td>
       </tr>
     </table>
     </td>
@@ -101,21 +102,21 @@
         time_limit_1 = movetime * 5;<br>
         time_limit_2 = movetime;<br>
         }<br>
-        else if (time &gt;= 0) { // контроль времени<br>
+        else if (time &gt;= 0) { // РєРѕРЅС‚СЂРѕР»СЊ РІСЂРµРјРµРЅРё<br>
         time_is_limited = 1;<br>
-        if (zapas) time_max = ((time / 10) * 9) - 5000; // максимальное время<br>
+        if (zapas) time_max = ((time / 10) * 9) - 5000; // РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ РІСЂРµРјСЏ<br>
         else time_max = time - 2000;<br>
         if (time_max &lt; 0) time_max = 0;<br>
         alloc = (time_max + inc * (movestogo - 1)) / movestogo;<br>
         if (alloc &gt; time_max) alloc = time_max;<br>
-        time_limit_1 = alloc; // нижняя граница контроля времени<br>
-        alloc = (time_max + inc * (movestogo - 1)) / 2; // половина от 
-        оставшегося<br>
+        time_limit_1 = alloc; // РЅРёР¶РЅСЏСЏ РіСЂР°РЅРёС†Р° РєРѕРЅС‚СЂРѕР»СЏ РІСЂРµРјРµРЅРё<br>
+        alloc = (time_max + inc * (movestogo - 1)) / 2; // РїРѕР»РѕРІРёРЅР° РѕС‚ 
+        РѕСЃС‚Р°РІС€РµРіРѕСЃСЏ<br>
         if (alloc &lt; time_limit_1) alloc = time_limit_1;<br>
         if (alloc &gt; time_max) alloc = time_max;<br>
-        time_limit_2 = alloc; // верхняя граница контроля<br>
-        // Есть мысль верхнюю границу брать не 1/2 а 1/3 от оставшегося,<br>
-        // а то бывает долго думает в таких случаях, и потом попадает в цейтнот.<br>
+        time_limit_2 = alloc; // РІРµСЂС…РЅСЏСЏ РіСЂР°РЅРёС†Р° РєРѕРЅС‚СЂРѕР»СЏ<br>
+        // Р•СЃС‚СЊ РјС‹СЃР»СЊ РІРµСЂС…РЅСЋСЋ РіСЂР°РЅРёС†Сѓ Р±СЂР°С‚СЊ РЅРµ 1/2 Р° 1/3 РѕС‚ РѕСЃС‚Р°РІС€РµРіРѕСЃСЏ,<br>
+        // Р° С‚Рѕ Р±С‹РІР°РµС‚ РґРѕР»РіРѕ РґСѓРјР°РµС‚ РІ С‚Р°РєРёС… СЃР»СѓС‡Р°СЏС…, Рё РїРѕС‚РѕРј РїРѕРїР°РґР°РµС‚ РІ С†РµР№С‚РЅРѕС‚.<br>
         }<br>
         Infinite = 0;<br>
         if (infinite || ponder) Infinite = 1;<br>
@@ -162,9 +163,9 @@
         }<br>
         list_root[num_moves].move = 0;<br>
         <br>
-        // Следующую строку можно добавлять только после грамотного написания 
+        // РЎР»РµРґСѓСЋС‰СѓСЋ СЃС‚СЂРѕРєСѓ РјРѕР¶РЅРѕ РґРѕР±Р°РІР»СЏС‚СЊ С‚РѕР»СЊРєРѕ РїРѕСЃР»Рµ РіСЂР°РјРѕС‚РЅРѕРіРѕ РЅР°РїРёСЃР°РЅРёСЏ 
         MultiPV,<br>
-        // иначе может быть ошибка.<br>
+        // РёРЅР°С‡Рµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РѕС€РёР±РєР°.<br>
         // if (num_moves &lt;= 1) { depth_is_limited = 1; depth_limit = 4; }<br>
         <br>
         trans_set_date((trans_date + 1) % DateSize);<br>
@@ -200,7 +201,7 @@
         if (Post) fprintf(stdout,&quot;info depth %d\n&quot;,depth);<br>
         bad_1 = change = 0;<br>
         value = full_root(depth);<br>
-        if (best_score &lt;= -32000 || best_score &gt;= 32000) break; // мат<br>
+        if (best_score &lt;= -32000 || best_score &gt;= 32000) break; // РјР°С‚<br>
         if (depth == 1 &amp;&amp; num_moves &gt;= 2 &amp;&amp; list_root[0].score &gt;= list_root[1].score 
         + 150) easy = 1;<br>
         if (depth &gt; 1) { bad_2 = bad_1; bad_1 = 0; }<br>
@@ -347,7 +348,7 @@
         else if (value &gt;= 31500) list_root[i].score = 63000;<br>
         else list_root[i].score = value + 31500;<br>
         if (value &gt; best_value) {<br>
-        // Ох, и криво написан MultiPV - с кучей багов. Надо бы переписать !!!<br>
+        // РћС…, Рё РєСЂРёРІРѕ РЅР°РїРёСЃР°РЅ MultiPV - СЃ РєСѓС‡РµР№ Р±Р°РіРѕРІ. РќР°РґРѕ Р±С‹ РїРµСЂРµРїРёСЃР°С‚СЊ !!!<br>
         if (pv_cnt &lt; MultiPV) {<br>
         pv_cat(multipv[pv_cnt].pv, new_pv, move);<br>
         multipv[pv_cnt].score = value;<br>
@@ -472,8 +473,8 @@
         Board-&gt;key = undo_null-&gt;key;<br>
         pos_info_entry--;<br>
         <br>
-        // верификация пустого хода - тоже из одной из Белок, что дает - 
-        неизвестно.<br>
+        // РІРµСЂРёС„РёРєР°С†РёСЏ РїСѓСЃС‚РѕРіРѕ С…РѕРґР° - С‚РѕР¶Рµ РёР· РѕРґРЅРѕР№ РёР· Р‘РµР»РѕРє, С‡С‚Рѕ РґР°РµС‚ - 
+        РЅРµРёР·РІРµСЃС‚РЅРѕ.<br>
         if (depth &gt; 5 &amp;&amp; new_value &gt;= beta) new_value = 
         full_search(beta,depth-5,0,new_pv);<br>
         <br>
@@ -728,13 +729,13 @@
         if (alpha &gt;= beta) return alpha;<br>
         }<br>
         else if (pos_info_entry-&gt;value &lt; (alpha - 250)) {<br>
-        // delta pruning: если оценка позиции хуже alpha,<br>
-        // то из взятий убираем &quot;слабые&quot; взятия через маски mask_w и mask_b<br>
+        // delta pruning: РµСЃР»Рё РѕС†РµРЅРєР° РїРѕР·РёС†РёРё С…СѓР¶Рµ alpha,<br>
+        // С‚Рѕ РёР· РІР·СЏС‚РёР№ СѓР±РёСЂР°РµРј &quot;СЃР»Р°Р±С‹Рµ&quot; РІР·СЏС‚РёСЏ С‡РµСЂРµР· РјР°СЃРєРё mask_w Рё mask_b<br>
         best_value = pos_info_entry-&gt;value + 250;<br>
         mask_w ^= Board-&gt;mp[WhitePawn];<br>
         mask_b ^= Board-&gt;mp[BlackPawn];<br>
-        // В оригинальной версии Стрелки исключались только взятия пешек<br>
-        // Следующие исключения - Белка 1.8.12 (+13 пунктов !!!)<br>
+        // Р’ РѕСЂРёРіРёРЅР°Р»СЊРЅРѕР№ РІРµСЂСЃРёРё РЎС‚СЂРµР»РєРё РёСЃРєР»СЋС‡Р°Р»РёСЃСЊ С‚РѕР»СЊРєРѕ РІР·СЏС‚РёСЏ РїРµС€РµРє<br>
+        // РЎР»РµРґСѓСЋС‰РёРµ РёСЃРєР»СЋС‡РµРЅРёСЏ - Р‘РµР»РєР° 1.8.12 (+13 РїСѓРЅРєС‚РѕРІ !!!)<br>
         if (pos_info_entry-&gt;value &lt; (alpha - 450)) {<br>
         best_value = pos_info_entry-&gt;value + 450;<br>
         mask_w ^= Board-&gt;mp[WhiteKnight];<br>
@@ -788,15 +789,15 @@
         }<br>
         }<br>
         if (depth &lt;= -6) return best_value;<br>
-        // в генерации шахов нужно &quot;вернуть&quot; слабые взятия, отброшенные по delta 
+        // РІ РіРµРЅРµСЂР°С†РёРё С€Р°С…РѕРІ РЅСѓР¶РЅРѕ &quot;РІРµСЂРЅСѓС‚СЊ&quot; СЃР»Р°Р±С‹Рµ РІР·СЏС‚РёСЏ, РѕС‚Р±СЂРѕС€РµРЅРЅС‹Рµ РїРѕ delta 
         pruning;<br>
-        // делаем это через маски ~mask_w и ~mask_b<br>
+        // РґРµР»Р°РµРј СЌС‚Рѕ С‡РµСЂРµР· РјР°СЃРєРё ~mask_w Рё ~mask_b<br>
         gen_checks(list, ~mask_w, ~mask_b);<br>
         for (pi = list; pi-&gt;move != 0; pi++) {<br>
         move = pi-&gt;move;<br>
-        // ход может быть с превращением, а в gen_checks это не учитывается,<br>
-        // поэтому для таких случаев добавляем флаг превращения в ферзя;<br>
-        // слабые превращения здесь учитывать не будем.<br>
+        // С…РѕРґ РјРѕР¶РµС‚ Р±С‹С‚СЊ СЃ РїСЂРµРІСЂР°С‰РµРЅРёРµРј, Р° РІ gen_checks СЌС‚Рѕ РЅРµ СѓС‡РёС‚С‹РІР°РµС‚СЃСЏ,<br>
+        // РїРѕСЌС‚РѕРјСѓ РґР»СЏ С‚Р°РєРёС… СЃР»СѓС‡Р°РµРІ РґРѕР±Р°РІР»СЏРµРј С„Р»Р°Рі РїСЂРµРІСЂР°С‰РµРЅРёСЏ РІ С„РµСЂР·СЏ;<br>
+        // СЃР»Р°Р±С‹Рµ РїСЂРµРІСЂР°С‰РµРЅРёСЏ Р·РґРµСЃСЊ СѓС‡РёС‚С‹РІР°С‚СЊ РЅРµ Р±СѓРґРµРј.<br>
         piece = Board-&gt;square[MOVE_FROM(move)];<br>
         to = MOVE_TO(move);<br>
         if (PIECE_IS_PAWN(piece) &amp;&amp; (to &gt; 55 || to &lt; 8) &amp;&amp; 
@@ -884,17 +885,17 @@
         return best_value;<br>
         }<br>
         //////////////////////////////////////////////////////////////////////////////<br>
-        // генерация ходов для функций типа full_search<br>
+        // РіРµРЅРµСЂР°С†РёСЏ С…РѕРґРѕРІ РґР»СЏ С„СѓРЅРєС†РёР№ С‚РёРїР° full_search<br>
         int next_move(struct moves_info_t * moves_info, struct pos_info_t * 
         pos_info)<br>
         { int move, move1, score, score1;<br>
         struct list_t * next;<br>
         <br>
         switch(moves_info-&gt;entry) {<br>
-        case 0: // сначала - trans_move<br>
+        case 0: // СЃРЅР°С‡Р°Р»Р° - trans_move<br>
         move = moves_info-&gt;trans_move;<br>
         moves_info-&gt;entry = 1;<br>
-        if (move != 0) { // проверяем trans_move<br>
+        if (move != 0) { // РїСЂРѕРІРµСЂСЏРµРј trans_move<br>
         if (Board-&gt;square[MOVE_FROM(move)] != 0) {<br>
         if ((Board-&gt;square[MOVE_TO(move)] &amp; 0x0E) != 12) {<br>
         if (!(move &amp; 0x7000)) return(move);<br>
@@ -904,11 +905,11 @@
         }<br>
         }<br>
         }<br>
-        case 1: // после trans_move генерим взятия<br>
+        case 1: // РїРѕСЃР»Рµ trans_move РіРµРЅРµСЂРёРј РІР·СЏС‚РёСЏ<br>
         moves_info-&gt;entry = 2;<br>
         gen_captures(moves_info-&gt;list, Board-&gt;mp[White], Board-&gt;mp[Black]);<br>
         moves_info-&gt;bad_cnt = 0;<br>
-        case 2: // проходим по взятиям и берем только хорошие по see_move<br>
+        case 2: // РїСЂРѕС…РѕРґРёРј РїРѕ РІР·СЏС‚РёСЏРј Рё Р±РµСЂРµРј С‚РѕР»СЊРєРѕ С…РѕСЂРѕС€РёРµ РїРѕ see_move<br>
         for (move = moves_info-&gt;next-&gt;move; move != 0; move = 
         moves_info-&gt;next-&gt;move) {<br>
         score = moves_info-&gt;next-&gt;score;<br>
@@ -925,40 +926,40 @@
         }<br>
         if (move != moves_info-&gt;trans_move) {<br>
         if (see_move(move) != 0) return(move);<br>
-        // плохие взятия заносим в отдельный список bad_captures<br>
+        // РїР»РѕС…РёРµ РІР·СЏС‚РёСЏ Р·Р°РЅРѕСЃРёРј РІ РѕС‚РґРµР»СЊРЅС‹Р№ СЃРїРёСЃРѕРє bad_captures<br>
         moves_info-&gt;bad_captures[moves_info-&gt;bad_cnt] = move;<br>
         moves_info-&gt;bad_cnt++;<br>
         }<br>
         }<br>
-        // первый killer<br>
+        // РїРµСЂРІС‹Р№ killer<br>
         move = pos_info-&gt;killer1;<br>
         moves_info-&gt;bad_captures[moves_info-&gt;bad_cnt] = 0;<br>
         moves_info-&gt;entry = 3;<br>
         if (move != moves_info-&gt;trans_move) {<br>
         if (move_is_legal(move, pos_info) != 0) return(move);<br>
         }<br>
-        case 3: // второй killer<br>
+        case 3: // РІС‚РѕСЂРѕР№ killer<br>
         move = pos_info-&gt;killer2;<br>
         moves_info-&gt;entry = 4;<br>
         if (move != moves_info-&gt;trans_move) {<br>
         if (move_is_legal(move, pos_info) != 0) return(move);<br>
         }<br>
-        case 4: // тихие ходы<br>
+        case 4: // С‚РёС…РёРµ С…РѕРґС‹<br>
         moves_info-&gt;entry = 5;<br>
         moves_info-&gt;next = moves_info-&gt;list;<br>
         gen_quiet_moves(moves_info-&gt;list, pos_info-&gt;mob[1], 
         moves_info-&gt;trans_move, pos_info-&gt;killer1, pos_info-&gt;killer2);<br>
-        case 5: // проходим по тихим ходам<br>
+        case 5: // РїСЂРѕС…РѕРґРёРј РїРѕ С‚РёС…РёРј С…РѕРґР°Рј<br>
         move = moves_info-&gt;next-&gt;move;<br>
         moves_info-&gt;next++;<br>
         if (move != 0) return(move);<br>
         moves_info-&gt;entry = 6;<br>
         moves_info-&gt;bad_index = 0;<br>
-        case 6: // в последнюю очередь - плохие взятия<br>
+        case 6: // РІ РїРѕСЃР»РµРґРЅСЋСЋ РѕС‡РµСЂРµРґСЊ - РїР»РѕС…РёРµ РІР·СЏС‚РёСЏ<br>
         move = moves_info-&gt;bad_captures[moves_info-&gt;bad_index];<br>
         moves_info-&gt;bad_index++;<br>
         break;<br>
-        case 7: // особый случай для evasions<br>
+        case 7: // РѕСЃРѕР±С‹Р№ СЃР»СѓС‡Р°Р№ РґР»СЏ evasions<br>
         move = moves_info-&gt;next-&gt;move;<br>
         moves_info-&gt;next++;<br>
         break;<br>

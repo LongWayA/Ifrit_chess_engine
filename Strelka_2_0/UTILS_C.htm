@@ -1,7 +1,8 @@
+<!DOCTYPE html>
 <html>
 
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>UTILS_C</title>
 </head>
 
@@ -16,7 +17,7 @@
         <h2 align="center">UTILS_C</h2>
         </td>
         <td width="25%">
-        <p align="center"><a href="/index.html">на главную страницу</a></td>
+        <p align="center"><a href="/Strelka.htm">РЅР° РіР»Р°РІРЅСѓСЋ СЃС‚СЂР°РЅРёС†Сѓ</a></td>
       </tr>
     </table>
     </td>
@@ -28,7 +29,7 @@
 
         <p align="justify">
         //////////////////////////////////////////////////////////////////////////////<br>
-        // Расчет разменов хода move<br>
+        // Р Р°СЃС‡РµС‚ СЂР°Р·РјРµРЅРѕРІ С…РѕРґР° move<br>
         int see_move(int move)<br>
         { int slide_index[4];<br>
         int from, to, piece_value, capt_value, me, opp, dir, delta;<br>
@@ -43,17 +44,17 @@
         if (MOVE_IS_ENPASSANT(move)) return 1;<br>
         me = Board-&gt;turn;<br>
         opp = me ^ 1;<br>
-        mask = MaskPawnAttacks[me][to] &amp; (Board-&gt;mp[WhitePawn + opp]); // чужие 
-        пешки<br>
-        if (mask) return 0; // чужие пешки атакуют - плохо<br>
-        // Формируем битовую маску фигур, атакующих позицию to<br>
-        // Атаки коней на to<br>
+        mask = MaskPawnAttacks[me][to] &amp; (Board-&gt;mp[WhitePawn + opp]); // С‡СѓР¶РёРµ 
+        РїРµС€РєРё<br>
+        if (mask) return 0; // С‡СѓР¶РёРµ РїРµС€РєРё Р°С‚Р°РєСѓСЋС‚ - РїР»РѕС…Рѕ<br>
+        // Р¤РѕСЂРјРёСЂСѓРµРј Р±РёС‚РѕРІСѓСЋ РјР°СЃРєСѓ С„РёРіСѓСЂ, Р°С‚Р°РєСѓСЋС‰РёС… РїРѕР·РёС†РёСЋ to<br>
+        // РђС‚Р°РєРё РєРѕРЅРµР№ РЅР° to<br>
         atk_bm = ((Board-&gt;mp[WhiteKnight]) | (Board-&gt;mp[BlackKnight])) &amp; 
         MaskKnightMoves[to];<br>
         delta = piece_value - capt_value;<br>
         if (delta &gt; 3 &amp;&amp; ((Board-&gt;mp[WhiteKnight + opp]) &amp; atk_bm)) return 0; // 
-        чужие кони атакуют - плохо<br>
-        // Аатаки дальнобойных фигур по диагоналям<br>
+        С‡СѓР¶РёРµ РєРѕРЅРё Р°С‚Р°РєСѓСЋС‚ - РїР»РѕС…Рѕ<br>
+        // РђР°С‚Р°РєРё РґР°Р»СЊРЅРѕР±РѕР№РЅС‹С… С„РёРіСѓСЂ РїРѕ РґРёР°РіРѕРЅР°Р»СЏРј<br>
         slide_index[0] = (int)((Board-&gt;md3) &gt;&gt; LineShift[0][to]) &amp; 0x3F;<br>
         slide_index[1] = (int)((Board-&gt;md4) &gt;&gt; LineShift[1][to]) &amp; 0x3F;<br>
         mask = (Board-&gt;mp[WhiteQueen]) | (Board-&gt;mp[BlackQueen]) |<br>
@@ -63,10 +64,10 @@
         atk_bm |= (LineMask[0][to][slide_index[0]] | LineMask[1][to][slide_index[1]]) 
         &amp; mask;<br>
         if (delta &gt; 3 &amp;&amp; ((Board-&gt;mp[WhiteBishop + opp]) &amp; atk_bm)) return 0; // 
-        чужие слоны атакуют<br>
+        С‡СѓР¶РёРµ СЃР»РѕРЅС‹ Р°С‚Р°РєСѓСЋС‚<br>
         mask = MaskPawnAttacks[opp][to] &amp; (Board-&gt;mp[WhitePawn + me]);<br>
-        if (mask) return 1; // свои пешки атакуют - хорошо<br>
-        // Атаки дальнобойных фигур по линиям<br>
+        if (mask) return 1; // СЃРІРѕРё РїРµС€РєРё Р°С‚Р°РєСѓСЋС‚ - С…РѕСЂРѕС€Рѕ<br>
+        // РђС‚Р°РєРё РґР°Р»СЊРЅРѕР±РѕР№РЅС‹С… С„РёРіСѓСЂ РїРѕ Р»РёРЅРёСЏРј<br>
         slide_index[2] = (int)((Board-&gt;md1) &gt;&gt; LineShift[2][to]) &amp; 0x3F;<br>
         slide_index[3] = (int)((Board-&gt;md2) &gt;&gt; LineShift[3][to]) &amp; 0x3F;<br>
         mask = (Board-&gt;mp[WhiteRook]) | (Board-&gt;mp[BlackRook]) |<br>
@@ -75,10 +76,10 @@
         slide_pieces[3] = mask;<br>
         atk_bm |= (LineMask[2][to][slide_index[2]] | LineMask[3][to][slide_index[3]]) 
         &amp; mask;<br>
-        // В конце добавляем атаки королей<br>
+        // Р’ РєРѕРЅС†Рµ РґРѕР±Р°РІР»СЏРµРј Р°С‚Р°РєРё РєРѕСЂРѕР»РµР№<br>
         atk_bm |= ((Board-&gt;mp[WhiteKing]) | (Board-&gt;mp[BlackKing])) &amp; 
         MaskKingMoves[to];<br>
-        // Маска для очистки полей фигур, сделавших свое дело<br>
+        // РњР°СЃРєР° РґР»СЏ РѕС‡РёСЃС‚РєРё РїРѕР»РµР№ С„РёРіСѓСЂ, СЃРґРµР»Р°РІС€РёС… СЃРІРѕРµ РґРµР»Рѕ<br>
         clear_bm = MaskClearSquare[from] &amp; MaskClearSquare[to];<br>
         atk_bm &amp;= clear_bm;<br>
         dir = LineIndex[from][to];<br>
@@ -87,15 +88,15 @@
         capt_value -= piece_value;<br>
         do {<br>
         clear_bm &amp;= ~atk_bm;<br>
-        // Сначала смотрим атаки соперника<br>
+        // РЎРЅР°С‡Р°Р»Р° СЃРјРѕС‚СЂРёРј Р°С‚Р°РєРё СЃРѕРїРµСЂРЅРёРєР°<br>
         mask = (Board-&gt;mp[WhiteKnight + opp]) &amp; atk_bm;<br>
-        if (mask) { // есть атакующий конь соперника<br>
+        if (mask) { // РµСЃС‚СЊ Р°С‚Р°РєСѓСЋС‰РёР№ РєРѕРЅСЊ СЃРѕРїРµСЂРЅРёРєР°<br>
         atk_bm ^= (~(mask - 1)) &amp; mask;<br>
         piece_value = 3;<br>
         }<br>
         else {<br>
         mask = (Board-&gt;mp[WhiteBishop + opp]) &amp; atk_bm;<br>
-        if (mask) { // есть атакующий слон соперника<br>
+        if (mask) { // РµСЃС‚СЊ Р°С‚Р°РєСѓСЋС‰РёР№ СЃР»РѕРЅ СЃРѕРїРµСЂРЅРёРєР°<br>
         piece_value = 3;<br>
         from = first_one(mask);<br>
         dir = LineIndex[from][to];<br>
@@ -104,7 +105,7 @@
         }<br>
         else {<br>
         mask = (Board-&gt;mp[WhiteRook + opp]) &amp; atk_bm;<br>
-        if (mask) { // есть атакующая ладья соперника<br>
+        if (mask) { // РµСЃС‚СЊ Р°С‚Р°РєСѓСЋС‰Р°СЏ Р»Р°РґСЊСЏ СЃРѕРїРµСЂРЅРёРєР°<br>
         piece_value = 5;<br>
         from = first_one(mask);<br>
         dir = LineIndex[from][to];<br>
@@ -113,7 +114,7 @@
         }<br>
         else {<br>
         mask = (Board-&gt;mp[WhiteQueen + opp]) &amp; atk_bm;<br>
-        if (mask) { // есть атакующий ферзь соперника<br>
+        if (mask) { // РµСЃС‚СЊ Р°С‚Р°РєСѓСЋС‰РёР№ С„РµСЂР·СЊ СЃРѕРїРµСЂРЅРёРєР°<br>
         piece_value = 10;<br>
         from = first_one(mask);<br>
         dir = LineIndex[from][to];<br>
@@ -121,9 +122,9 @@
         atk_bm = mask | (MaskClearSquare[from] &amp; atk_bm);<br>
         }<br>
         else {<br>
-        mask = (Board-&gt;mp[WhiteKing + opp]) &amp; atk_bm; // в конце смотрим атаки 
-        короля<br>
-        if (!mask) return 1; // атак соперника больше нет - хорошо<br>
+        mask = (Board-&gt;mp[WhiteKing + opp]) &amp; atk_bm; // РІ РєРѕРЅС†Рµ СЃРјРѕС‚СЂРёРј Р°С‚Р°РєРё 
+        РєРѕСЂРѕР»СЏ<br>
+        if (!mask) return 1; // Р°С‚Р°Рє СЃРѕРїРµСЂРЅРёРєР° Р±РѕР»СЊС€Рµ РЅРµС‚ - С…РѕСЂРѕС€Рѕ<br>
         piece_value = 2001;<br>
         }<br>
         }<br>
@@ -131,7 +132,7 @@
         }<br>
         capt_value += piece_value;<br>
         if (capt_value &lt; 0) return 0;<br>
-        // Теперь - ответные атаки своих фигур<br>
+        // РўРµРїРµСЂСЊ - РѕС‚РІРµС‚РЅС‹Рµ Р°С‚Р°РєРё СЃРІРѕРёС… С„РёРіСѓСЂ<br>
         mask = (Board-&gt;mp[WhiteKnight + me]) &amp; atk_bm;<br>
         if (mask) {<br>
         atk_bm ^= (~(mask - 1)) &amp; mask;<br>
@@ -179,7 +180,7 @@
         return 1;<br>
         }<br>
         ///////////////////////////////////////////////////////////////////////////////<br>
-        // Проверка легальности хода move<br>
+        // РџСЂРѕРІРµСЂРєР° Р»РµРіР°Р»СЊРЅРѕСЃС‚Рё С…РѕРґР° move<br>
         int move_is_legal(int move, struct pos_info_t * pos_info)<br>
         { int from, to, piece;<br>
         unsigned __int64 mask_to;<br>
@@ -189,15 +190,15 @@
         mask_to = (unsigned __int64)1 &lt;&lt; to;<br>
         if ((Board-&gt;md1) &amp; mask_to) return 0;<br>
         piece = Board-&gt;square[from];<br>
-        if (piece == 0) return 0; // нет фигуры на from<br>
-        if (Board-&gt;turn == White) { // Ход белых<br>
-        if ((piece &amp; 1) != 0) return 0; // а фигура на from - черная<br>
+        if (piece == 0) return 0; // РЅРµС‚ С„РёРіСѓСЂС‹ РЅР° from<br>
+        if (Board-&gt;turn == White) { // РҐРѕРґ Р±РµР»С‹С…<br>
+        if ((piece &amp; 1) != 0) return 0; // Р° С„РёРіСѓСЂР° РЅР° from - С‡РµСЂРЅР°СЏ<br>
         if (piece == WhiteKnight) { if (MaskKnightMoves[from] &amp; mask_to) return 
         1; else return 0; }<br>
         if (piece == WhiteBishop) {<br>
         if ((LINE1(from) | LINE2(from)) &amp; mask_to) return 1; else return 0;<br>
         }<br>
-        if (MOVE_IS_CASTLING(move)) { // рокировка<br>
+        if (MOVE_IS_CASTLING(move)) { // СЂРѕРєРёСЂРѕРІРєР°<br>
         if (mask_to &amp; 0x40) {<br>
         if (((Board-&gt;flags) &amp; 1) == 0) return 0;<br>
         if (Board-&gt;square[5] != 0) return 0;<br>
@@ -225,7 +226,7 @@
         }<br>
         if (MaskKingMoves[from] &amp; mask_to) return 1;<br>
         }<br>
-        else { // Ход черных - аналогично<br>
+        else { // РҐРѕРґ С‡РµСЂРЅС‹С… - Р°РЅР°Р»РѕРіРёС‡РЅРѕ<br>
         if ((piece &amp; 1) == 0) return 0;<br>
         if (piece == BlackKnight) { if (MaskKnightMoves[from] &amp; mask_to) return 
         1; else return 0; }<br>
@@ -263,7 +264,7 @@
         return 0;<br>
         }<br>
         ////////////////////////////////////////////////////////////////////////////<br>
-        // Выполнение хода move из текущей позиции - переопределяем структуру 
+        // Р’С‹РїРѕР»РЅРµРЅРёРµ С…РѕРґР° move РёР· С‚РµРєСѓС‰РµР№ РїРѕР·РёС†РёРё - РїРµСЂРµРѕРїСЂРµРґРµР»СЏРµРј СЃС‚СЂСѓРєС‚СѓСЂСѓ 
         Board<br>
         void move_do(int move, struct undo_t undo[])<br>
         { int from, to, piece, capture, flags, me;<br>
@@ -471,7 +472,7 @@
         }<br>
         }<br>
         ////////////////////////////////////////////////////////////////////////////<br>
-        // Взятие хода назад - восстановление Board<br>
+        // Р’Р·СЏС‚РёРµ С…РѕРґР° РЅР°Р·Р°Рґ - РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ Board<br>
         void move_undo(int move, struct undo_t undo[])<br>
         { int from, to, piece, me;<br>
         unsigned __int64 mask_from, mask_to;<br>
@@ -534,7 +535,7 @@
         pos_info_entry--;<br>
         }<br>
         //////////////////////////////////////////////////////////////////////////////<br>
-        // Выполнение нулевого хода - просто передаем право хода сопернику<br>
+        // Р’С‹РїРѕР»РЅРµРЅРёРµ РЅСѓР»РµРІРѕРіРѕ С…РѕРґР° - РїСЂРѕСЃС‚Рѕ РїРµСЂРµРґР°РµРј РїСЂР°РІРѕ С…РѕРґР° СЃРѕРїРµСЂРЅРёРєСѓ<br>
         void move_do_null(struct undo_null_t * undo)<br>
         { undo-&gt;ep_square = Board-&gt;ep_square;<br>
         undo-&gt;ply_nb = Board-&gt;ply_nb;<br>
@@ -549,7 +550,7 @@
         }<br>
         }<br>
         /////////////////////////////////////////////////////////////////////////////<br>
-        // Сохраняем лучший ход в таблице History<br>
+        // РЎРѕС…СЂР°РЅСЏРµРј Р»СѓС‡С€РёР№ С…РѕРґ РІ С‚Р°Р±Р»РёС†Рµ History<br>
         void history_store(struct pos_info_t * pos_info, int move, int depth)<br>
         { int from, to, piece;<br>
         <br>
@@ -563,7 +564,7 @@
         History[piece-2][to] += depth * depth;<br>
         }<br>
         //////////////////////////////////////////////////////////////////////////////////////////////////////////<br>
-        // Определение оценок ходов в списке list и сортировка списка по оценкам<br>
+        // РћРїСЂРµРґРµР»РµРЅРёРµ РѕС†РµРЅРѕРє С…РѕРґРѕРІ РІ СЃРїРёСЃРєРµ list Рё СЃРѕСЂС‚РёСЂРѕРІРєР° СЃРїРёСЃРєР° РїРѕ РѕС†РµРЅРєР°Рј<br>
         void note_moves(struct list_t * last, struct list_t * moves, struct 
         pos_info_t * pos_info, int best_move)<br>
         { struct list_t * pi, *pj;<br>
