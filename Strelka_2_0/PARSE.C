@@ -1,5 +1,5 @@
 /******************************************************************
-  Parse.c - Функции обработки команд UCI
+  Parse.c - Р¤СѓРЅРєС†РёРё РѕР±СЂР°Р±РѕС‚РєРё РєРѕРјР°РЅРґ UCI
 *******************************************************************/
 #include <stdio.h>
 #include <windows.h>
@@ -243,20 +243,20 @@ int parse_move(char cmove[])
     }
     return 0;
   }
-  // удаляем символы 'x' '=' '+' '#' и переводим в верхний регистр
+  // СѓРґР°Р»СЏРµРј СЃРёРјРІРѕР»С‹ 'x' '=' '+' '#' Рё РїРµСЂРµРІРѕРґРёРј РІ РІРµСЂС…РЅРёР№ СЂРµРіРёСЃС‚СЂ
   memset(stroka, 0, 20); pos = 0;
   for (i = 0; (c = cmove[i]) != 0; i++) if (!strchr("x=+#", c)) 
     stroka[pos++] = strchr("qrn", c) ? toupper(c) : c;
   left = 0; right = strlen(stroka) - 1;
   if (strstr(stroka, "/ep")) right -= 3;
-  // смотрим превращение пешки
+  // СЃРјРѕС‚СЂРёРј РїСЂРµРІСЂР°С‰РµРЅРёРµ РїРµС€РєРё
   if (strchr("QRBN", stroka[right])) promotion = stroka[right--];
-  // тип ходящей фигуры - символ 'K' 'Q' 'R' 'B' 'N' 'P'
+  // С‚РёРї С…РѕРґСЏС‰РµР№ С„РёРіСѓСЂС‹ - СЃРёРјРІРѕР» 'K' 'Q' 'R' 'B' 'N' 'P'
   if (left < right) {
     if (strchr("KQRBN", stroka[left])) pt = stroka[left++];
-    else pt = 'P';   // если не указана фигура, то это пешка
+    else pt = 'P';   // РµСЃР»Рё РЅРµ СѓРєР°Р·Р°РЅР° С„РёРіСѓСЂР°, С‚Рѕ СЌС‚Рѕ РїРµС€РєР°
   }
-  // определяем позицию to
+  // РѕРїСЂРµРґРµР»СЏРµРј РїРѕР·РёС†РёСЋ to
   if (left < right) {
     if (stroka[right] < '1' || stroka[right] > '8' ||
         stroka[right - 1] < 'a' || stroka[right - 1] > 'h') return 0;
@@ -264,7 +264,7 @@ int parse_move(char cmove[])
     right -= 2;
   }
   else return 0;
-  // определяем file, rank
+  // РѕРїСЂРµРґРµР»СЏРµРј file, rank
   if (left <= right) {
     if (strchr("abcdefgh", stroka[left])) file = stroka[left++];
     if (strchr("12345678", stroka[left])) rank = stroka[left];
@@ -287,10 +287,10 @@ int parse_move(char cmove[])
 }
 
 struct pgn_t {
-  char WhitePlayer[100];   // имя игрока, играющего белыми
-  char BlackPlayer[100];   // имя игрока, играющего черными
-  char Winner;             // кто выиграл: 0 - ничья, 1 - выигрыш белых, 2 - черных
-  int  PlyCount;           // количество ходов
+  char WhitePlayer[100];   // РёРјСЏ РёРіСЂРѕРєР°, РёРіСЂР°СЋС‰РµРіРѕ Р±РµР»С‹РјРё
+  char BlackPlayer[100];   // РёРјСЏ РёРіСЂРѕРєР°, РёРіСЂР°СЋС‰РµРіРѕ С‡РµСЂРЅС‹РјРё
+  char Winner;             // РєС‚Рѕ РІС‹РёРіСЂР°Р»: 0 - РЅРёС‡СЊСЏ, 1 - РІС‹РёРіСЂС‹С€ Р±РµР»С‹С…, 2 - С‡РµСЂРЅС‹С…
+  int  PlyCount;           // РєРѕР»РёС‡РµСЃС‚РІРѕ С…РѕРґРѕРІ
   int  Moves[1000];
   struct {
     int pv[100];
@@ -537,7 +537,7 @@ void run_pgn_test(char string[])
         opening = 0;
         if (Pgn->comment[i].pv[0] == 0 && Pgn->comment[i].depth == 0) opening = 1;
         if (!opening && (i & 1) == side && Pgn->comment[i].value > -200) {
-          // не дебют, ход Стрелки и еще не проиграно - сохраняем позицию в EPD
+          // РЅРµ РґРµР±СЋС‚, С…РѕРґ РЎС‚СЂРµР»РєРё Рё РµС‰Рµ РЅРµ РїСЂРѕРёРіСЂР°РЅРѕ - СЃРѕС…СЂР°РЅСЏРµРј РїРѕР·РёС†РёСЋ РІ EPD
           strcpy(position,"position startpos moves");
           for (j = 0; j < i; j++) {
             move_to_string(Pgn->Moves[j], cmove);
@@ -545,9 +545,9 @@ void run_pgn_test(char string[])
             strcat(position, cmove);
           }
           parse_position(position);
-          // преобразуем позицию в FEN
+          // РїСЂРµРѕР±СЂР°Р·СѓРµРј РїРѕР·РёС†РёСЋ РІ FEN
           board_to_fen(position);
-          // добавляем лучший ход, предложенный ранее соперником или наш текущий
+          // РґРѕР±Р°РІР»СЏРµРј Р»СѓС‡С€РёР№ С…РѕРґ, РїСЂРµРґР»РѕР¶РµРЅРЅС‹Р№ СЂР°РЅРµРµ СЃРѕРїРµСЂРЅРёРєРѕРј РёР»Рё РЅР°С€ С‚РµРєСѓС‰РёР№
           if (i > 0 && Pgn->comment[i-1].pv[1] != 0) move = Pgn->comment[i-1].pv[1];
           else move = Pgn->Moves[i];
           move_to_string(move, cmove);

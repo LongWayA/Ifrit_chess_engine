@@ -1,40 +1,40 @@
 //////////////////////////////////////////////////////////////////////////
-// Ãåíåðàöèÿ õîäîâ â ñëó÷àå øàõà
+// Ð“ÐµÐ½ÐµÑ€Ð°Ñ†Ð¸Ñ Ñ…Ð¾Ð´Ð¾Ð² Ð² ÑÐ»ÑƒÑ‡Ð°Ðµ ÑˆÐ°Ñ…Ð°
 struct list_t * gen_evasions(struct list_t * list, unsigned __int64 mask)
 { unsigned __int64 atk_bm, mask_em;
   int king, square, piece, atk_square;
 
-  if (Board->turn == White) {           // õîä áåëûõ
-    king = first_one(Board->mp[WhiteKing]);    // ïîçèöèÿ áåëîãî êîðîëÿ
-    // ôîðìèðóåì áèòîâóþ ñòðîêó ïîçèöèé ôèãóð, àòàêóþùèõ êîðîëÿ
-    atk_bm = ((LINE3(king) | LINE4(king)) & ((Board->mp[BlackRook])   | (Board->mp[BlackQueen]))) |   // ëàäüè è ôåðçè
-             ((LINE1(king) | LINE2(king)) & ((Board->mp[BlackBishop]) | (Board->mp[BlackQueen]))) |   // ñëîíû è ôåðçè
-             (MaskKnightMoves[king] & (Board->mp[BlackKnight])) |                                     // êîíè
-             (MaskPawnAttacks[0][king] & (Board->mp[BlackPawn]));                                     // ïåøêè
-    atk_square = first_one(atk_bm);       // ïîçèöèÿ ïåðâîé àòàêóþùåé ôèãóðû
-    piece = Board->square[atk_square];    // òèï àòàêóþùåé ôèãóðû
-    // ñîçäàåì áèòîâóþ ìàñêó ïîçèöèé, áåçîïàñíûõ äëÿ îòõîäà êîðîëÿ;
-    // èñõîäíàÿ ìàñêà mask - âñå ïîçèöèè, äîïóñòèìûå äëÿ õîäîâ áåëûõ.
+  if (Board->turn == White) {           // Ñ…Ð¾Ð´ Ð±ÐµÐ»Ñ‹Ñ…
+    king = first_one(Board->mp[WhiteKing]);    // Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ñ Ð±ÐµÐ»Ð¾Ð³Ð¾ ÐºÐ¾Ñ€Ð¾Ð»Ñ
+    // Ñ„Ð¾Ñ€Ð¼Ð¸Ñ€ÑƒÐµÐ¼ Ð±Ð¸Ñ‚Ð¾Ð²ÑƒÑŽ ÑÑ‚Ñ€Ð¾ÐºÑƒ Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¹ Ñ„Ð¸Ð³ÑƒÑ€, Ð°Ñ‚Ð°ÐºÑƒÑŽÑ‰Ð¸Ñ… ÐºÐ¾Ñ€Ð¾Ð»Ñ
+    atk_bm = ((LINE3(king) | LINE4(king)) & ((Board->mp[BlackRook])   | (Board->mp[BlackQueen]))) |   // Ð»Ð°Ð´ÑŒÐ¸ Ð¸ Ñ„ÐµÑ€Ð·Ð¸
+             ((LINE1(king) | LINE2(king)) & ((Board->mp[BlackBishop]) | (Board->mp[BlackQueen]))) |   // ÑÐ»Ð¾Ð½Ñ‹ Ð¸ Ñ„ÐµÑ€Ð·Ð¸
+             (MaskKnightMoves[king] & (Board->mp[BlackKnight])) |                                     // ÐºÐ¾Ð½Ð¸
+             (MaskPawnAttacks[0][king] & (Board->mp[BlackPawn]));                                     // Ð¿ÐµÑˆÐºÐ¸
+    atk_square = first_one(atk_bm);       // Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ñ Ð¿ÐµÑ€Ð²Ð¾Ð¹ Ð°Ñ‚Ð°ÐºÑƒÑŽÑ‰ÐµÐ¹ Ñ„Ð¸Ð³ÑƒÑ€Ñ‹
+    piece = Board->square[atk_square];    // Ñ‚Ð¸Ð¿ Ð°Ñ‚Ð°ÐºÑƒÑŽÑ‰ÐµÐ¹ Ñ„Ð¸Ð³ÑƒÑ€Ñ‹
+    // ÑÐ¾Ð·Ð´Ð°ÐµÐ¼ Ð±Ð¸Ñ‚Ð¾Ð²ÑƒÑŽ Ð¼Ð°ÑÐºÑƒ Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¹, Ð±ÐµÐ·Ð¾Ð¿Ð°ÑÐ½Ñ‹Ñ… Ð´Ð»Ñ Ð¾Ñ‚Ñ…Ð¾Ð´Ð° ÐºÐ¾Ñ€Ð¾Ð»Ñ;
+    // Ð¸ÑÑ…Ð¾Ð´Ð½Ð°Ñ Ð¼Ð°ÑÐºÐ° mask - Ð²ÑÐµ Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¸, Ð´Ð¾Ð¿ÑƒÑÑ‚Ð¸Ð¼Ñ‹Ðµ Ð´Ð»Ñ Ñ…Ð¾Ð´Ð¾Ð² Ð±ÐµÐ»Ñ‹Ñ….
     mask = mask & (MaskPieceIsPawn[piece] | MaskEvasionMoves[king][atk_square][1]) &
            MaskKingMoves[king] & (~(Board->mp[White]));
-    atk_bm &= (atk_bm - 1);   // óäàëÿåì èç áèòîâîé ñòðîêè àòàê ïåðâóþ àòàêóþùóþ ôèãóðó
-    if (atk_bm != 0) {        // îñòàëèñü àòàêè - ýòî êðàòíûé øàõ; ìîæíî òîëüêî óéòè êîðîëåì
-      square = first_one(atk_bm);         // ýòî ïîçèöèÿ âòîðîé àòàêóþùåé ôèãóðû
+    atk_bm &= (atk_bm - 1);   // ÑƒÐ´Ð°Ð»ÑÐµÐ¼ Ð¸Ð· Ð±Ð¸Ñ‚Ð¾Ð²Ð¾Ð¹ ÑÑ‚Ñ€Ð¾ÐºÐ¸ Ð°Ñ‚Ð°Ðº Ð¿ÐµÑ€Ð²ÑƒÑŽ Ð°Ñ‚Ð°ÐºÑƒÑŽÑ‰ÑƒÑŽ Ñ„Ð¸Ð³ÑƒÑ€Ñƒ
+    if (atk_bm != 0) {        // Ð¾ÑÑ‚Ð°Ð»Ð¸ÑÑŒ Ð°Ñ‚Ð°ÐºÐ¸ - ÑÑ‚Ð¾ ÐºÑ€Ð°Ñ‚Ð½Ñ‹Ð¹ ÑˆÐ°Ñ…; Ð¼Ð¾Ð¶Ð½Ð¾ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ ÑƒÐ¹Ñ‚Ð¸ ÐºÐ¾Ñ€Ð¾Ð»ÐµÐ¼
+      square = first_one(atk_bm);         // ÑÑ‚Ð¾ Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ñ Ð²Ñ‚Ð¾Ñ€Ð¾Ð¹ Ð°Ñ‚Ð°ÐºÑƒÑŽÑ‰ÐµÐ¹ Ñ„Ð¸Ð³ÑƒÑ€Ñ‹
       piece = Board->square[square];
-      // êîððåêòèðóåì ìàñêó áåçîïàñíûõ ïîçèöèé ñ ó÷åòîì âòîðîé ôèãóðû, è ôîðìèðóåì îòõîäû êîðîëÿ
+      // ÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð¸Ñ€ÑƒÐµÐ¼ Ð¼Ð°ÑÐºÑƒ Ð±ÐµÐ·Ð¾Ð¿Ð°ÑÐ½Ñ‹Ñ… Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¹ Ñ ÑƒÑ‡ÐµÑ‚Ð¾Ð¼ Ð²Ñ‚Ð¾Ñ€Ð¾Ð¹ Ñ„Ð¸Ð³ÑƒÑ€Ñ‹, Ð¸ Ñ„Ð¾Ñ€Ð¼Ð¸Ñ€ÑƒÐµÐ¼ Ð¾Ñ‚Ñ…Ð¾Ð´Ñ‹ ÐºÐ¾Ñ€Ð¾Ð»Ñ
       for (mask = mask & (MaskPieceIsPawn[piece] | MaskEvasionMoves[king][square][1]); mask != 0; mask &= (mask-1)) {
-        square = first_one(mask);        // ñþäà êîðîëü ìîæåò áåçîïàñíî óéòè
+        square = first_one(mask);        // ÑÑŽÐ´Ð° ÐºÐ¾Ñ€Ð¾Ð»ÑŒ Ð¼Ð¾Ð¶ÐµÑ‚ Ð±ÐµÐ·Ð¾Ð¿Ð°ÑÐ½Ð¾ ÑƒÐ¹Ñ‚Ð¸
         (list++)->move = (king << 6) | square;
       }
       list->move = list->score = 0;
       return (list - 1);
     }
-    // òåïåðü ðàññìàòðèâàåì ñèòóàöèþ îäèíî÷íîãî øàõà.
-    // ñíà÷àëà ñìîòðèì áåçîïàñíûå îòõîäû êîðîëÿ ïî ìàñêå õîäîâ mask
+    // Ñ‚ÐµÐ¿ÐµÑ€ÑŒ Ñ€Ð°ÑÑÐ¼Ð°Ñ‚Ñ€Ð¸Ð²Ð°ÐµÐ¼ ÑÐ¸Ñ‚ÑƒÐ°Ñ†Ð¸ÑŽ Ð¾Ð´Ð¸Ð½Ð¾Ñ‡Ð½Ð¾Ð³Ð¾ ÑˆÐ°Ñ…Ð°.
+    // ÑÐ½Ð°Ñ‡Ð°Ð»Ð° ÑÐ¼Ð¾Ñ‚Ñ€Ð¸Ð¼ Ð±ÐµÐ·Ð¾Ð¿Ð°ÑÐ½Ñ‹Ðµ Ð¾Ñ‚Ñ…Ð¾Ð´Ñ‹ ÐºÐ¾Ñ€Ð¾Ð»Ñ Ð¿Ð¾ Ð¼Ð°ÑÐºÐµ Ñ…Ð¾Ð´Ð¾Ð² mask
     for (; mask != 0; mask &= (mask - 1)) {
       (list++)->move = (king << 6) | first_one(mask);
     }
-    // ñìîòðèì âçÿòèÿ àòàêóþùåé ôèãóðû ñâîåé ïåøêîé
+    // ÑÐ¼Ð¾Ñ‚Ñ€Ð¸Ð¼ Ð²Ð·ÑÑ‚Ð¸Ñ Ð°Ñ‚Ð°ÐºÑƒÑŽÑ‰ÐµÐ¹ Ñ„Ð¸Ð³ÑƒÑ€Ñ‹ ÑÐ²Ð¾ÐµÐ¹ Ð¿ÐµÑˆÐºÐ¾Ð¹
     if (WhitePawnCaptures1[atk_square] & (Board->mp[WhitePawn])) {
       list->move = ((atk_square-9)<<6) | atk_square;
       if (atk_square >= 56) {
@@ -55,7 +55,7 @@ struct list_t * gen_evasions(struct list_t * list, unsigned __int64 mask)
       }
       list++;
     }
-    // ïðîâåðÿåì âîçìîæíîñòü âçÿòèÿ íà ïðîõîäå
+    // Ð¿Ñ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼ Ð²Ð¾Ð·Ð¼Ð¾Ð¶Ð½Ð¾ÑÑ‚ÑŒ Ð²Ð·ÑÑ‚Ð¸Ñ Ð½Ð° Ð¿Ñ€Ð¾Ñ…Ð¾Ð´Ðµ
     if (Board->ep_square != 0 && Board->ep_square == (atk_square + 8)) {
       if (WhitePawnCaptures1[atk_square + 8] & (Board->mp[WhitePawn])) {
         (list++)->move = ((atk_square - 1) << 6) | (atk_square + 8) | FlagEnpassant;
@@ -65,7 +65,7 @@ struct list_t * gen_evasions(struct list_t * list, unsigned __int64 mask)
       }
     }
     mask_em = MaskEvasionMoves[king][atk_square][0];
-    // õîäû ïåøêè âïåðåä íà îäíî ïîëå - ïûòàåìñÿ çàêðûòü êîðîëÿ ïåøêîé
+    // Ñ…Ð¾Ð´Ñ‹ Ð¿ÐµÑˆÐºÐ¸ Ð²Ð¿ÐµÑ€ÐµÐ´ Ð½Ð° Ð¾Ð´Ð½Ð¾ Ð¿Ð¾Ð»Ðµ - Ð¿Ñ‹Ñ‚Ð°ÐµÐ¼ÑÑ Ð·Ð°ÐºÑ€Ñ‹Ñ‚ÑŒ ÐºÐ¾Ñ€Ð¾Ð»Ñ Ð¿ÐµÑˆÐºÐ¾Ð¹
     mask = (MaskClearSquare[atk_square] >> 8) & (mask_em >> 8) & (Board->mp[WhitePawn]);
     for (; mask != 0; mask &= (mask - 1)) {
       square = first_one(mask);
@@ -78,7 +78,7 @@ struct list_t * gen_evasions(struct list_t * list, unsigned __int64 mask)
       }
       list++;
     }
-    // ïðîâåðÿåì õîäû ïåøêè íà äâà ïîëÿ âïåðåä ñî âòîðîé ãîðèçîíòàëè
+    // Ð¿Ñ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼ Ñ…Ð¾Ð´Ñ‹ Ð¿ÐµÑˆÐºÐ¸ Ð½Ð° Ð´Ð²Ð° Ð¿Ð¾Ð»Ñ Ð²Ð¿ÐµÑ€ÐµÐ´ ÑÐ¾ Ð²Ñ‚Ð¾Ñ€Ð¾Ð¹ Ð³Ð¾Ñ€Ð¸Ð·Ð¾Ð½Ñ‚Ð°Ð»Ð¸
     mask = (~((Board->md1) >> 8)) &
            (MaskClearSquare[atk_square] >> 16) &
            (mask_em >> 16) &
@@ -87,21 +87,21 @@ struct list_t * gen_evasions(struct list_t * list, unsigned __int64 mask)
       square = first_one(mask);
       (list++)->move = (square << 6) | (square + 16);
     }
-    // çàùèùàþùèå õîäû êîíÿ
+    // Ð·Ð°Ñ‰Ð¸Ñ‰Ð°ÑŽÑ‰Ð¸Ðµ Ñ…Ð¾Ð´Ñ‹ ÐºÐ¾Ð½Ñ
     for (atk_bm = Board->mp[WhiteKnight]; atk_bm != 0; atk_bm &= (atk_bm - 1)) {
       square = first_one(atk_bm);
       for (mask = MaskKnightMoves[square] & mask_em; mask != 0; mask &= (mask - 1)) {
         (list++)->move = (square << 6) | first_one(mask);
       }
     }
-    // çàùèùàþùèå õîäû ñëîíà èëè ôåðçÿ - ïî äèàãîíàëÿì
+    // Ð·Ð°Ñ‰Ð¸Ñ‰Ð°ÑŽÑ‰Ð¸Ðµ Ñ…Ð¾Ð´Ñ‹ ÑÐ»Ð¾Ð½Ð° Ð¸Ð»Ð¸ Ñ„ÐµÑ€Ð·Ñ - Ð¿Ð¾ Ð´Ð¸Ð°Ð³Ð¾Ð½Ð°Ð»ÑÐ¼
     for (atk_bm = (Board->mp[WhiteBishop]) | (Board->mp[WhiteQueen]); atk_bm != 0; atk_bm &= (atk_bm - 1)) {
       square = first_one(atk_bm);
       for (mask = (LINE1(square) | LINE2(square)) & mask_em; mask != 0; mask &= (mask - 1)) {
         (list++)->move = (square << 6) | first_one(mask);
       }
     }
-    // çàùèùàþùèå õîäû ëàäüè èëè ôåðçÿ - ïî ãîðèçîíòàëÿì, âåðòèêàëÿì
+    // Ð·Ð°Ñ‰Ð¸Ñ‰Ð°ÑŽÑ‰Ð¸Ðµ Ñ…Ð¾Ð´Ñ‹ Ð»Ð°Ð´ÑŒÐ¸ Ð¸Ð»Ð¸ Ñ„ÐµÑ€Ð·Ñ - Ð¿Ð¾ Ð³Ð¾Ñ€Ð¸Ð·Ð¾Ð½Ñ‚Ð°Ð»ÑÐ¼, Ð²ÐµÑ€Ñ‚Ð¸ÐºÐ°Ð»ÑÐ¼
     for (atk_bm = (Board->mp[WhiteRook]) | (Board->mp[WhiteQueen]); atk_bm != 0; atk_bm &= (atk_bm - 1)) {
       square = first_one(atk_bm);
       for (mask = (LINE3(square) | LINE4(square)) & mask_em; mask != 0; mask &= (mask - 1)) {
@@ -109,7 +109,7 @@ struct list_t * gen_evasions(struct list_t * list, unsigned __int64 mask)
       }
     }
   }
-  else {                // õîä ÷åðíûõ - âñå òî æå ñàìîå
+  else {                // Ñ…Ð¾Ð´ Ñ‡ÐµÑ€Ð½Ñ‹Ñ… - Ð²ÑÐµ Ñ‚Ð¾ Ð¶Ðµ ÑÐ°Ð¼Ð¾Ðµ
     king = first_one(Board->mp[BlackKing]);
     atk_bm = ((LINE3(king) | LINE4(king)) & ((Board->mp[WhiteRook])   | (Board->mp[WhiteQueen]))) |
              ((LINE1(king) | LINE2(king)) & ((Board->mp[WhiteBishop]) | (Board->mp[WhiteQueen]))) |
@@ -204,24 +204,24 @@ struct list_t * gen_evasions(struct list_t * list, unsigned __int64 mask)
   return (list - 1);
 }
 //////////////////////////////////////////////////////////////////////////////////////////
-// Ãåíåðàòîð âçÿòèé è ïðåâðàùåíèé ïåøêè
+// Ð“ÐµÐ½ÐµÑ€Ð°Ñ‚Ð¾Ñ€ Ð²Ð·ÑÑ‚Ð¸Ð¹ Ð¸ Ð¿Ñ€ÐµÐ²Ñ€Ð°Ñ‰ÐµÐ½Ð¸Ð¹ Ð¿ÐµÑˆÐºÐ¸
 void gen_captures(struct list_t * list, unsigned __int64 mask_w, unsigned __int64 mask_b)
 { unsigned __int64 mask_from, mask_to;
   int from, to;
 
-  if (Board->turn == White) {      // â ïîçèöèè õîä áåëûõ
-    // Çäåñü èùåì âçÿòèÿ ÷åðíûõ ôèãóð áåëûìè. Äëÿ ýòîãî íà ìàñêè âîçìîæíûõ õîäîâ
-    // íàêëàäûâàåì ìàñêó ïîçèöèé ÷åðíûõ ôèãóð mask_b
-    // Õîäû áåëîãî êîíÿ
+  if (Board->turn == White) {      // Ð² Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¸ Ñ…Ð¾Ð´ Ð±ÐµÐ»Ñ‹Ñ…
+    // Ð—Ð´ÐµÑÑŒ Ð¸Ñ‰ÐµÐ¼ Ð²Ð·ÑÑ‚Ð¸Ñ Ñ‡ÐµÑ€Ð½Ñ‹Ñ… Ñ„Ð¸Ð³ÑƒÑ€ Ð±ÐµÐ»Ñ‹Ð¼Ð¸. Ð”Ð»Ñ ÑÑ‚Ð¾Ð³Ð¾ Ð½Ð° Ð¼Ð°ÑÐºÐ¸ Ð²Ð¾Ð·Ð¼Ð¾Ð¶Ð½Ñ‹Ñ… Ñ…Ð¾Ð´Ð¾Ð²
+    // Ð½Ð°ÐºÐ»Ð°Ð´Ñ‹Ð²Ð°ÐµÐ¼ Ð¼Ð°ÑÐºÑƒ Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¹ Ñ‡ÐµÑ€Ð½Ñ‹Ñ… Ñ„Ð¸Ð³ÑƒÑ€ mask_b
+    // Ð¥Ð¾Ð´Ñ‹ Ð±ÐµÐ»Ð¾Ð³Ð¾ ÐºÐ¾Ð½Ñ
     for (mask_from = Board->mp[WhiteKnight]; mask_from != 0; mask_from &= (mask_from-1)) {
       from = first_one(mask_from);
       for (mask_to = MaskKnightMoves[from] & mask_b; mask_to != 0; mask_to &= (mask_to-1)) {
         to = first_one(mask_to);
         list->move = (from << 6) | to;
-        (list++)->score = (Board->square[to]) * 3 + 12;  // îöåíêà âçÿòèÿ = capture * 3 + 12;
+        (list++)->score = (Board->square[to]) * 3 + 12;  // Ð¾Ñ†ÐµÐ½ÐºÐ° Ð²Ð·ÑÑ‚Ð¸Ñ = capture * 3 + 12;
       }
     }
-    // Õîäû áåëîãî ñëîíà
+    // Ð¥Ð¾Ð´Ñ‹ Ð±ÐµÐ»Ð¾Ð³Ð¾ ÑÐ»Ð¾Ð½Ð°
     for (mask_from = Board->mp[WhiteBishop]; mask_from != 0; mask_from &= (mask_from-1)) {
       from = first_one(mask_from);
       for (mask_to = (LINE1(from) | LINE2(from)) & mask_b; mask_to != 0; mask_to &= (mask_to-1)) {
@@ -230,7 +230,7 @@ void gen_captures(struct list_t * list, unsigned __int64 mask_w, unsigned __int6
         (list++)->score = (Board->square[to]) * 3 + 11;
       }
     }
-    // Õîäû áåëîé ëàäüè
+    // Ð¥Ð¾Ð´Ñ‹ Ð±ÐµÐ»Ð¾Ð¹ Ð»Ð°Ð´ÑŒÐ¸
     for (mask_from = Board->mp[WhiteRook]; mask_from != 0; mask_from &= (mask_from-1)) {
       from = first_one(mask_from);
       for (mask_to = (LINE3(from) | LINE4(from)) & mask_b; mask_to != 0; mask_to &= (mask_to-1)) {
@@ -239,7 +239,7 @@ void gen_captures(struct list_t * list, unsigned __int64 mask_w, unsigned __int6
         (list++)->score = (Board->square[to]) * 3 + 10;
       }
     }
-    // Õîäû áåëîãî ôåðçÿ
+    // Ð¥Ð¾Ð´Ñ‹ Ð±ÐµÐ»Ð¾Ð³Ð¾ Ñ„ÐµÑ€Ð·Ñ
     for (mask_from = Board->mp[WhiteQueen]; mask_from != 0; mask_from &= (mask_from-1)) {
       from = first_one(mask_from);
       for (mask_to = (LINE1(from) | LINE2(from) | LINE3(from) | LINE4(from)) & mask_b; mask_to != 0; mask_to &= (mask_to-1)) {
@@ -248,14 +248,14 @@ void gen_captures(struct list_t * list, unsigned __int64 mask_w, unsigned __int6
         (list++)->score = (Board->square[to]) * 3 + 9;
       }
     }
-    // Õîäû áåëîãî êîðîëÿ
+    // Ð¥Ð¾Ð´Ñ‹ Ð±ÐµÐ»Ð¾Ð³Ð¾ ÐºÐ¾Ñ€Ð¾Ð»Ñ
     from = first_one(Board->mp[WhiteKing]);
     for (mask_to = MaskKingMoves[from] & mask_b; mask_to != 0; mask_to &= (mask_to-1)) {
       to = first_one(mask_to);
       list->move = (from << 6) | to;
       (list++)->score = (Board->square[to]) * 3 + 8;
     }
-    // Ïðåâðàùåíèÿ ïåøêè - ñìîòðèì òîëüêî ïðåäïîñëåäíþþ ãîðèçîíòàëü
+    // ÐŸÑ€ÐµÐ²Ñ€Ð°Ñ‰ÐµÐ½Ð¸Ñ Ð¿ÐµÑˆÐºÐ¸ - ÑÐ¼Ð¾Ñ‚Ñ€Ð¸Ð¼ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð¿Ñ€ÐµÐ´Ð¿Ð¾ÑÐ»ÐµÐ´Ð½ÑŽÑŽ Ð³Ð¾Ñ€Ð¸Ð·Ð¾Ð½Ñ‚Ð°Ð»ÑŒ
     for (mask_from = (Board->mp[WhitePawn]) & 0x00FF000000000000; mask_from != 0; mask_from &= (mask_from-1)) {
       from = first_one(mask_from);
       to = from + 8;
@@ -292,7 +292,7 @@ void gen_captures(struct list_t * list, unsigned __int64 mask_w, unsigned __int6
         (list++)->score = (Board->square[to]) * 3 + 10;
       }
     }
-    // Ïðîñòûå âçÿòèÿ ïåøêàìè - áåç ïðåâðàùåíèÿ
+    // ÐŸÑ€Ð¾ÑÑ‚Ñ‹Ðµ Ð²Ð·ÑÑ‚Ð¸Ñ Ð¿ÐµÑˆÐºÐ°Ð¼Ð¸ - Ð±ÐµÐ· Ð¿Ñ€ÐµÐ²Ñ€Ð°Ñ‰ÐµÐ½Ð¸Ñ
     for (mask_to = (((Board->mp[WhitePawn]) & 0x0000FEFEFEFEFE00) << 7) & mask_b; mask_to != 0; mask_to &= (mask_to-1)) {
       to = first_one(mask_to);
       from = to - 7;
@@ -305,7 +305,7 @@ void gen_captures(struct list_t * list, unsigned __int64 mask_w, unsigned __int6
       list->move = (from << 6) | to;
       (list++)->score = (Board->square[to]) * 3 + 13;
     }
-    // Âçÿòèå íà ïðîõîäå
+    // Ð’Ð·ÑÑ‚Ð¸Ðµ Ð½Ð° Ð¿Ñ€Ð¾Ñ…Ð¾Ð´Ðµ
     if ((to = Board->ep_square) != 0) {
       mask_to = (((Board->mp[WhitePawn]) & 0x00FEFEFEFEFEFEFE) << 7) & ((unsigned __int64)1 << to);
       if (mask_to != 0) {
@@ -321,7 +321,7 @@ void gen_captures(struct list_t * list, unsigned __int64 mask_w, unsigned __int6
       }
     }
   }
-  else {                // Äëÿ ïîçèöèè ñ õîäîì ÷åðíûõ - òî æå ñàìîå
+  else {                // Ð”Ð»Ñ Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¸ Ñ Ñ…Ð¾Ð´Ð¾Ð¼ Ñ‡ÐµÑ€Ð½Ñ‹Ñ… - Ñ‚Ð¾ Ð¶Ðµ ÑÐ°Ð¼Ð¾Ðµ
     for (mask_from = Board->mp[BlackKnight]; mask_from != 0; mask_from &= (mask_from-1)) {
       from = first_one(mask_from);
       for (mask_to = MaskKnightMoves[from] & mask_w; mask_to != 0; mask_to &= (mask_to-1)) {
@@ -426,25 +426,25 @@ void gen_captures(struct list_t * list, unsigned __int64 mask_w, unsigned __int6
   list->move = 0;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Ãåíåðàöèÿ òèõèõ õîäîâ äëÿ ôóíêöèé òèïà full_search
+// Ð“ÐµÐ½ÐµÑ€Ð°Ñ†Ð¸Ñ Ñ‚Ð¸Ñ…Ð¸Ñ… Ñ…Ð¾Ð´Ð¾Ð² Ð´Ð»Ñ Ñ„ÑƒÐ½ÐºÑ†Ð¸Ð¹ Ñ‚Ð¸Ð¿Ð° full_search
 void gen_quiet_moves(struct list_t * list, unsigned __int64 mask, int trans_move, int killer1, int killer2)
 { int move, score, from, to;
   unsigned __int64 bme, mask_to;
   struct list_t * list_head, * pi, * pj;
 
-  list_head = list;       // çàïîìèíàåì íà÷àëî ñïèñêà
-  bme = ~(Board->md1);    // ìàñêà ïóñòûõ ïîëåé - äëÿ ãåíåðàöèè õîäîâ áåç âçÿòèé
+  list_head = list;       // Ð·Ð°Ð¿Ð¾Ð¼Ð¸Ð½Ð°ÐµÐ¼ Ð½Ð°Ñ‡Ð°Ð»Ð¾ ÑÐ¿Ð¸ÑÐºÐ°
+  bme = ~(Board->md1);    // Ð¼Ð°ÑÐºÐ° Ð¿ÑƒÑÑ‚Ñ‹Ñ… Ð¿Ð¾Ð»ÐµÐ¹ - Ð´Ð»Ñ Ð³ÐµÐ½ÐµÑ€Ð°Ñ†Ð¸Ð¸ Ñ…Ð¾Ð´Ð¾Ð² Ð±ÐµÐ· Ð²Ð·ÑÑ‚Ð¸Ð¹
   if (Board->turn == White) {
-    // ðîêèðîâêè
+    // Ñ€Ð¾ÐºÐ¸Ñ€Ð¾Ð²ÐºÐ¸
     if (((Board->flags) & 1) && (((Board->md1) | mask) & 0x60) == 0) {
       list->move = 0x106 | FlagCastle;
-      (list++)->score = History[WhiteKing-2][6];    // îöåíêó òèõèõ õîäîâ áåðåì èç History
+      (list++)->score = History[WhiteKing-2][6];    // Ð¾Ñ†ÐµÐ½ÐºÑƒ Ñ‚Ð¸Ñ…Ð¸Ñ… Ñ…Ð¾Ð´Ð¾Ð² Ð±ÐµÑ€ÐµÐ¼ Ð¸Ð· History
     }
     if (((Board->flags) & 2) && ((Board->md1) & 0x0E) == 0 && (mask & 0x0C) == 0) {
       list->move = 0x102 | FlagCastle;
       (list++)->score = History[WhiteKing-2][2];
     }
-    // õîäû ïåøåê âïåðåä
+    // Ñ…Ð¾Ð´Ñ‹ Ð¿ÐµÑˆÐµÐº Ð²Ð¿ÐµÑ€ÐµÐ´
     for (mask = (((Board->mp[WhitePawn]) & 0x0000FFFFFFFFFF00) << 8) & bme; mask != 0; mask &= (mask-1)) {
       from = first_one(mask);
       if (((from & 0xFFFFFFF8) == 16) && Board->square[from + 8] == 0) {
@@ -454,7 +454,7 @@ void gen_quiet_moves(struct list_t * list, unsigned __int64 mask, int trans_move
       list->move = ((from - 8) << 6) | from;
       (list++)->score = History[WhitePawn-2][from];
     }
-    // õîäû êîíÿ
+    // Ñ…Ð¾Ð´Ñ‹ ÐºÐ¾Ð½Ñ
     for (mask = Board->mp[WhiteKnight]; mask != 0; mask &= (mask-1)) {
       from = first_one(mask);
       for (mask_to = MaskKnightMoves[from] & bme; mask_to != 0; mask_to &= (mask_to-1)) {
@@ -463,7 +463,7 @@ void gen_quiet_moves(struct list_t * list, unsigned __int64 mask, int trans_move
         (list++)->score = History[WhiteKnight-2][to];
       }
     }
-    // õîäû ôåðçÿ
+    // Ñ…Ð¾Ð´Ñ‹ Ñ„ÐµÑ€Ð·Ñ
     for (mask = Board->mp[WhiteQueen]; mask != 0; mask &= (mask-1)) {
       from = first_one(mask);
       for (mask_to = (LINE1(from) | LINE2(from) | LINE3(from) | LINE4(from)) & bme; mask_to != 0; mask_to &= (mask_to-1)) {
@@ -472,7 +472,7 @@ void gen_quiet_moves(struct list_t * list, unsigned __int64 mask, int trans_move
         (list++)->score = History[WhiteQueen-2][to];
       }
     }
-    // õîäû ñëîíà
+    // Ñ…Ð¾Ð´Ñ‹ ÑÐ»Ð¾Ð½Ð°
     for (mask = Board->mp[WhiteBishop]; mask != 0; mask &= (mask-1)) {
       from = first_one(mask);
       for (mask_to = (LINE1(from) | LINE2(from)) & bme; mask_to != 0; mask_to &= (mask_to-1)) {
@@ -481,7 +481,7 @@ void gen_quiet_moves(struct list_t * list, unsigned __int64 mask, int trans_move
         (list++)->score = History[WhiteBishop-2][to];
       }
     }
-    // õîäû ëàäüè
+    // Ñ…Ð¾Ð´Ñ‹ Ð»Ð°Ð´ÑŒÐ¸
     for (mask = Board->mp[WhiteRook]; mask != 0; mask &= (mask-1)) {
       from = first_one(mask);
       for (mask_to = (LINE3(from) | LINE4(from)) & bme; mask_to != 0; mask_to &= (mask_to-1)) {
@@ -490,7 +490,7 @@ void gen_quiet_moves(struct list_t * list, unsigned __int64 mask, int trans_move
         (list++)->score = History[WhiteRook-2][to];
       }
     }
-    // õîäû êîðîëÿ
+    // Ñ…Ð¾Ð´Ñ‹ ÐºÐ¾Ñ€Ð¾Ð»Ñ
     from = first_one(Board->mp[WhiteKing]);
     for (mask_to = MaskKingMoves[from] & bme; mask_to != 0; mask_to &= (mask_to-1)) {
       to = first_one(mask_to);
@@ -498,7 +498,7 @@ void gen_quiet_moves(struct list_t * list, unsigned __int64 mask, int trans_move
       (list++)->score = History[WhiteKing-2][to];
     }
   }
-  else {              // õîä ÷åðíûõ - àíàëîãè÷íî
+  else {              // Ñ…Ð¾Ð´ Ñ‡ÐµÑ€Ð½Ñ‹Ñ… - Ð°Ð½Ð°Ð»Ð¾Ð³Ð¸Ñ‡Ð½Ð¾
     if (((Board->flags) & 4) && (((Board->md1) | mask) & 0x6000000000000000) == 0) {
       list->move = 0xF3E | FlagCastle;
       (list++)->score = History[BlackKing-2][62];
@@ -557,8 +557,8 @@ void gen_quiet_moves(struct list_t * list, unsigned __int64 mask, int trans_move
   }
   list->move = 0;
   list->score = 0;
-  if (list == list_head) return;    // íåò õîäîâ
-  // ñîðòèðóåì ñïèñîê ïî score è èñêëþ÷àåì èç íåãî trans_move è killer
+  if (list == list_head) return;    // Ð½ÐµÑ‚ Ñ…Ð¾Ð´Ð¾Ð²
+  // ÑÐ¾Ñ€Ñ‚Ð¸Ñ€ÑƒÐµÐ¼ ÑÐ¿Ð¸ÑÐ¾Ðº Ð¿Ð¾ score Ð¸ Ð¸ÑÐºÐ»ÑŽÑ‡Ð°ÐµÐ¼ Ð¸Ð· Ð½ÐµÐ³Ð¾ trans_move Ð¸ killer
   for (pi = list - 1; pi >= list_head; pi--) {
     if (pi->move != trans_move && pi->move != killer1 && pi->move != killer2) break;
     pi->move = 0;
@@ -585,22 +585,22 @@ void gen_quiet_moves(struct list_t * list, unsigned __int64 mask, int trans_move
   }
 }
 ///////////////////////////////////////////////////////////////////////////////
-// Ãåíåðàöèÿ øàõîâ äëÿ qu_search
+// Ð“ÐµÐ½ÐµÑ€Ð°Ñ†Ð¸Ñ ÑˆÐ°Ñ…Ð¾Ð² Ð´Ð»Ñ qu_search
 void gen_checks(struct list_t * list, unsigned __int64 mask_w, unsigned __int64 mask_b)
 { unsigned __int64 mask, mask_to;
   int wking, bking, from, to, piece;
 
-  if (Board->turn == White) {     // õîä áåëûõ
-    bking  = first_one(Board->mp[BlackKing]);    // ïîçèöèÿ ÷åðíîãî êîðîëÿ
-    // øàõè áåëûì êîíåì
+  if (Board->turn == White) {     // Ñ…Ð¾Ð´ Ð±ÐµÐ»Ñ‹Ñ…
+    bking  = first_one(Board->mp[BlackKing]);    // Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ñ Ñ‡ÐµÑ€Ð½Ð¾Ð³Ð¾ ÐºÐ¾Ñ€Ð¾Ð»Ñ
+    // ÑˆÐ°Ñ…Ð¸ Ð±ÐµÐ»Ñ‹Ð¼ ÐºÐ¾Ð½ÐµÐ¼
     for (mask = Board->mp[WhiteKnight]; mask != 0; mask &= (mask-1)) {
       from = first_one(mask);
       mask_to = MaskKnightMoves[from] & MaskKnightMoves[bking] & ((Board->mp[White]) ^ mask_b);
       for (; mask_to != 0; mask_to &= (mask_to-1))
         (list++)->move = (from << 6) | first_one(mask_to);
     }
-    // õîäû äàëüíîáîéíûõ ôèãóð ïî äèàãîíàëÿì - ñëîíà è ôåðçÿ
-    // îíè ìîãóò ñàìè ïîñòàâèòü øàõ, èëè îòêðûòü ëèíèþ äëÿ øàõà îò äðóãîé ôèãóðû
+    // Ñ…Ð¾Ð´Ñ‹ Ð´Ð°Ð»ÑŒÐ½Ð¾Ð±Ð¾Ð¹Ð½Ñ‹Ñ… Ñ„Ð¸Ð³ÑƒÑ€ Ð¿Ð¾ Ð´Ð¸Ð°Ð³Ð¾Ð½Ð°Ð»ÑÐ¼ - ÑÐ»Ð¾Ð½Ð° Ð¸ Ñ„ÐµÑ€Ð·Ñ
+    // Ð¾Ð½Ð¸ Ð¼Ð¾Ð³ÑƒÑ‚ ÑÐ°Ð¼Ð¸ Ð¿Ð¾ÑÑ‚Ð°Ð²Ð¸Ñ‚ÑŒ ÑˆÐ°Ñ…, Ð¸Ð»Ð¸ Ð¾Ñ‚ÐºÑ€Ñ‹Ñ‚ÑŒ Ð»Ð¸Ð½Ð¸ÑŽ Ð´Ð»Ñ ÑˆÐ°Ñ…Ð° Ð¾Ñ‚ Ð´Ñ€ÑƒÐ³Ð¾Ð¹ Ñ„Ð¸Ð³ÑƒÑ€Ñ‹
     for (mask = (Board->mp[WhiteBishop]) | (Board->mp[WhiteQueen]); mask != 0; mask &= (mask-1)) {
       from = first_one(mask);
       mask_to = (LINE1(from) & LINE1(bking) & mask_b) |
@@ -650,7 +650,7 @@ void gen_checks(struct list_t * list, unsigned __int64 mask_w, unsigned __int64 
           (list++)->move = (from << 6) | first_one(mask_to);
       }
     }
-    // òî÷íî òàê æå äëÿ âåðòèêàëåé, ãîðèçîíòàëåé - õîäû ëàäüè èëè ôåðçÿ
+    // Ñ‚Ð¾Ñ‡Ð½Ð¾ Ñ‚Ð°Ðº Ð¶Ðµ Ð´Ð»Ñ Ð²ÐµÑ€Ñ‚Ð¸ÐºÐ°Ð»ÐµÐ¹, Ð³Ð¾Ñ€Ð¸Ð·Ð¾Ð½Ñ‚Ð°Ð»ÐµÐ¹ - Ñ…Ð¾Ð´Ñ‹ Ð»Ð°Ð´ÑŒÐ¸ Ð¸Ð»Ð¸ Ñ„ÐµÑ€Ð·Ñ
     for (mask = (Board->mp[WhiteRook]) | (Board->mp[WhiteQueen]); mask != 0; mask &= (mask-1)) {
       from = first_one(mask);
       mask_to = (LINE3(from) & LINE3(bking) & mask_b) |
@@ -694,7 +694,7 @@ void gen_checks(struct list_t * list, unsigned __int64 mask_w, unsigned __int64 
           (list++)->move = (from << 6) | first_one(mask_to);
       }
     }
-    // õîäû áåëîé ïåøêè
+    // Ñ…Ð¾Ð´Ñ‹ Ð±ÐµÐ»Ð¾Ð¹ Ð¿ÐµÑˆÐºÐ¸
     mask = (((Board->mp[WhitePawn]) & 0x0000FEFEFEFEFEFE) << 15) & (Board->mp[BlackKing]);
     if (mask && Board->square[bking - 7] == 0) (list++)->move = ((bking - 15) << 6) | (bking - 7);
     mask = (((Board->mp[WhitePawn]) & 0xFFFFFF7F7F7F7F7F) << 17) & (Board->mp[BlackKing]);
@@ -722,7 +722,7 @@ void gen_checks(struct list_t * list, unsigned __int64 mask_w, unsigned __int64 
     if (mask && Board->square[bking - 9] == 0 && Board->square[bking - 17] == 0)
       (list++)->move = ((bking - 25) << 6) | (bking - 9);
   }
-  else {            // õîä ÷åðíûõ - àíàëîãè÷íî
+  else {            // Ñ…Ð¾Ð´ Ñ‡ÐµÑ€Ð½Ñ‹Ñ… - Ð°Ð½Ð°Ð»Ð¾Ð³Ð¸Ñ‡Ð½Ð¾
     wking  = first_one(Board->mp[WhiteKing]);
     for (mask = Board->mp[BlackKnight]; mask != 0; mask &= (mask-1)) {
       from = first_one(mask);

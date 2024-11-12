@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
-// Инициализация позиции из строки FEN
+// РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїРѕР·РёС†РёРё РёР· СЃС‚СЂРѕРєРё FEN
 void board_from_fen(const char fen[])
 { int pos, i, j;
   char c;
@@ -34,12 +34,12 @@ void board_from_fen(const char fen[])
   board_init(Board);
 }
 ///////////////////////////////////////////////////////////////////////////
-// Инициализация структуры Board
+// РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ СЃС‚СЂСѓРєС‚СѓСЂС‹ Board
 void board_init(struct board_t * board)
 { int i, square, piece;
   unsigned __int64 key;
   
-  // Оценки положений фигур по типам и координатам
+  // РћС†РµРЅРєРё РїРѕР»РѕР¶РµРЅРёР№ С„РёРіСѓСЂ РїРѕ С‚РёРїР°Рј Рё РєРѕРѕСЂРґРёРЅР°С‚Р°Рј
   board->opening = 0;
   board->endgame = 0;
   for (square = 0; square < 64; square++) {
@@ -49,7 +49,7 @@ void board_init(struct board_t * board)
       board->endgame += PieceSquareValue[piece - 2][square][1];
     }
   }
-  // Битовые строки
+  // Р‘РёС‚РѕРІС‹Рµ СЃС‚СЂРѕРєРё
   for (i = 0; i < 14; i++) board->mp[i] = 0;
   board->md1 = 0; board->md2 = 0; board->md3 = 0; board->md4 = 0;
   for (square = 0; square < 64; square++) {
@@ -64,7 +64,7 @@ void board_init(struct board_t * board)
       board->md4 |= MaskSetMD4[square];
     }
   }
-  // Хэш-коды позиции
+  // РҐСЌС€-РєРѕРґС‹ РїРѕР·РёС†РёРё
   board->key = 0;
   for (square = 0; square < 64; square++) {
     piece = board->square[square];
@@ -74,13 +74,13 @@ void board_init(struct board_t * board)
   if (board->ep_square != 0) board->key ^= RandomEP[board->ep_square & 7];
   if (board->turn) board->key ^= 0;
   else board->key ^= RandomTurn;
-  // Хэш-код пешечной структуры
+  // РҐСЌС€-РєРѕРґ РїРµС€РµС‡РЅРѕР№ СЃС‚СЂСѓРєС‚СѓСЂС‹
   board->pawn_key = Random[0][0];
   for (square = 0; square < 64; square++) {
     piece = board->square[square];
     if (PIECE_IS_PAWN(piece)) board->pawn_key ^= Random[piece-2][square];
   }
-  // Сумма материала
+  // РЎСѓРјРјР° РјР°С‚РµСЂРёР°Р»Р°
   board->mat_summ =
     popcnt(board->mp[WhiteQueen])  +
     popcnt(board->mp[BlackQueen])  * 2 +
@@ -92,7 +92,7 @@ void board_init(struct board_t * board)
     popcnt(board->mp[BlackKnight]) * 2*2*3*3*3*3*3 +
     popcnt(board->mp[WhitePawn])   * 2*2*3*3*3*3*3*3 +
     popcnt(board->mp[BlackPawn])   * 2*2*3*3*3*3*3*3*9;
-  // Разность материала
+  // Р Р°Р·РЅРѕСЃС‚СЊ РјР°С‚РµСЂРёР°Р»Р°
   board->mat_diff =
     (popcnt(board->mp[WhiteQueen])  - popcnt(board->mp[BlackQueen]))  * 10 +
     (popcnt(board->mp[WhiteRook])   - popcnt(board->mp[BlackRook]))   * 5  +
@@ -115,7 +115,7 @@ static int popcnt(unsigned __int64 v)
   return ((v1 * 0x01010101) >> 24) + ((v2 * 0x01010101) >> 24);
 }
 /////////////////////////////////////////////////////////////////////////////
-// Инициализация битовых масок
+// РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ Р±РёС‚РѕРІС‹С… РјР°СЃРѕРє
 #define Rank(x) ((x)>>3)
 #define File(x) ((x)&7)
 
@@ -189,21 +189,21 @@ void init_bitboards()
     else if (File(i) - File(j) == Rank(j) - Rank(i)) LineIndex[i][j] = 0;
     else LineIndex[i][j] = 9;
   }
-  for (i = 0; i < 64; i++) {    // по полям
-    for (j = 0; j < 64; j++) {  // по вариантам заполнения линии фигурами
+  for (i = 0; i < 64; i++) {    // РїРѕ РїРѕР»СЏРј
+    for (j = 0; j < 64; j++) {  // РїРѕ РІР°СЂРёР°РЅС‚Р°Рј Р·Р°РїРѕР»РЅРµРЅРёСЏ Р»РёРЅРёРё С„РёРіСѓСЂР°РјРё
       LineMask[0][i][j] = 0;
       LineMask[1][i][j] = 0;
       LineMask[2][i][j] = 0;
       LineMask[3][i][j] = 0;
-      // заполняем из att горизонталь, проходящую через i, слева направо
-      att = line_attack(File(i), j << 1);   // получили строку атак (8 бит)
+      // Р·Р°РїРѕР»РЅСЏРµРј РёР· att РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊ, РїСЂРѕС…РѕРґСЏС‰СѓСЋ С‡РµСЂРµР· i, СЃР»РµРІР° РЅР°РїСЂР°РІРѕ
+      att = line_attack(File(i), j << 1);   // РїРѕР»СѓС‡РёР»Рё СЃС‚СЂРѕРєСѓ Р°С‚Р°Рє (8 Р±РёС‚)
       for (k = 0, sq = Rank(i) * 8; k < 8; k++, sq++)
         if (att & (1 << k)) LineMask[2][i][j] |= (unsigned __int64)1 << sq;
-      // а теперь вертикаль - сверху вниз
+      // Р° С‚РµРїРµСЂСЊ РІРµСЂС‚РёРєР°Р»СЊ - СЃРІРµСЂС…Сѓ РІРЅРёР·
       att = line_attack(7 - Rank(i), j << 1);
       for (k = 0, sq = File(i) + 56; k < 8; k++, sq -= 8)
         if (att & (1 << k)) LineMask[3][i][j] |= (unsigned __int64)1 << sq;
-      // диагональ сверху справа влево вниз
+      // РґРёР°РіРѕРЅР°Р»СЊ СЃРІРµСЂС…Сѓ СЃРїСЂР°РІР° РІР»РµРІРѕ РІРЅРёР·
       if (Rank(i) + File(i) <= 7) sq = File(i); else sq = 7 - Rank(i);
       att = line_attack(sq, j << 1);
       if (Rank(i) + File(i) <= 7) sq = i + 7 * File(i);
@@ -212,7 +212,7 @@ void init_bitboards()
         if (att & (1 << k)) LineMask[0][i][j] |= (unsigned __int64)1 << sq;
         if (File(sq) == 7 || Rank(sq) == 0) break;
       }
-      // диагональ снизу справа вверх влево
+      // РґРёР°РіРѕРЅР°Р»СЊ СЃРЅРёР·Сѓ СЃРїСЂР°РІР° РІРІРµСЂС… РІР»РµРІРѕ
       if (File(i) > Rank(i)) sq = Rank(i); else sq = File(i);
       att = line_attack(sq, j << 1);
       if (File(i) > Rank(i)) sq = i - 9 * Rank(i);

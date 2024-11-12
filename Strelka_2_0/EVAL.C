@@ -23,7 +23,7 @@ l_ret:
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-// Вычисление статической оценки позиции
+// Р’С‹С‡РёСЃР»РµРЅРёРµ СЃС‚Р°С‚РёС‡РµСЃРєРѕР№ РѕС†РµРЅРєРё РїРѕР·РёС†РёРё
 int evaluate(struct pos_info_t * pos_info)
 { int wking_square, bking_square, king_attack_nb, king_safety_value;
   int diff, summ, value, cnt, square, i, k, opening, endgame, phase;
@@ -33,46 +33,46 @@ int evaluate(struct pos_info_t * pos_info)
   unsigned __int16 flags;
   unsigned char files;
 
-  diff = Board->mat_diff;     // материальная разница
-  summ = (Board->mat_summ) & 0x3FFFF;       // материальная сумма
+  diff = Board->mat_diff;     // РјР°С‚РµСЂРёР°Р»СЊРЅР°СЏ СЂР°Р·РЅРёС†Р°
+  summ = (Board->mat_summ) & 0x3FFFF;       // РјР°С‚РµСЂРёР°Р»СЊРЅР°СЏ СЃСѓРјРјР°
   flags = 0;
   value = diff * 3399;
   if (summ < MAX_MATERIAL) {
     value += Material[summ].value;
     flags = Material[summ].flags;
   }
-  // Здесь была ленивая оценка. В одной из Белок была отключена,
-  // и вроде получилось лучше, но данных об этом нет.
-  // Зато такое отключение очень упростило программу,
-  // а на скорости сказалось не очень заметно.
-  opening = value + Board->opening;  // материал + оценки позиций фигур
+  // Р—РґРµСЃСЊ Р±С‹Р»Р° Р»РµРЅРёРІР°СЏ РѕС†РµРЅРєР°. Р’ РѕРґРЅРѕР№ РёР· Р‘РµР»РѕРє Р±С‹Р»Р° РѕС‚РєР»СЋС‡РµРЅР°,
+  // Рё РІСЂРѕРґРµ РїРѕР»СѓС‡РёР»РѕСЃСЊ Р»СѓС‡С€Рµ, РЅРѕ РґР°РЅРЅС‹С… РѕР± СЌС‚РѕРј РЅРµС‚.
+  // Р—Р°С‚Рѕ С‚Р°РєРѕРµ РѕС‚РєР»СЋС‡РµРЅРёРµ РѕС‡РµРЅСЊ СѓРїСЂРѕСЃС‚РёР»Рѕ РїСЂРѕРіСЂР°РјРјСѓ,
+  // Р° РЅР° СЃРєРѕСЂРѕСЃС‚Рё СЃРєР°Р·Р°Р»РѕСЃСЊ РЅРµ РѕС‡РµРЅСЊ Р·Р°РјРµС‚РЅРѕ.
+  opening = value + Board->opening;  // РјР°С‚РµСЂРёР°Р» + РѕС†РµРЅРєРё РїРѕР·РёС†РёР№ С„РёРіСѓСЂ
   endgame = value + Board->endgame;
   wking_square = first_one(Board->mp[WhiteKing]);
   wking_moves = MaskKingMoves[wking_square];
   bking_square = first_one(Board->mp[BlackKing]);
   bking_moves = MaskKingMoves[bking_square];
-  king_attack_nb = 0;      // здесь будем накапливать оценку безопасности короля
+  king_attack_nb = 0;      // Р·РґРµСЃСЊ Р±СѓРґРµРј РЅР°РєР°РїР»РёРІР°С‚СЊ РѕС†РµРЅРєСѓ Р±РµР·РѕРїР°СЃРЅРѕСЃС‚Рё РєРѕСЂРѕР»СЏ
   king_safety_value = 0;
-  // Вычисляем по фигурам - их подвижность и атаки на чужого короля
-  // Белые пешки
+  // Р’С‹С‡РёСЃР»СЏРµРј РїРѕ С„РёРіСѓСЂР°Рј - РёС… РїРѕРґРІРёР¶РЅРѕСЃС‚СЊ Рё Р°С‚Р°РєРё РЅР° С‡СѓР¶РѕРіРѕ РєРѕСЂРѕР»СЏ
+  // Р‘РµР»С‹Рµ РїРµС€РєРё
   mob_w = Board->mp[WhitePawn];
   mob_w = (((mob_w & 0xFFFF7F7F7F7F7F7F) << 2) | (mob_w & 0x00FEFEFEFEFEFEFE)) << 7;
   if (mob_w & bking_moves) king_attack_nb++;
-  // Белые кони
-  for (mask = Board->mp[WhiteKnight]; mask != 0; mask &= (mask-1)) {  // Идем по списку коней
-    mob = MaskKnightMoves[first_one(mask)];    // маска возможных ходов коня
-    mob_w |= mob;         // добавляем к общей маске мобильности белых фигур
-    if (mob & bking_moves) {    // есть атака окрестности чужого короля
+  // Р‘РµР»С‹Рµ РєРѕРЅРё
+  for (mask = Board->mp[WhiteKnight]; mask != 0; mask &= (mask-1)) {  // РРґРµРј РїРѕ СЃРїРёСЃРєСѓ РєРѕРЅРµР№
+    mob = MaskKnightMoves[first_one(mask)];    // РјР°СЃРєР° РІРѕР·РјРѕР¶РЅС‹С… С…РѕРґРѕРІ РєРѕРЅСЏ
+    mob_w |= mob;         // РґРѕР±Р°РІР»СЏРµРј Рє РѕР±С‰РµР№ РјР°СЃРєРµ РјРѕР±РёР»СЊРЅРѕСЃС‚Рё Р±РµР»С‹С… С„РёРіСѓСЂ
+    if (mob & bking_moves) {    // РµСЃС‚СЊ Р°С‚Р°РєР° РѕРєСЂРµСЃС‚РЅРѕСЃС‚Рё С‡СѓР¶РѕРіРѕ РєРѕСЂРѕР»СЏ
       king_attack_nb++; king_safety_value += 941;
     }
-    mob &= ~(Board->mp[White]);   // из маски подвижности убираем позиции своих фигур
-    // и определяем количество полей, доступных для хода коня
+    mob &= ~(Board->mp[White]);   // РёР· РјР°СЃРєРё РїРѕРґРІРёР¶РЅРѕСЃС‚Рё СѓР±РёСЂР°РµРј РїРѕР·РёС†РёРё СЃРІРѕРёС… С„РёРіСѓСЂ
+    // Рё РѕРїСЂРµРґРµР»СЏРµРј РєРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР»РµР№, РґРѕСЃС‚СѓРїРЅС‹С… РґР»СЏ С…РѕРґР° РєРѕРЅСЏ
     cnt = popcnt(mob);
-    // оценку подвижности добавляем к общей позиционной оценке
+    // РѕС†РµРЅРєСѓ РїРѕРґРІРёР¶РЅРѕСЃС‚Рё РґРѕР±Р°РІР»СЏРµРј Рє РѕР±С‰РµР№ РїРѕР·РёС†РёРѕРЅРЅРѕР№ РѕС†РµРЅРєРµ
     endgame += cnt * 121;
     opening += cnt * 14;
   }
-  // Белые слоны - аналогично
+  // Р‘РµР»С‹Рµ СЃР»РѕРЅС‹ - Р°РЅР°Р»РѕРіРёС‡РЅРѕ
   for (mask = Board->mp[WhiteBishop]; mask != 0; mask &= (mask-1)) {
     square = first_one(mask);
     mob = LINE1(square) | LINE2(square);
@@ -83,7 +83,7 @@ int evaluate(struct pos_info_t * pos_info)
     endgame += cnt * 116;
     opening += cnt * 149;
   }
-  // Белые ладьи
+  // Р‘РµР»С‹Рµ Р»Р°РґСЊРё
   for (mask = Board->mp[WhiteRook]; mask != 0; mask &= (mask-1)) {
     square = first_one(mask);
     mob = LINE3(square) | LINE4(square);
@@ -94,26 +94,26 @@ int evaluate(struct pos_info_t * pos_info)
     endgame += cnt * 79;
     opening += cnt * 84;
     mob = MaskPawnOpenFileW[square];
-    if ((Board->mp[WhitePawn] & mob) == 0) {    // Открытая вертикаль - нет своих пешек
+    if ((Board->mp[WhitePawn] & mob) == 0) {    // РћС‚РєСЂС‹С‚Р°СЏ РІРµСЂС‚РёРєР°Р»СЊ - РЅРµС‚ СЃРІРѕРёС… РїРµС€РµРє
       endgame += 256;
       opening += 64;
-      if ((Board->mp[BlackPawn] & mob) == 0) {   // На вертикали нет и чужих пешек
+      if ((Board->mp[BlackPawn] & mob) == 0) {   // РќР° РІРµСЂС‚РёРєР°Р»Рё РЅРµС‚ Рё С‡СѓР¶РёС… РїРµС€РµРє
         endgame += 172; opening += 971;
       }
-      // атака на чужого короля по открытой линии
+      // Р°С‚Р°РєР° РЅР° С‡СѓР¶РѕРіРѕ РєРѕСЂРѕР»СЏ РїРѕ РѕС‚РєСЂС‹С‚РѕР№ Р»РёРЅРёРё
       if ((flags & 4) && (bking_moves & mob)) {
         opening += 121;
         if (Board->mp[BlackKing] & mob) opening += 853;
       }
     }
-    if ((square & 0xFFFFFFF8) == 0x30) {    // Предпоследняя горизонталь
-      // если есть чужие пешки на предпоследней горизонтали или король на последней
+    if ((square & 0xFFFFFFF8) == 0x30) {    // РџСЂРµРґРїРѕСЃР»РµРґРЅСЏСЏ РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊ
+      // РµСЃР»Рё РµСЃС‚СЊ С‡СѓР¶РёРµ РїРµС€РєРё РЅР° РїСЂРµРґРїРѕСЃР»РµРґРЅРµР№ РіРѕСЂРёР·РѕРЅС‚Р°Р»Рё РёР»Рё РєРѕСЂРѕР»СЊ РЅР° РїРѕСЃР»РµРґРЅРµР№
       if ((Board->mp[BlackPawn] & 0x00FF000000000000) || (Board->mp[BlackKing] & 0xFF00000000000000)) {
         endgame += 1026; opening += 246;
       }
     }
   }
-  // Белый ферзь
+  // Р‘РµР»С‹Р№ С„РµСЂР·СЊ
   for (mask = Board->mp[WhiteQueen]; mask != 0; mask &= (mask-1)) {
     square = first_one(mask);
     mob = LINE1(square) | LINE2(square) | LINE3(square) | LINE4(square);
@@ -123,19 +123,19 @@ int evaluate(struct pos_info_t * pos_info)
     cnt = popcnt(mob);
     endgame += cnt * 37;
     opening += cnt * 54;
-    if ((square & 0xFFFFFFF8) == 0x30) {    // Предпоследняя горизонталь
+    if ((square & 0xFFFFFFF8) == 0x30) {    // РџСЂРµРґРїРѕСЃР»РµРґРЅСЏСЏ РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊ
       if ((Board->mp[BlackPawn] & 0x00FF000000000000) || (Board->mp[BlackKing] & 0xFF00000000000000)) {
         endgame += 1420;
       }
     }
   }
-  mob_w |= wking_moves;     // Добавляем к оценке подвижность белого короля
-  // Определяем оценку пешечной структуры
+  mob_w |= wking_moves;     // Р”РѕР±Р°РІР»СЏРµРј Рє РѕС†РµРЅРєРµ РїРѕРґРІРёР¶РЅРѕСЃС‚СЊ Р±РµР»РѕРіРѕ РєРѕСЂРѕР»СЏ
+  // РћРїСЂРµРґРµР»СЏРµРј РѕС†РµРЅРєСѓ РїРµС€РµС‡РЅРѕР№ СЃС‚СЂСѓРєС‚СѓСЂС‹
   entry = pawn_get_info();
   opening += entry->opening;
   endgame += entry->endgame;
-  if (flags & 4) {    // Особый тип позиции (определенный суммарный материал)
-    // Только для таких особых позиций определяем безопасность короля
+  if (flags & 4) {    // РћСЃРѕР±С‹Р№ С‚РёРї РїРѕР·РёС†РёРё (РѕРїСЂРµРґРµР»РµРЅРЅС‹Р№ СЃСѓРјРјР°СЂРЅС‹Р№ РјР°С‚РµСЂРёР°Р»)
+    // РўРѕР»СЊРєРѕ РґР»СЏ С‚Р°РєРёС… РѕСЃРѕР±С‹С… РїРѕР·РёС†РёР№ РѕРїСЂРµРґРµР»СЏРµРј Р±РµР·РѕРїР°СЃРЅРѕСЃС‚СЊ РєРѕСЂРѕР»СЏ
     opening += (KingAttackWeight[king_attack_nb] * king_safety_value) / 32;
     i = FileWing[bking_square];
     k = entry->sheet_black_king[i];
@@ -143,7 +143,7 @@ int evaluate(struct pos_info_t * pos_info)
     if (((Board->flags) & 8) && (entry->sheet_black_king[0] < k)) k = entry->sheet_black_king[0];
     opening += (k + entry->sheet_black_king[i]) / 2;
   }
-  // Все то же самое для черных фигур
+  // Р’СЃРµ С‚Рѕ Р¶Рµ СЃР°РјРѕРµ РґР»СЏ С‡РµСЂРЅС‹С… С„РёРіСѓСЂ
   king_attack_nb = 0;
   king_safety_value = 0;
   mob_b = Board->mp[BlackPawn];
@@ -217,20 +217,20 @@ int evaluate(struct pos_info_t * pos_info)
     if (((Board->flags) & 2) && entry->sheet_white_king[0] < k) k = entry->sheet_white_king[0];
     opening -= (k + entry->sheet_white_king[i]) / 2;
   }
-  // Отдельно считаем оценку проходных пешек - по соответствующим вертикалям
+  // РћС‚РґРµР»СЊРЅРѕ СЃС‡РёС‚Р°РµРј РѕС†РµРЅРєСѓ РїСЂРѕС…РѕРґРЅС‹С… РїРµС€РµРє - РїРѕ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёРј РІРµСЂС‚РёРєР°Р»СЏРј
   for (files = entry->pass_file[0]; files != 0; files &= (files - 1)) {
     mask = Board->mp[WhitePawn] & MaskFile[BsfByte[files]];
-    square = last_one(mask);   // если пешка не одна - берем самую продвинутую
+    square = last_one(mask);   // РµСЃР»Рё РїРµС€РєР° РЅРµ РѕРґРЅР° - Р±РµСЂРµРј СЃР°РјСѓСЋ РїСЂРѕРґРІРёРЅСѓС‚СѓСЋ
     mob = MaskPawnOpenFileW[square];
-    opening += PassedPawnValue1[square >> 3];  // оценка в зависимости от горизонтали
+    opening += PassedPawnValue1[square >> 3];  // РѕС†РµРЅРєР° РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ РіРѕСЂРёР·РѕРЅС‚Р°Р»Рё
     endgame += PassedPawnValue2[square >> 3];
-    // В случае отсутствия чужих фигур - у соперника только пешки
+    // Р’ СЃР»СѓС‡Р°Рµ РѕС‚СЃСѓС‚СЃС‚РІРёСЏ С‡СѓР¶РёС… С„РёРіСѓСЂ - Сѓ СЃРѕРїРµСЂРЅРёРєР° С‚РѕР»СЊРєРѕ РїРµС€РєРё
     if ((Board->mp[BlackQueen]  | Board->mp[BlackRook] |
          Board->mp[BlackBishop] | Board->mp[BlackKnight]) == 0) {
       if ((mob & Board->mp[White]) == 0 && (QuadBlackKing[square][Board->turn] & (Board->mp[BlackKing])) != 0) endgame += 25600;
       else if ((WhiteKingOpp[square] & Board->mp[WhiteKing]) != 0) endgame += 25600;
     }
-    else {    // есть фигуры соперника
+    else {    // РµСЃС‚СЊ С„РёРіСѓСЂС‹ СЃРѕРїРµСЂРЅРёРєР°
       if ((mob & Board->mp[White]) == 0) endgame += PassedPawnValue3[square >> 3];
       if ((mob & Board->mp[Black]) == 0) endgame += PassedPawnValue4[square >> 3];
       if (((~mob_w) & mob & mob_b) == 0) endgame += PassedPawnValue5[square >> 3];
@@ -238,7 +238,7 @@ int evaluate(struct pos_info_t * pos_info)
     endgame += Distance[square+8][bking_square] * PassedPawnValue7[square>>3] -
                Distance[square+8][wking_square] * PassedPawnValue6[square>>3];
   }
-  // То же самое для черных проходных пешек
+  // РўРѕ Р¶Рµ СЃР°РјРѕРµ РґР»СЏ С‡РµСЂРЅС‹С… РїСЂРѕС…РѕРґРЅС‹С… РїРµС€РµРє
   for (files = entry->pass_file[1]; files != 0; files &= (files - 1)) {
     mask = Board->mp[BlackPawn] & MaskFile[BsfByte[files]];
     square = first_one(mask);
@@ -258,7 +258,7 @@ int evaluate(struct pos_info_t * pos_info)
     endgame += Distance[square-8][bking_square] * PassedPawnValue6[7-(square>>3)] -
                Distance[square-8][wking_square] * PassedPawnValue7[7-(square>>3)];
   }
-  // Некоторые особые случаи паттернов
+  // РќРµРєРѕС‚РѕСЂС‹Рµ РѕСЃРѕР±С‹Рµ СЃР»СѓС‡Р°Рё РїР°С‚С‚РµСЂРЅРѕРІ
   if ((((Board->mp[WhiteBishop]) >> 7) & (Board->mp[BlackPawn]) & 0x0004020200000000) ||
       (((Board->mp[WhiteBishop]) >> 9) & (Board->mp[BlackPawn]) & 0x0020404000000000)) {
     opening -= 1802; endgame -= 1802;
@@ -288,22 +288,22 @@ int evaluate(struct pos_info_t * pos_info)
   if ((Board->mp[BlackRook] & 0xC080000000000000) &&
       (Board->mp[BlackKing] & 0x6000000000000000)) opening += 1920;
 
-  if (flags & 1) {    // слоновый эндшпиль
-    // Смотрим - разноцветные ли слоны
+  if (flags & 1) {    // СЃР»РѕРЅРѕРІС‹Р№ СЌРЅРґС€РїРёР»СЊ
+    // РЎРјРѕС‚СЂРёРј - СЂР°Р·РЅРѕС†РІРµС‚РЅС‹Рµ Р»Рё СЃР»РѕРЅС‹
     mask = (Board->mp[BlackBishop]) | (Board->mp[WhiteBishop]);
     if ((mask & 0x55AA55AA55AA55AA) && (mask & 0xAA55AA55AA55AA55)) {
       opening = opening / 2; endgame = endgame / 2;
     }
   }
 
-  // Считаем интегральную оценку и заносим ее в структуру pos_info,
-  // а также битовые маски подвижности фигур обоих цветов
+  // РЎС‡РёС‚Р°РµРј РёРЅС‚РµРіСЂР°Р»СЊРЅСѓСЋ РѕС†РµРЅРєСѓ Рё Р·Р°РЅРѕСЃРёРј РµРµ РІ СЃС‚СЂСѓРєС‚СѓСЂСѓ pos_info,
+  // Р° С‚Р°РєР¶Рµ Р±РёС‚РѕРІС‹Рµ РјР°СЃРєРё РїРѕРґРІРёР¶РЅРѕСЃС‚Рё С„РёРіСѓСЂ РѕР±РѕРёС… С†РІРµС‚РѕРІ
 
-  phase = (unsigned int)(flags) >> 4;   // стадия игры - число от 0 до 24
+  phase = (unsigned int)(flags) >> 4;   // СЃС‚Р°РґРёСЏ РёРіСЂС‹ - С‡РёСЃР»Рѕ РѕС‚ 0 РґРѕ 24
 
-  // В оригинальной Стрелке здесь вместо phase были нелинейные коэффициенты:
+  // Р’ РѕСЂРёРіРёРЅР°Р»СЊРЅРѕР№ РЎС‚СЂРµР»РєРµ Р·РґРµСЃСЊ РІРјРµСЃС‚Рѕ phase Р±С‹Р»Рё РЅРµР»РёРЅРµР№РЅС‹Рµ РєРѕСЌС„С„РёС†РёРµРЅС‚С‹:
   // value = ((MatPhase[phase][1] * endgame) + (MatPhase[phase][0] * opening)) >> 13;
-  // В Белке 1.8.7 заменено на линейные коэффициенты, как у Фрукта (+30 пунктов !!!)
+  // Р’ Р‘РµР»РєРµ 1.8.7 Р·Р°РјРµРЅРµРЅРѕ РЅР° Р»РёРЅРµР№РЅС‹Рµ РєРѕСЌС„С„РёС†РёРµРЅС‚С‹, РєР°Рє Сѓ Р¤СЂСѓРєС‚Р° (+30 РїСѓРЅРєС‚РѕРІ !!!)
 
   value = ((phase * endgame + (24 - phase) * opening) / 24) / 32;
 
@@ -311,7 +311,7 @@ int evaluate(struct pos_info_t * pos_info)
     pos_info->value = value + 3;
     pos_info->mob[0] = mob_w;
     pos_info->mob[1] = mob_b;
-    mask = (Board->mp[WhiteKing]) & mob_b;   // маска атак чужих фигур на своего короля
+    mask = (Board->mp[WhiteKing]) & mob_b;   // РјР°СЃРєР° Р°С‚Р°Рє С‡СѓР¶РёС… С„РёРіСѓСЂ РЅР° СЃРІРѕРµРіРѕ РєРѕСЂРѕР»СЏ
   }
   else {
     pos_info->value = 3 - value;
@@ -319,12 +319,12 @@ int evaluate(struct pos_info_t * pos_info)
     pos_info->mob[1] = mob_w;
     mask = (Board->mp[BlackKing]) & mob_w;
   }
-  // Возвращаем признак шаха в позиции по наличию в маске подвижности атак на короля
+  // Р’РѕР·РІСЂР°С‰Р°РµРј РїСЂРёР·РЅР°Рє С€Р°С…Р° РІ РїРѕР·РёС†РёРё РїРѕ РЅР°Р»РёС‡РёСЋ РІ РјР°СЃРєРµ РїРѕРґРІРёР¶РЅРѕСЃС‚Рё Р°С‚Р°Рє РЅР° РєРѕСЂРѕР»СЏ
   if (mask == 0) return 0;
             else return 1;
 }
 ///////////////////////////////////////////////////////////////////////////
-// Определение битовых масок подвижности фигур в случае ленивой оценки
+// РћРїСЂРµРґРµР»РµРЅРёРµ Р±РёС‚РѕРІС‹С… РјР°СЃРѕРє РїРѕРґРІРёР¶РЅРѕСЃС‚Рё С„РёРіСѓСЂ РІ СЃР»СѓС‡Р°Рµ Р»РµРЅРёРІРѕР№ РѕС†РµРЅРєРё
 int eval_mob(struct pos_info_t * pos_info)
 { unsigned __int64 mob_w, mob_b, mask;
   int square;
@@ -381,7 +381,7 @@ int eval_mob(struct pos_info_t * pos_info)
             else return 1;
 }
 //////////////////////////////////////////////////////////////////////////////
-// Оценка пешечной структуры
+// РћС†РµРЅРєР° РїРµС€РµС‡РЅРѕР№ СЃС‚СЂСѓРєС‚СѓСЂС‹
 struct pawn_info_t * pawn_get_info()
 { struct pawn_info_t * entry;
   unsigned int lock;
@@ -391,14 +391,14 @@ struct pawn_info_t * pawn_get_info()
   __int16 opening, endgame;
   unsigned char wp_pass_file, bp_pass_file;
 
-  // Сначала ищем сохраненную информацию в таблице Pawn
+  // РЎРЅР°С‡Р°Р»Р° РёС‰РµРј СЃРѕС…СЂР°РЅРµРЅРЅСѓСЋ РёРЅС„РѕСЂРјР°С†РёСЋ РІ С‚Р°Р±Р»РёС†Рµ Pawn
   entry = pawn_entry + ((unsigned int)(Board->pawn_key) & pawn_mask);
   lock = (unsigned int)((Board->pawn_key) >> 32);
-  if (entry->lock == lock) return entry;    // Нашли
-  // Не нашли в таблице - считаем
-  opening = endgame = 0;             // Общая оценка пешечной структуры
-  wp_pass_file = bp_pass_file = 0;   // Здесь будем запоминать открытые вертикали
-  for (mask = Board->mp[WhitePawn]; mask != 0; mask &= (mask-1)) {    // По белым пешкам
+  if (entry->lock == lock) return entry;    // РќР°С€Р»Рё
+  // РќРµ РЅР°С€Р»Рё РІ С‚Р°Р±Р»РёС†Рµ - СЃС‡РёС‚Р°РµРј
+  opening = endgame = 0;             // РћР±С‰Р°СЏ РѕС†РµРЅРєР° РїРµС€РµС‡РЅРѕР№ СЃС‚СЂСѓРєС‚СѓСЂС‹
+  wp_pass_file = bp_pass_file = 0;   // Р—РґРµСЃСЊ Р±СѓРґРµРј Р·Р°РїРѕРјРёРЅР°С‚СЊ РѕС‚РєСЂС‹С‚С‹Рµ РІРµСЂС‚РёРєР°Р»Рё
+  for (mask = Board->mp[WhitePawn]; mask != 0; mask &= (mask-1)) {    // РџРѕ Р±РµР»С‹Рј РїРµС€РєР°Рј
     square = first_one(mask);
     if (MaskPawnDoubled[square] & Board->mp[WhitePawn]) endgame -= 158;
     open_file = 1;
@@ -425,7 +425,7 @@ struct pawn_info_t * pawn_get_info()
       }
     }
   }
-  for (mask = Board->mp[BlackPawn]; mask != 0; mask &= (mask-1)) {    // По черным
+  for (mask = Board->mp[BlackPawn]; mask != 0; mask &= (mask-1)) {    // РџРѕ С‡РµСЂРЅС‹Рј
     square = first_one(mask);
     if (MaskPawnDoubled[square] & Board->mp[BlackPawn]) endgame += 158;
     open_file = 1;
@@ -452,12 +452,12 @@ struct pawn_info_t * pawn_get_info()
       }
     }
   }
-  // Заносим в таблицу
+  // Р—Р°РЅРѕСЃРёРј РІ С‚Р°Р±Р»РёС†Сѓ
   entry->pass_file[0] = wp_pass_file;
   entry->opening = opening;
   entry->pass_file[1] = bp_pass_file;
   entry->endgame = endgame;
-  // Оцениваем пешечное прикрытие короля по флангам и/или в центре
+  // РћС†РµРЅРёРІР°РµРј РїРµС€РµС‡РЅРѕРµ РїСЂРёРєСЂС‹С‚РёРµ РєРѕСЂРѕР»СЏ РїРѕ С„Р»Р°РЅРіР°Рј Рё/РёР»Рё РІ С†РµРЅС‚СЂРµ
   mask = Board->mp[BlackPawn];
   mask1 = ((mask >> 23) & 0x0E00) | ((mask >> 18) & 0x01C0) | ((mask >> 13) & 0x0038) | ((mask >> 8) & 0x0007);
   mask = Board->mp[WhitePawn];

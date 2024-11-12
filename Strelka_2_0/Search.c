@@ -64,20 +64,20 @@ void start_go(char string[])
     time_limit_1 = movetime * 5;
     time_limit_2 = movetime;
   }
-  else if (time >= 0) {   // контроль времени
+  else if (time >= 0) {   // РєРѕРЅС‚СЂРѕР»СЊ РІСЂРµРјРµРЅРё
     time_is_limited = 1;
-    if (zapas) time_max = ((time / 10) * 9) - 5000;   // максимальное время
+    if (zapas) time_max = ((time / 10) * 9) - 5000;   // РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ РІСЂРµРјСЏ
     else time_max = time - 2000;
     if (time_max < 0) time_max = 0;
     alloc = (time_max + inc * (movestogo - 1)) / movestogo;
     if (alloc > time_max) alloc = time_max;
-    time_limit_1 = alloc;   // нижняя граница контроля времени
-    alloc = (time_max + inc * (movestogo - 1)) / 2;  // половина от оставшегося
+    time_limit_1 = alloc;   // РЅРёР¶РЅСЏСЏ РіСЂР°РЅРёС†Р° РєРѕРЅС‚СЂРѕР»СЏ РІСЂРµРјРµРЅРё
+    alloc = (time_max + inc * (movestogo - 1)) / 2;  // РїРѕР»РѕРІРёРЅР° РѕС‚ РѕСЃС‚Р°РІС€РµРіРѕСЃСЏ
     if (alloc < time_limit_1) alloc = time_limit_1;
     if (alloc > time_max) alloc = time_max;
-    time_limit_2 = alloc;   // верхняя граница контроля
-    // Есть мысль верхнюю границу брать не 1/2 а 1/3 от оставшегося,
-    // а то бывает долго думает в таких случаях, и потом попадает в цейтнот.
+    time_limit_2 = alloc;   // РІРµСЂС…РЅСЏСЏ РіСЂР°РЅРёС†Р° РєРѕРЅС‚СЂРѕР»СЏ
+    // Р•СЃС‚СЊ РјС‹СЃР»СЊ РІРµСЂС…РЅСЋСЋ РіСЂР°РЅРёС†Сѓ Р±СЂР°С‚СЊ РЅРµ 1/2 Р° 1/3 РѕС‚ РѕСЃС‚Р°РІС€РµРіРѕСЃСЏ,
+    // Р° С‚Рѕ Р±С‹РІР°РµС‚ РґРѕР»РіРѕ РґСѓРјР°РµС‚ РІ С‚Р°РєРёС… СЃР»СѓС‡Р°СЏС…, Рё РїРѕС‚РѕРј РїРѕРїР°РґР°РµС‚ РІ С†РµР№С‚РЅРѕС‚.
   }
   Infinite = 0;
   if (infinite || ponder) Infinite = 1;
@@ -123,8 +123,8 @@ void start_search()
   }
   list_root[num_moves].move = 0;
 
-// Следующую строку можно добавлять только после грамотного написания MultiPV,
-// иначе может быть ошибка.
+// РЎР»РµРґСѓСЋС‰СѓСЋ СЃС‚СЂРѕРєСѓ РјРѕР¶РЅРѕ РґРѕР±Р°РІР»СЏС‚СЊ С‚РѕР»СЊРєРѕ РїРѕСЃР»Рµ РіСЂР°РјРѕС‚РЅРѕРіРѕ РЅР°РїРёСЃР°РЅРёСЏ MultiPV,
+// РёРЅР°С‡Рµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РѕС€РёР±РєР°.
 //  if (num_moves <= 1) { depth_is_limited = 1; depth_limit = 4; }
 
   trans_set_date((trans_date + 1) % DateSize);
@@ -159,7 +159,7 @@ void start_search()
     if (Post) fprintf(stdout,"info depth %d\n",depth);
     bad_1 = change = 0;
     value = full_root(depth);
-    if (best_score <= -32000 || best_score >= 32000) break;  // мат
+    if (best_score <= -32000 || best_score >= 32000) break;  // РјР°С‚
     if (depth == 1 && num_moves >= 2 && list_root[0].score >= list_root[1].score + 150) easy = 1;
     if (depth > 1) { bad_2 = bad_1; bad_1 = 0; }
     if (depth >= 5) can_stop = 1;
@@ -303,7 +303,7 @@ int full_root(int depth)
     else if (value >= 31500) list_root[i].score = 63000;
     else list_root[i].score = value + 31500;
     if (value > best_value) {
-      // Ох, и криво написан MultiPV - с кучей багов. Надо бы переписать !!!
+      // РћС…, Рё РєСЂРёРІРѕ РЅР°РїРёСЃР°РЅ MultiPV - СЃ РєСѓС‡РµР№ Р±Р°РіРѕРІ. РќР°РґРѕ Р±С‹ РїРµСЂРµРїРёСЃР°С‚СЊ !!!
       if (pv_cnt < MultiPV) {
         pv_cat(multipv[pv_cnt].pv, new_pv, move);
         multipv[pv_cnt].score = value;
@@ -423,7 +423,7 @@ int full_search(int beta, int depth, int search_parm, int * pv)
       Board->key = undo_null->key;
       pos_info_entry--;
 
-      // верификация пустого хода - тоже из одной из Белок, что дает - неизвестно.
+      // РІРµСЂРёС„РёРєР°С†РёСЏ РїСѓСЃС‚РѕРіРѕ С…РѕРґР° - С‚РѕР¶Рµ РёР· РѕРґРЅРѕР№ РёР· Р‘РµР»РѕРє, С‡С‚Рѕ РґР°РµС‚ - РЅРµРёР·РІРµСЃС‚РЅРѕ.
       if (depth > 5 && new_value >= beta) new_value = full_search(beta,depth-5,0,new_pv);
 
       if (new_value >= beta) {
@@ -650,13 +650,13 @@ int qu_search(int alpha, int beta, int depth, int * pv)
     if (alpha >= beta) return alpha;
   }
   else if (pos_info_entry->value < (alpha - 250)) {
-    // delta pruning: если оценка позиции хуже alpha,
-    // то из взятий убираем "слабые" взятия через маски mask_w и mask_b
+    // delta pruning: РµСЃР»Рё РѕС†РµРЅРєР° РїРѕР·РёС†РёРё С…СѓР¶Рµ alpha,
+    // С‚Рѕ РёР· РІР·СЏС‚РёР№ СѓР±РёСЂР°РµРј "СЃР»Р°Р±С‹Рµ" РІР·СЏС‚РёСЏ С‡РµСЂРµР· РјР°СЃРєРё mask_w Рё mask_b
     best_value = pos_info_entry->value + 250;
     mask_w ^= Board->mp[WhitePawn];
     mask_b ^= Board->mp[BlackPawn];
-    // В оригинальной версии Стрелки исключались только взятия пешек
-    // Следующие исключения - Белка 1.8.12 (+13 пунктов !!!)
+    // Р’ РѕСЂРёРіРёРЅР°Р»СЊРЅРѕР№ РІРµСЂСЃРёРё РЎС‚СЂРµР»РєРё РёСЃРєР»СЋС‡Р°Р»РёСЃСЊ С‚РѕР»СЊРєРѕ РІР·СЏС‚РёСЏ РїРµС€РµРє
+    // РЎР»РµРґСѓСЋС‰РёРµ РёСЃРєР»СЋС‡РµРЅРёСЏ - Р‘РµР»РєР° 1.8.12 (+13 РїСѓРЅРєС‚РѕРІ !!!)
     if (pos_info_entry->value < (alpha - 450)) {
       best_value = pos_info_entry->value + 450;
       mask_w ^= Board->mp[WhiteKnight];
@@ -709,14 +709,14 @@ int qu_search(int alpha, int beta, int depth, int * pv)
     }
   }
   if (depth <= -6) return best_value;
-  // в генерации шахов нужно "вернуть" слабые взятия, отброшенные по delta pruning;
-  // делаем это через маски ~mask_w и ~mask_b
+  // РІ РіРµРЅРµСЂР°С†РёРё С€Р°С…РѕРІ РЅСѓР¶РЅРѕ "РІРµСЂРЅСѓС‚СЊ" СЃР»Р°Р±С‹Рµ РІР·СЏС‚РёСЏ, РѕС‚Р±СЂРѕС€РµРЅРЅС‹Рµ РїРѕ delta pruning;
+  // РґРµР»Р°РµРј СЌС‚Рѕ С‡РµСЂРµР· РјР°СЃРєРё ~mask_w Рё ~mask_b
   gen_checks(list, ~mask_w, ~mask_b);
   for (pi = list; pi->move != 0; pi++) {
     move = pi->move;
-    // ход может быть с превращением, а в gen_checks это не учитывается,
-    // поэтому для таких случаев добавляем флаг превращения в ферзя;
-    // слабые превращения здесь учитывать не будем.
+    // С…РѕРґ РјРѕР¶РµС‚ Р±С‹С‚СЊ СЃ РїСЂРµРІСЂР°С‰РµРЅРёРµРј, Р° РІ gen_checks СЌС‚Рѕ РЅРµ СѓС‡РёС‚С‹РІР°РµС‚СЃСЏ,
+    // РїРѕСЌС‚РѕРјСѓ РґР»СЏ С‚Р°РєРёС… СЃР»СѓС‡Р°РµРІ РґРѕР±Р°РІР»СЏРµРј С„Р»Р°Рі РїСЂРµРІСЂР°С‰РµРЅРёСЏ РІ С„РµСЂР·СЏ;
+    // СЃР»Р°Р±С‹Рµ РїСЂРµРІСЂР°С‰РµРЅРёСЏ Р·РґРµСЃСЊ СѓС‡РёС‚С‹РІР°С‚СЊ РЅРµ Р±СѓРґРµРј.
     piece = Board->square[MOVE_FROM(move)];
     to = MOVE_TO(move);
     if (PIECE_IS_PAWN(piece) && (to > 55 || to < 8) && !MOVE_IS_PROMOTION(move))
@@ -800,16 +800,16 @@ int qu_check_search(int alpha, int beta, int depth, int * pv)
   return best_value;
 }
 //////////////////////////////////////////////////////////////////////////////
-// генерация ходов для функций типа full_search
+// РіРµРЅРµСЂР°С†РёСЏ С…РѕРґРѕРІ РґР»СЏ С„СѓРЅРєС†РёР№ С‚РёРїР° full_search
 int next_move(struct moves_info_t * moves_info, struct pos_info_t * pos_info)
 { int move, move1, score, score1;
   struct list_t * next;
 
   switch(moves_info->entry) {
-    case 0:                  // сначала - trans_move
+    case 0:                  // СЃРЅР°С‡Р°Р»Р° - trans_move
       move = moves_info->trans_move;
       moves_info->entry = 1;
-      if (move != 0) {       // проверяем trans_move
+      if (move != 0) {       // РїСЂРѕРІРµСЂСЏРµРј trans_move
         if (Board->square[MOVE_FROM(move)] != 0) {
           if ((Board->square[MOVE_TO(move)] & 0x0E) != 12) {
             if (!(move & 0x7000)) return(move);
@@ -819,11 +819,11 @@ int next_move(struct moves_info_t * moves_info, struct pos_info_t * pos_info)
           }
         }
       }
-    case 1:                  // после trans_move генерим взятия
+    case 1:                  // РїРѕСЃР»Рµ trans_move РіРµРЅРµСЂРёРј РІР·СЏС‚РёСЏ
       moves_info->entry = 2;
       gen_captures(moves_info->list, Board->mp[White], Board->mp[Black]);
       moves_info->bad_cnt = 0;
-    case 2:      // проходим по взятиям и берем только хорошие по see_move
+    case 2:      // РїСЂРѕС…РѕРґРёРј РїРѕ РІР·СЏС‚РёСЏРј Рё Р±РµСЂРµРј С‚РѕР»СЊРєРѕ С…РѕСЂРѕС€РёРµ РїРѕ see_move
       for (move = moves_info->next->move; move != 0; move = moves_info->next->move) {
         score = moves_info->next->score;
         moves_info->next++;
@@ -839,39 +839,39 @@ int next_move(struct moves_info_t * moves_info, struct pos_info_t * pos_info)
         }
         if (move != moves_info->trans_move) {
           if (see_move(move) != 0) return(move);
-          // плохие взятия заносим в отдельный список bad_captures
+          // РїР»РѕС…РёРµ РІР·СЏС‚РёСЏ Р·Р°РЅРѕСЃРёРј РІ РѕС‚РґРµР»СЊРЅС‹Р№ СЃРїРёСЃРѕРє bad_captures
           moves_info->bad_captures[moves_info->bad_cnt] = move;
           moves_info->bad_cnt++;
         }
       }
-      // первый killer
+      // РїРµСЂРІС‹Р№ killer
       move = pos_info->killer1;
       moves_info->bad_captures[moves_info->bad_cnt] = 0;
       moves_info->entry = 3;
       if (move != moves_info->trans_move) {
         if (move_is_legal(move, pos_info) != 0) return(move);
       }
-    case 3:       // второй killer
+    case 3:       // РІС‚РѕСЂРѕР№ killer
       move = pos_info->killer2;
       moves_info->entry = 4;
       if (move != moves_info->trans_move) {
         if (move_is_legal(move, pos_info) != 0) return(move);
       }
-    case 4:       // тихие ходы
+    case 4:       // С‚РёС…РёРµ С…РѕРґС‹
       moves_info->entry = 5;
       moves_info->next = moves_info->list;
       gen_quiet_moves(moves_info->list, pos_info->mob[1], moves_info->trans_move, pos_info->killer1, pos_info->killer2);
-    case 5:       // проходим по тихим ходам
+    case 5:       // РїСЂРѕС…РѕРґРёРј РїРѕ С‚РёС…РёРј С…РѕРґР°Рј
       move = moves_info->next->move;
       moves_info->next++;
       if (move != 0) return(move);
       moves_info->entry = 6;
       moves_info->bad_index = 0;
-    case 6:       // в последнюю очередь - плохие взятия
+    case 6:       // РІ РїРѕСЃР»РµРґРЅСЋСЋ РѕС‡РµСЂРµРґСЊ - РїР»РѕС…РёРµ РІР·СЏС‚РёСЏ
       move = moves_info->bad_captures[moves_info->bad_index];
       moves_info->bad_index++;
       break;
-    case 7:       // особый случай для evasions
+    case 7:       // РѕСЃРѕР±С‹Р№ СЃР»СѓС‡Р°Р№ РґР»СЏ evasions
       move = moves_info->next->move;
       moves_info->next++;
       break;
